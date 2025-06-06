@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
+import 'package:hopper/Presentation/Authentication/screens/permission_screens.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
@@ -154,12 +155,10 @@ class _OtpScreensState extends State<OtpScreens> {
                         ),
                       ),
                       if (otpError != null)
-                        Center(
-                          child: Text(
-                            otpError!,
-                            style: TextStyle(color: Colors.red, fontSize: 14),
-                            textAlign: TextAlign.center,
-                          ),
+                        Text(
+                          otpError!,
+                          style: TextStyle(color: Colors.red, fontSize: 14),
+                          textAlign: TextAlign.center,
                         ),
                       SizedBox(height: 20),
 
@@ -181,7 +180,25 @@ class _OtpScreensState extends State<OtpScreens> {
                   ),
                 ),
               ),
-              AppButtons.button(onTap: () {}, text: AppTexts.verify),
+              AppButtons.button(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PermissionScreens(),
+                    ),
+                  );
+                  // if (otp.text.length != 4) {
+                  //   errorController?.add(ErrorAnimationType.shake);
+                  //   setState(() {
+                  //     otpError = 'Please enter a valid 4-digit OTP';
+                  //     isButtonDisabled = false;
+                  //   });
+                  //   return;
+                  // }
+                },
+                text: AppTexts.verify,
+              ),
             ],
           ),
         ),
