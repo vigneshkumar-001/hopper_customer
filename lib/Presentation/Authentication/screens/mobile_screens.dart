@@ -54,7 +54,7 @@ class _MobileScreensState extends State<MobileScreens> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         AppButtons.backButton(context: context),
-                        SizedBox(height: 25),
+                        const SizedBox(height: 25),
                         CustomTextFields.textWithStyles700(
                           AppTexts.enterMobileNumberForVerification,
                         ),
@@ -64,14 +64,16 @@ class _MobileScreensState extends State<MobileScreens> {
                         ),
                         const SizedBox(height: 20),
 
+                        // Country Code & Mobile Number Input Row
                         Row(
                           children: [
+                            // Country Selector
                             Expanded(
                               flex: 2,
                               child: GestureDetector(
                                 onTap: () => showCountrySelector(context),
                                 child: Obx(
-                                  () => Container(
+                                      () => Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 12,
                                       vertical: 11,
@@ -91,13 +93,12 @@ class _MobileScreensState extends State<MobileScreens> {
                                         const SizedBox(width: 4),
                                         Text(
                                           controller
-                                                  .selectedCountryCode
-                                                  .value
-                                                  .isEmpty
+                                              .selectedCountryCode
+                                              .value
+                                              .isEmpty
                                               ? '+--'
                                               : controller
-                                                  .selectedCountryCode
-                                                  .value,
+                                              .selectedCountryCode.value,
                                           style: const TextStyle(fontSize: 16),
                                         ),
                                         const Icon(Icons.arrow_drop_down),
@@ -108,22 +109,41 @@ class _MobileScreensState extends State<MobileScreens> {
                               ),
                             ),
                             const SizedBox(width: 5),
+
+                            // Mobile Number Field with Validation
                             Expanded(
                               flex: 4,
-                              child: TextField(
-                                autofocus: true,
+                              child: TextFormField(
+                                onChanged: (value) {
+                                  // Trigger revalidation on each change
+                                  _formKey.currentState?.validate();
+                                },
                                 controller: controller.mobileNumber,
                                 keyboardType: TextInputType.phone,
+                                autofocus: true,
                                 inputFormatters: [
                                   LengthLimitingTextInputFormatter(10),
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
+                                validator: (value) {
+                                  final code =
+                                      controller.selectedCountryCode.value;
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your Mobile Number';
+                                  } else if (code == '+91' && value.length != 10) {
+                                    return 'Indian numbers must be exactly 10 digits';
+                                  } else if (code == '+234' &&
+                                      value.length != 10) {
+                                    return 'Nigerian numbers must be exactly 10 digits';
+                                  }
+                                  return null;
+                                },
                                 decoration: InputDecoration(
+                                  hintText: 'Enter mobile number',
                                   contentPadding: const EdgeInsets.symmetric(
                                     vertical: 1,
                                     horizontal: 10,
                                   ),
-                                  hintText: 'Enter mobile number',
                                   filled: true,
                                   fillColor: AppColors.containerColor,
                                   border: OutlineInputBorder(
@@ -131,60 +151,26 @@ class _MobileScreensState extends State<MobileScreens> {
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                 ),
-                                onChanged: (value) {
-                                  final code =
-                                      controller.selectedCountryCode.value;
-                                  if (value.isEmpty) {
-                                    controller.errorText.value =
-                                        'Please enter your Mobile Number';
-                                  } else if (code == '+91' &&
-                                      value.length != 10) {
-                                    controller.errorText.value =
-                                        'Indian numbers must be exactly 10 digits';
-                                  } else if (code == '+234' &&
-                                      value.length != 10) {
-                                    controller.errorText.value =
-                                        'Nigerian numbers must be exactly 10 digits';
-                                  } else {
-                                    controller.errorText.value = '';
-                                  }
-                                },
                               ),
                             ),
                           ],
-                        ),
-
-                        Obx(
-                          () =>
-                              controller.errorText.value.isNotEmpty
-                                  ? Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      controller.errorText.value,
-                                      style: const TextStyle(
-                                        color: Colors.red,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  )
-                                  : const SizedBox(),
                         ),
                       ],
                     ),
                   ),
                 ),
+
+                // Submit Button
                 AppButtons.button(
                   onTap: () {
                     if (_formKey.currentState!.validate()) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder:
-                              (context) => OtpScreens(
-                                countyCode:
-                                    controller.selectedCountryCode.value,
-                                mobileNumber: controller.mobileNumber.text,
-                              ),
+                          builder: (context) => OtpScreens(
+                            countyCode: controller.selectedCountryCode.value,
+                            mobileNumber: controller.mobileNumber.text,
+                          ),
                         ),
                       );
                     }
@@ -198,4 +184,5 @@ class _MobileScreensState extends State<MobileScreens> {
       ),
     );
   }
+
 }

@@ -10,6 +10,9 @@ class AppTexts {
   static String resendCode = 'Resend Code';
   static String verify = 'Verify';
   static String locationPermission = 'Location permission Required';
+  static String sendOrReceiveParcel = 'Send or Receive Parcel';
+  static String collectFrom = 'Collect from';
+  static String addSenderAddress = 'Add sender address';
   static String locationPermissionContent = 'We need GPS access on your phone to find rides near you and provide available Hoppr Services. To enable, go to settings & turn on location permission.';
 
 }

@@ -147,6 +147,11 @@ class _OtpScreensState extends State<OtpScreens> {
                             debugPrint(value);
 
                             verifyCode = value;
+                            if (value.length == 4 && otpError != null) {
+                              setState(() {
+                                otpError = null;
+                              });
+                            }
                           },
                           beforeTextPaste: (text) {
                             debugPrint("Allowing to paste $text");
@@ -182,12 +187,22 @@ class _OtpScreensState extends State<OtpScreens> {
               ),
               AppButtons.button(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PermissionScreens(),
-                    ),
-                  );
+                  if (otp.text.length != 4) {
+                    errorController?.add(ErrorAnimationType.shake);
+                    setState(() {
+                      otpError = 'Please enter a valid 4-digit OTP';
+                      isButtonDisabled = false;
+                    });
+                    return;
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PermissionScreens(),
+                      ),
+                    );
+                  }
+
                   // if (otp.text.length != 4) {
                   //   errorController?.add(ErrorAnimationType.shake);
                   //   setState(() {

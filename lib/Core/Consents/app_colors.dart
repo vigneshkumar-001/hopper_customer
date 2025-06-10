@@ -10,6 +10,7 @@ class AppColors {
 
   static const commonBlack = Color(0xff000000);
   static const commonWhite = Color(0xffFFFFFF);
+
   static const textColor = Color(0xff686868);
   static const sampleDocText = Color(0xff666666);
   static const dividerColor1 = Color(0xffF1F1F1);

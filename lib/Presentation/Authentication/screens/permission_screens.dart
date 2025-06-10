@@ -5,6 +5,7 @@ import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
 
 class PermissionScreens extends StatefulWidget {
   const PermissionScreens({super.key});
@@ -43,7 +44,9 @@ class _PermissionScreensState extends State<PermissionScreens> {
                   ),
                 ),
               ),
-              AppButtons.button(onTap: () {}, text: AppTexts.continues),
+              AppButtons.button(onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>PackageScreens()));
+              }, text: AppTexts.continues),
             ],
           ),
         ),

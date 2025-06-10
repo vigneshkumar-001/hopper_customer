@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Presentation/Authentication/screens/splash_screens.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -16,6 +17,9 @@ class MyApp extends StatelessWidget {
     return ScreenUtilInit(
       designSize: const Size(360, 690),
       child: GetMaterialApp(
+          theme: ThemeData(
+            scaffoldBackgroundColor:AppColors.commonWhite,
+          ),
          debugShowCheckedModeBanner: false,
           home: SplashScreens()),
     );
