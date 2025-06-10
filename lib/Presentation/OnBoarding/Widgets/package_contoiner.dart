@@ -105,6 +105,9 @@ class PackageContainer {
     required String leadingImage,
     required String title,
     required String subTitle,
+    Color? subColor = Colors.black45,
+    Color? trailingColor = AppColors.commonBlack,
+    Color? titleColor = AppColors.commonBlack,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -117,9 +120,9 @@ class PackageContainer {
       ),
       child: ListTile(
         leading: Image.asset(leadingImage, height: 22, width: 22),
-        trailing: Image.asset(AppImages.add, height: 20, width: 20),
-        title: CustomTextFields.textWithStyles700(fontSize: 16, title),
-        subtitle: Text(subTitle, style: TextStyle(color: Colors.black45)),
+        trailing: Image.asset(AppImages.add, height: 20, width: 20,color: trailingColor,),
+        title: CustomTextFields.textWithStyles700(fontSize: 16, title,color: titleColor),
+        subtitle: Text(subTitle, style: TextStyle(color: subColor)),
       ),
     );
   }

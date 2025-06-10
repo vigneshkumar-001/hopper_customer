@@ -7,4 +7,8 @@ class AppImages {
   static String tick = "assets/images/tick.png";
   static String add = "assets/images/add.png";
   static String colorUpArrow = "assets/images/colorUpArrow.png";
+  static String colorDownArrow = "assets/images/colorDownArrow.png";
+  static String emptyBox = "assets/images/emptyBox.png";
+  static String pencilBike = "assets/images/pencilBike.png";
+  static String avoidDrinks = "assets/images/avoidDrinks.png";
 }

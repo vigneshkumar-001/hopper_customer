@@ -67,10 +67,58 @@ class _PackageScreensState extends State<PackageScreens> {
                 SizedBox(height: 20),
 
                 PackageContainer.customPlainContainers(
+                  trailingColor: AppColors.commonWhite,
+                  titleColor: AppColors.commonWhite,
+                  subColor: AppColors.commonWhite.withOpacity(0.7),
                   containerColor: AppColors.commonBlack,
-                  subTitle: AppTexts.addSenderAddress,
-                  title: AppTexts.collectFrom,
-                  leadingImage: AppImages.colorUpArrow,
+                  subTitle: AppTexts.addRecipientAddress,
+                  title: AppTexts.sendTo,
+                  leadingImage: AppImages.colorDownArrow,
+                ),
+                SizedBox(height: 20),
+
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.commonBlack.withOpacity(0.1),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: ListTile(
+                    title: CustomTextFields.textWithStyles600(
+                      AppTexts.thingsToKeepInMind,
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5.0),
+                      child: Column(
+                        spacing: 5,
+                        children: [
+                          Row(
+                            children: [
+                              Image.asset(AppImages.pencilBike, height: 20),
+                              SizedBox(width: 10),
+                              Text(AppTexts. fitOnaTwoWheeler),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Image.asset(AppImages.emptyBox, height: 20),
+                              SizedBox(width: 10),
+                              Text(AppTexts. avoidSendingExpensive),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Image.asset(AppImages.avoidDrinks, height: 20),
+                              SizedBox(width: 10),
+                              Text(AppTexts. noAlcohol),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

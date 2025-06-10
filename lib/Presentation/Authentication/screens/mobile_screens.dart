@@ -73,7 +73,7 @@ class _MobileScreensState extends State<MobileScreens> {
                               child: GestureDetector(
                                 onTap: () => showCountrySelector(context),
                                 child: Obx(
-                                      () => Container(
+                                  () => Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 12,
                                       vertical: 11,
@@ -93,12 +93,13 @@ class _MobileScreensState extends State<MobileScreens> {
                                         const SizedBox(width: 4),
                                         Text(
                                           controller
-                                              .selectedCountryCode
-                                              .value
-                                              .isEmpty
+                                                  .selectedCountryCode
+                                                  .value
+                                                  .isEmpty
                                               ? '+--'
                                               : controller
-                                              .selectedCountryCode.value,
+                                                  .selectedCountryCode
+                                                  .value,
                                           style: const TextStyle(fontSize: 16),
                                         ),
                                         const Icon(Icons.arrow_drop_down),
@@ -130,7 +131,8 @@ class _MobileScreensState extends State<MobileScreens> {
                                       controller.selectedCountryCode.value;
                                   if (value == null || value.isEmpty) {
                                     return 'Please enter your Mobile Number';
-                                  } else if (code == '+91' && value.length != 10) {
+                                  } else if (code == '+91' &&
+                                      value.length != 10) {
                                     return 'Indian numbers must be exactly 10 digits';
                                   } else if (code == '+234' &&
                                       value.length != 10) {
@@ -167,10 +169,12 @@ class _MobileScreensState extends State<MobileScreens> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => OtpScreens(
-                            countyCode: controller.selectedCountryCode.value,
-                            mobileNumber: controller.mobileNumber.text,
-                          ),
+                          builder:
+                              (context) => OtpScreens(
+                                countyCode:
+                                    controller.selectedCountryCode.value,
+                                mobileNumber: controller.mobileNumber.text,
+                              ),
                         ),
                       );
                     }
@@ -184,5 +188,4 @@ class _MobileScreensState extends State<MobileScreens> {
       ),
     );
   }
-
 }

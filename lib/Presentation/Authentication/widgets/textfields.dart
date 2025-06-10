@@ -69,11 +69,23 @@ class CustomTextFields {
       ],
     );
   }
-  static Text textWithStyles700(String text, {String? text1, double fontSize = 25}) {
+  static Text textWithStyles700(String text, {String? text1, double fontSize = 25,Color? color} ) {
     return Text(
       text + (text1 ?? ''),
       style: TextStyle(
+        color: color,
         fontWeight: FontWeight.w700,
+        fontSize: fontSize,
+      ),
+    );
+  }
+  static Text textWithStyles600(String text, {String? text1, double fontSize = 15,Color? color} ) {
+    return Text(
+      text + (text1 ?? ''),
+      style: TextStyle(
+        color: color,
+        letterSpacing: 0.3,
+        fontWeight: FontWeight.w600,
         fontSize: fontSize,
       ),
     );
