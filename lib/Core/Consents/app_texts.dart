@@ -19,6 +19,7 @@ class AppTexts {
   static String  fitOnaTwoWheeler = 'Items should fit on a two wheeler';
   static String avoidSendingExpensive = 'Avoid sending expensive or fragile items';
   static String noAlcohol = 'No alcohol, illegal or restricted items.';
+  static String tellUsYourDestination = 'Tell us your destination to get ride availability and accurate fare information.';
   static String locationPermissionContent = 'We need GPS access on your phone to find rides near you and provide available Hoppr Services. To enable, go to settings & turn on location permission.';
 
 }

@@ -20,11 +20,68 @@ class MobileScreens extends StatefulWidget {
 class _MobileScreensState extends State<MobileScreens> {
   final AuthController controller = Get.put(AuthController());
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  void showCountrySelector(BuildContext) {
+  void showCountrySelector(BuildContext context) {
     showCountryPicker(
       context: context,
+      showSearch: true,
       showPhoneCode: true,
       searchAutofocus: true,
+      countryListTheme: CountryListThemeData(
+        flagSize: 25,
+        backgroundColor: Colors.white,
+        // textStyle: TextStyle(fontSize: 16, color: Colors.blueGrey),
+        bottomSheetHeight: 550, // Optional. Country list modal height
+        //Optional. Sets the border radius for the bottomsheet.
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(30.0),
+          topRight: Radius.circular(30.0),
+        ),
+        searchTextStyle: TextStyle(color: Colors.black),
+        //Optional. Styles the search field.
+        inputDecoration: InputDecoration(
+          hintText: 'Search',
+          hintStyle: TextStyle(color: Colors.grey),
+          prefixIcon: Icon(Icons.search, color: Colors.black),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.black),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.black, width: 2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+
+          border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: const Color(0xFF8C98A8).withOpacity(0.2),
+            ),
+          ),
+        ),
+      ),
+      // countryListTheme: CountryListThemeData(
+      //   inputDecoration: InputDecoration(
+      //     hintText: 'Search',
+      //     hintStyle: TextStyle(color: Colors.grey),
+      //     prefixIcon: Icon(Icons.search, color: Colors.black),
+      //     enabledBorder: OutlineInputBorder(
+      //       borderSide: BorderSide(color: Colors.black),
+      //       borderRadius: BorderRadius.circular(8),
+      //     ),
+      //     focusedBorder: OutlineInputBorder(
+      //       borderSide: BorderSide(color: Colors.black, width: 2),
+      //       borderRadius: BorderRadius.circular(8),
+      //     ),
+      //     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      //   ),
+      //
+      //   searchTextStyle: TextStyle(color: Colors.black),
+      //   // Optional sheet styling
+      //   borderRadius: BorderRadius.only(
+      //     topLeft: Radius.circular(12),
+      //     topRight: Radius.circular(12),
+      //   ),
+      // ),
       onSelect: (Country country) {
         controller.setSelectedCountry(country);
       },
@@ -115,8 +172,26 @@ class _MobileScreensState extends State<MobileScreens> {
                             Expanded(
                               flex: 4,
                               child: TextFormField(
+                                autovalidateMode:
+                                    AutovalidateMode.onUserInteraction,
+
                                 onChanged: (value) {
-                                  // Trigger revalidation on each change
+                                  final code =
+                                      controller.selectedCountryCode.value;
+                                  if (value.isEmpty) {
+                                    controller.errorText.value =
+                                        'Please enter your Mobile Number';
+                                  } else if (code == '+91' &&
+                                      value.length != 10) {
+                                    controller.errorText.value =
+                                        'Indian numbers must be exactly 10 digits';
+                                  } else if (code == '+234' &&
+                                      value.length != 10) {
+                                    controller.errorText.value =
+                                        'Nigerian numbers must be exactly 10 digits';
+                                  } else {
+                                    controller.errorText.value = '';
+                                  }
                                   _formKey.currentState?.validate();
                                 },
                                 controller: controller.mobileNumber,
@@ -126,20 +201,21 @@ class _MobileScreensState extends State<MobileScreens> {
                                   LengthLimitingTextInputFormatter(10),
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
-                                validator: (value) {
-                                  final code =
-                                      controller.selectedCountryCode.value;
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your Mobile Number';
-                                  } else if (code == '+91' &&
-                                      value.length != 10) {
-                                    return 'Indian numbers must be exactly 10 digits';
-                                  } else if (code == '+234' &&
-                                      value.length != 10) {
-                                    return 'Nigerian numbers must be exactly 10 digits';
-                                  }
-                                  return null;
-                                },
+
+                                // validator: (value) {
+                                //   final code =
+                                //       controller.selectedCountryCode.value;
+                                //   if (value == null || value.isEmpty) {
+                                //     return 'Please enter your Mobile Number';
+                                //   } else if (code == '+91' &&
+                                //       value.length != 10) {
+                                //     return 'Indian numbers must be exactly 10 digits';
+                                //   } else if (code == '+234' &&
+                                //       value.length != 10) {
+                                //     return 'Nigerian numbers must be exactly 10 digits';
+                                //   }
+                                //   return null;
+                                // },
                                 decoration: InputDecoration(
                                   hintText: 'Enter mobile number',
                                   contentPadding: const EdgeInsets.symmetric(
@@ -157,28 +233,60 @@ class _MobileScreensState extends State<MobileScreens> {
                             ),
                           ],
                         ),
+                        Obx(
+                          () =>
+                              controller.errorText.value.isNotEmpty
+                                  ? Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      controller.errorText.value,
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  )
+                                  : const SizedBox(),
+                        ),
                       ],
                     ),
                   ),
                 ),
 
-                // Submit Button
                 AppButtons.button(
-                  onTap: () {
-                    if (_formKey.currentState!.validate()) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => OtpScreens(
-                                countyCode:
-                                    controller.selectedCountryCode.value,
-                                mobileNumber: controller.mobileNumber.text,
-                              ),
-                        ),
-                      );
+                  onTap: () async {
+                    final code = controller.selectedCountryCode.value;
+                    final value = controller.mobileNumber.text.trim();
+
+                    // Manual validation
+                    if (value.isEmpty) {
+                      controller.errorText.value =
+                          'Please enter your Mobile Number';
+                      return;
+                    } else if (code == '+91' && value.length != 10) {
+                      controller.errorText.value =
+                          'Indian numbers must be exactly 10 digits';
+                      return;
+                    } else if (code == '+234' && value.length != 10) {
+                      controller.errorText.value =
+                          'Nigerian numbers must be exactly 10 digits';
+                      return;
+                    } else {
+                      controller.errorText.value = '';
                     }
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => OtpScreens(
+                              countyCode: controller.selectedCountryCode.value,
+                              mobileNumber: controller.mobileNumber.text,
+                            ),
+                      ),
+                    );
                   },
+
                   text: AppTexts.continueWithPhoneNumber,
                 ),
               ],

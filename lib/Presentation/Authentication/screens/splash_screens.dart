@@ -71,7 +71,7 @@ class _SplashScreensState extends State<SplashScreens> {
                   children: const [
                     TextSpan(
                       text:
-                          "By continuing, you agree that you have read and accept our ",
+                          "By continuing, you agree that you have read and accept our  ",
                     ),
                     TextSpan(
                       text: "T&C",

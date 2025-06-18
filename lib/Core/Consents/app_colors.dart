@@ -7,6 +7,7 @@ class AppColors {
   static const containerColor = Color(0xffF1F1F1);
   static const containerColor1 = Color(0xffF5F5F7);
   static const containerBorder = Color(0xff1C1C1C);
+  static const advertisementColor = Color(0xffE9F3FF);
 
   static const commonBlack = Color(0xff000000);
   static const commonWhite = Color(0xffFFFFFF);
@@ -18,4 +19,5 @@ class AppColors {
   static const errorRed = Color(0xFFEA4335);
   static final errorBorder = Colors.red;
   static final resendBlue = Color(0xff006FD0);
+  static final justInColor = Color(0xff5700D0);
 }
