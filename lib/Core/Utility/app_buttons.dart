@@ -14,11 +14,14 @@ class AppButtons {
     required GestureTapCallback? onTap,
     required String text,
     double? size = double.infinity,
+    double? fontSize = 16,
     Color? buttonColor = AppColors.commonBlack,
     Color? textColor = Colors.white,
+    Color  borderColor = const Color(0xff3F5FF2),
 
     bool? isLoading,
     bool hasBorder = false,
+
     String? imagePath,
   }) {
     return SizedBox(
@@ -30,7 +33,7 @@ class AppButtons {
           shape:
               hasBorder
                   ? RoundedRectangleBorder(
-                    side: BorderSide(color: Color(0xff3F5FF2)),
+                    side: BorderSide(color: borderColor),
                     borderRadius: BorderRadius.circular(8),
                   )
                   : RoundedRectangleBorder(
@@ -52,7 +55,7 @@ class AppButtons {
               text,
               style: TextStyle(
                 fontFamily: "Roboto-normal",
-                fontSize: 16.sp,
+                fontSize: fontSize,
                 color: textColor,
               ),
             ),

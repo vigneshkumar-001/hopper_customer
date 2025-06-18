@@ -22,5 +22,7 @@ class AppImages {
   static String bProfile = "assets/images/bProfile.png";
   static String bWallet = "assets/images/bWallet.png";
   static String bHome = "assets/images/bHome.png";
+  static String mapLocation = "assets/images/mapLocation.png";
+  static String dart = "assets/images/dort.png";
 
 }

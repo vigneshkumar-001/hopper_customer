@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
+import 'package:get/get.dart';
+import 'package:hopper/uitls/map/search_loaction.dart';
 
 class PackageScreens extends StatefulWidget {
   const PackageScreens({super.key});
@@ -14,6 +18,13 @@ class PackageScreens extends StatefulWidget {
 
 class _PackageScreensState extends State<PackageScreens> {
   bool isSendSelected = true;
+  String selectedAddress = 'Collect from';
+
+  String enteredAddress = '';
+  String landmark = '';
+  String name = 'Add Sender Address';
+  String phone = '';
+
   int selectedIndex = 0;
   @override
   Widget build(BuildContext context) {
@@ -59,11 +70,30 @@ class _PackageScreensState extends State<PackageScreens> {
                 SizedBox(height: 20),
 
                 PackageContainer.customPlainContainers(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CommonLocationSearch(),
+                      ),
+                    );
+
+                    if (result != null) {
+                      setState(() {
+                        selectedAddress = result['mapAddress'];
+                        enteredAddress = result['address'];
+                        landmark = result['landmark'];
+                        name = result['name'];
+                        phone = result['phone'];
+                      });
+                    }
+                  },
                   containerColor: AppColors.commonWhite,
-                  subTitle: AppTexts.addSenderAddress,
-                  title: AppTexts.collectFrom,
+                  subTitle: '$name $phone',
+                  title: '$enteredAddress $landmark\n$selectedAddress',
                   leadingImage: AppImages.colorUpArrow,
                 ),
+
                 SizedBox(height: 20),
 
                 PackageContainer.customPlainContainers(
@@ -98,21 +128,21 @@ class _PackageScreensState extends State<PackageScreens> {
                             children: [
                               Image.asset(AppImages.pencilBike, height: 20),
                               SizedBox(width: 10),
-                              Text(AppTexts. fitOnaTwoWheeler),
+                              Text(AppTexts.fitOnaTwoWheeler),
                             ],
                           ),
                           Row(
                             children: [
                               Image.asset(AppImages.emptyBox, height: 20),
                               SizedBox(width: 10),
-                              Text(AppTexts. avoidSendingExpensive),
+                              Text(AppTexts.avoidSendingExpensive),
                             ],
                           ),
                           Row(
                             children: [
                               Image.asset(AppImages.avoidDrinks, height: 20),
                               SizedBox(width: 10),
-                              Text(AppTexts. noAlcohol),
+                              Text(AppTexts.noAlcohol),
                             ],
                           ),
                         ],

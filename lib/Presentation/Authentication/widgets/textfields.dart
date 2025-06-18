@@ -78,16 +78,25 @@ class CustomTextFields {
     Widget? suffixIcon,
     String? initialValue,
     bool readOnly = true,
+    String? leadingImage,
+    double imgHeight = 10,
+    double imgWidth = 10,
     Widget? prefixIcon,
+
     required String title,
     TextEditingController? controller,
+    ValueChanged<String>? onChanged,
+    TextStyle? hintStyle,
+    Color containerColor = const Color(0xffF1F1F1),
   }) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Color(0xffF1F1F1),
+        borderRadius: BorderRadius.circular(15),
+        color: containerColor,
       ),
       child: TextFormField(
+        autofocus: true,
+        onChanged: onChanged,
         onTap: onTap,
         controller: controller,
         initialValue: initialValue,
@@ -95,8 +104,12 @@ class CustomTextFields {
         cursorColor: AppColors.commonBlack,
         decoration: InputDecoration(
           prefixIcon: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Image.asset(AppImages.search, height: 10, width: 10),
+            padding: EdgeInsets.all(imgHeight),
+            child: Image.asset(
+              leadingImage ?? AppImages.search,
+              height: 9,
+              width: 10,
+            ),
           ),
           // focusedBorder: OutlineInputBorder(
           //   borderSide: BorderSide(color: Colors.black, width: 1.5),
@@ -106,13 +119,15 @@ class CustomTextFields {
             borderSide: BorderSide.none,
             borderRadius: BorderRadius.circular(15),
           ),
-
+          suffixIcon: suffixIcon,
           hintText: title,
-          hintStyle: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: AppColors.commonBlack,
-            fontSize: 16,
-          ),
+          hintStyle:
+              hintStyle ??
+              TextStyle(
+                fontWeight: FontWeight.w500,
+                color: AppColors.commonBlack,
+                fontSize: 16,
+              ),
           contentPadding: EdgeInsets.symmetric(horizontal: 10),
         ),
       ),
@@ -164,6 +179,72 @@ class CustomTextFields {
       textAlign: textAlign,
       text,
       style: TextStyle(color: colors, fontSize: 13, fontWeight: fontWeight),
+    );
+  }
+
+  static textAndField({
+    required String tittle,
+    GlobalKey<FormState>? formKey,
+    required String hintText,
+    TextEditingController? controller,
+    TextInputType? type,
+    ValueChanged<String>? onChanged,
+    List<TextInputFormatter>? inputFormatters,
+    String? Function(String?)? validator,
+
+    bool readOnly = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          tittle,
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        SizedBox(height: 8),
+        TextFormField(
+          cursorColor: Colors.black,
+
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          onChanged: (value) {
+            // Call the passed onChanged if exists
+            // if (onChanged != null) onChanged(value);
+            // // Then trigger form validation if formKey is provided
+            // formKey?.currentState?.validate();
+          },
+          inputFormatters: inputFormatters,
+          keyboardType: type,
+          controller: controller,
+          readOnly: readOnly,
+          style: TextStyle(
+            color: Color(0xff111111),
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(color: Color(0xff666666)),
+            border: OutlineInputBorder(
+              borderSide: BorderSide(color: AppColors.commonWhite),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: Colors.black,
+                width: 1.5,
+              ), // BLACK BORDER
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.errorRed, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.errorRed, width: 1.5),
+            ),
+          ),
+          validator: validator,
+        ),
+      ],
     );
   }
 }

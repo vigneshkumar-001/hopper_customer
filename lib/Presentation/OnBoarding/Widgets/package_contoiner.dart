@@ -105,33 +105,37 @@ class PackageContainer {
     required String leadingImage,
     required String title,
     required String subTitle,
+    VoidCallback? onTap,
     Color? subColor = Colors.black45,
     Color? trailingColor = AppColors.commonBlack,
     Color? titleColor = AppColors.commonBlack,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: containerColor,
-        border: Border.all(
-          color: AppColors.commonBlack.withOpacity(0.1),
-          width: 1.5,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: containerColor,
+          border: Border.all(
+            color: AppColors.commonBlack.withOpacity(0.1),
+            width: 1.5,
+          ),
+          borderRadius: BorderRadius.circular(10),
         ),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: ListTile(
-        leading: Image.asset(leadingImage, height: 22, width: 22),
-        trailing: Image.asset(
-          AppImages.add,
-          height: 20,
-          width: 20,
-          color: trailingColor,
+        child: ListTile(
+          leading: Image.asset(leadingImage, height: 22, width: 22),
+          trailing: Image.asset(
+            AppImages.add,
+            height: 20,
+            width: 20,
+            color: trailingColor,
+          ),
+          title: CustomTextFields.textWithStyles700(
+            fontSize: 16,
+            title,
+            color: titleColor,
+          ),
+          subtitle: Text(subTitle, style: TextStyle(color: subColor)),
         ),
-        title: CustomTextFields.textWithStyles700(
-          fontSize: 16,
-          title,
-          color: titleColor,
-        ),
-        subtitle: Text(subTitle, style: TextStyle(color: subColor)),
       ),
     );
   }
@@ -140,13 +144,12 @@ class PackageContainer {
     required String tittle,
     required String subTitle,
     required String img,
-     double imgHeight = 43,
+    double imgHeight = 43,
     double imgWeight = 32,
-    VoidCallback?  onTap,
-
+    VoidCallback? onTap,
   }) {
     return GestureDetector(
-      onTap:onTap ,
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
@@ -155,20 +158,10 @@ class PackageContainer {
         child: ListTile(
           title: Text(
             tittle,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
-          subtitle: Text(
-            subTitle,
-            style: TextStyle(fontSize: 10),
-          ),
-          trailing: Image.asset(
-            img,
-            height: imgHeight,
-            width: imgWeight,
-          ),
+          subtitle: Text(subTitle, style: TextStyle(fontSize: 10)),
+          trailing: Image.asset(img, height: imgHeight, width: imgWeight),
         ),
       ),
     );
