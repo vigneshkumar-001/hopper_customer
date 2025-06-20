@@ -164,10 +164,9 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  void _onConfirmLocation() {}
-
-  void _onConfirmLocastion() {
+  void _onConfirmLocation() {
     showModalBottomSheet(
+      backgroundColor: AppColors.commonWhite,
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -314,6 +313,7 @@ class _MapScreenState extends State<MapScreen> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: CustomTextFields.plainTextField(
+                            autofocus: false,
                             suffixIcon: IconButton(
                               onPressed: () {
                                 _searchResults.clear();
@@ -414,7 +414,7 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                           const SizedBox(height: 20),
                           AppButtons.button(
-                            onTap: _onConfirmLocastion,
+                            onTap: _onConfirmLocation,
                             text: 'Confirm Location',
                           ),
                         ],

@@ -78,6 +78,7 @@ class CustomTextFields {
     Widget? suffixIcon,
     String? initialValue,
     bool readOnly = true,
+    bool autofocus = true,
     String? leadingImage,
     double imgHeight = 10,
     double imgWidth = 10,
@@ -95,7 +96,7 @@ class CustomTextFields {
         color: containerColor,
       ),
       child: TextFormField(
-        autofocus: true,
+        autofocus: autofocus,
         onChanged: onChanged,
         onTap: onTap,
         controller: controller,
@@ -171,14 +172,20 @@ class CustomTextFields {
 
   static textWithStylesSmall(
     String text, {
+    String? text1,
     TextAlign textAlign = TextAlign.start,
     FontWeight? fontWeight,
+    double fontSize = 13,
     Color? colors = Colors.black45,
   }) {
     return Text(
       textAlign: textAlign,
-      text,
-      style: TextStyle(color: colors, fontSize: 13, fontWeight: fontWeight),
+      text + (text1 ?? ''),
+      style: TextStyle(
+        color: colors,
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+      ),
     );
   }
 
@@ -224,7 +231,13 @@ class CustomTextFields {
             hintText: hintText,
             hintStyle: TextStyle(color: Color(0xff666666)),
             border: OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.commonWhite),
+              borderSide: BorderSide(color: AppColors.containerColor),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: AppColors.containerColor,
+                width: 1.5,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -243,6 +256,43 @@ class CustomTextFields {
             ),
           ),
           validator: validator,
+        ),
+      ],
+    );
+  }
+
+  static Widget textWithImage({
+    required String text,
+    String? imagePath,
+    double imageSize = 16,
+    double fontSize = 13,
+    TextAlign textAlign = TextAlign.start,
+    FontWeight? fontWeight,
+    Color? colors = Colors.black45,
+    Color? imageColors = Colors.black,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (imagePath != null)
+          Image.asset(
+            imagePath,
+            height: imageSize,
+            width: imageSize,
+            color: imageColors,
+          ),
+        const SizedBox(width: 5),
+        Flexible(
+          child: Text(
+            text,
+            textAlign: textAlign,
+            style: TextStyle(
+              color: colors,
+              fontSize: fontSize,
+              fontWeight: fontWeight,
+            ),
+          ),
         ),
       ],
     );

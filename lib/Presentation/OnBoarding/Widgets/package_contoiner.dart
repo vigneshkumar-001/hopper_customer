@@ -104,7 +104,7 @@ class PackageContainer {
     required Color containerColor,
     required String leadingImage,
     required String title,
-    required String subTitle,
+    required String subTitle, VoidCallback? onClear, // <- add this
     VoidCallback? onTap,
     Color? subColor = Colors.black45,
     Color? trailingColor = AppColors.commonBlack,
@@ -123,14 +123,21 @@ class PackageContainer {
         ),
         child: ListTile(
           leading: Image.asset(leadingImage, height: 22, width: 22),
-          trailing: Image.asset(
+          trailing: onClear != null
+              ? IconButton(
+            icon: const Icon(Icons.clear, size: 20),
+            color: trailingColor,
+            onPressed: onClear,
+          )
+              : Image.asset(
             AppImages.add,
             height: 20,
             width: 20,
             color: trailingColor,
           ),
-          title: CustomTextFields.textWithStyles700(
-            fontSize: 16,
+
+          title: CustomTextFields.textWithStyles600(
+            fontSize: 15,
             title,
             color: titleColor,
           ),
@@ -166,4 +173,50 @@ class PackageContainer {
       ),
     );
   }
+
+
+  static   customWalletContainer({
+    required VoidCallback onTap,
+    required String title,
+    FontWeight? fontWeight = FontWeight.w600,
+    required String leadingImagePath,
+    Widget? trailing ,
+    Color containerColor = Colors.white,
+    Color borderColor = const Color(0xFFE0E0E0),
+    Color textColor = Colors.black,
+    Color arrowColor = Colors.black,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: borderColor,
+            width: 1,
+          ),
+          color: containerColor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15),
+        child: Row(
+          children: [
+            Image.asset(leadingImagePath, height: 26, width: 26),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 15,
+                  fontWeight: fontWeight,
+                ),
+              ),
+            ),
+            if (trailing != null) trailing,
+          ],
+        ),
+      ),
+    );
+  }
+
 }

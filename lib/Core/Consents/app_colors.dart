@@ -19,5 +19,8 @@ class AppColors {
   static const errorRed = Color(0xFFEA4335);
   static final errorBorder = Colors.red;
   static final resendBlue = Color(0xff006FD0);
+  static final couponCard = Color(0xff006FD01A);
   static final justInColor = Color(0xff5700D0);
+  static final choiceChipColor = Color(0xff006FD0);
+  static final walletCurrencyColor = Color(0xff009721);
 }

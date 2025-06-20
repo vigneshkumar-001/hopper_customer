@@ -24,5 +24,14 @@ class AppImages {
   static String bHome = "assets/images/bHome.png";
   static String mapLocation = "assets/images/mapLocation.png";
   static String dart = "assets/images/dort.png";
+  static String tag = "assets/images/tag.png";
+  static String rightArrow = "assets/images/rightArrow.png";
+  static String nCurrency = "assets/images/nCurrency.png";
+  static String nBlackCurrency = "assets/images/nBlackCurrency.png";
+  static String payPall = "assets/images/payPall.png";
+  static String applePay = "assets/images/applePay.png";
+  static String cash = "assets/images/cash.png";
+  static String wallet = "assets/images/wallet.png";
+  static String borderAdd = "assets/images/borderAdd.png";
 
 }

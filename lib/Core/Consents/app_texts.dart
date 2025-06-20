@@ -15,9 +15,15 @@ class AppTexts {
   static String sendOrReceiveParcel = 'Send or Receive Parcel';
   static String collectFrom = 'Collect from';
   static String sendTo = 'Send to';
+  static String reviewYourOrderToAvoidCancellations = 'Review your order to avoid cancellations';
   static String addSenderAddress = 'Add sender address';
   static String addRecipientAddress = 'Add Recipient address';
   static String  fitOnaTwoWheeler = 'Items should fit on a two wheeler';
+  static String  senderDetails = 'Sender details';
+  static String  totalBill  = 'Total Bill (with convenience fees)';
+  static String  itemType = 'Item type';
+  static String  recipientDetails = 'Recipient details';
+  static String  readPolicy = 'A cancellation fee will be charged if an order is cancelled after the delivery has arrived at the Pick up location.';
   static String avoidSendingExpensive = 'Avoid sending expensive or fragile items';
   static String noAlcohol = 'No alcohol, illegal or restricted items.';
   static String tellUsYourDestination = 'Tell us your destination to get ride availability and accurate fare information.';
