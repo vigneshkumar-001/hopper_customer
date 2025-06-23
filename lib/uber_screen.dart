@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -9,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
+import 'package:geocoding/geocoding.dart';
 
 class UberStyleMapScreen extends StatefulWidget {
   @override
@@ -27,7 +29,12 @@ class _UberStyleMapScreenState extends State<UberStyleMapScreen> {
   late GooglePlace googlePlace;
   Timer? _carTimer;
   Set<Polyline> _polylines = {};
+  String? _startLocationName;
+  String? _selectedDestinationName;
+  Offset? _startOffset;
+  Offset? _destinationOffset;
 
+  String? _destinationLocationName;
   @override
   void initState() {
     super.initState();
@@ -41,6 +48,46 @@ class _UberStyleMapScreenState extends State<UberStyleMapScreen> {
     googlePlace = GooglePlace(apiKey);
   }
 
+  void _updateMarkerLabels() async {
+    if (_mapController == null) return;
+
+    final screenSize = MediaQuery.of(context).size;
+
+    if (_currentPosition != null) {
+      final coord = await _mapController!.getScreenCoordinate(_currentPosition!);
+      _startOffset = Offset(
+        coord.x.toDouble(),
+        coord.y.toDouble().clamp(0.0, screenSize.height - 50), // Prevent off-screen
+      );
+    }
+
+    if (_destinationPosition != null) {
+      final coord =
+      await _mapController!.getScreenCoordinate(_destinationPosition!);
+      _destinationOffset = Offset(
+        coord.x.toDouble(),
+        coord.y.toDouble().clamp(0.0, screenSize.height - 50), // Prevent off-screen
+      );
+    }
+
+    setState(() {});
+  }
+
+  Widget _buildMarkerLabel(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 3)],
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+      ),
+    );
+  }
+
   Future<void> _loadCustomMarkers() async {
     _carIcon = await BitmapDescriptor.fromAssetImage(
       const ImageConfiguration(),
@@ -51,8 +98,8 @@ class _UberStyleMapScreenState extends State<UberStyleMapScreen> {
       AppImages.pencilBike,
     );
     _endIcon = await BitmapDescriptor.asset(
-      const ImageConfiguration(),
-      AppImages.location,
+      const ImageConfiguration(size: Size(0, 0)),
+      AppImages.square,
       height: 30,
       width: 30,
     );
@@ -68,6 +115,9 @@ class _UberStyleMapScreenState extends State<UberStyleMapScreen> {
       _currentPosition = LatLng(pos.latitude, pos.longitude);
       _mapController?.animateCamera(CameraUpdate.newLatLng(_currentPosition!));
       setState(() {});
+      Future.delayed(const Duration(milliseconds: 300), () {
+        _updateMarkerLabels();
+      });
     }
   }
 
@@ -134,31 +184,79 @@ class _UberStyleMapScreenState extends State<UberStyleMapScreen> {
   void _onPlaceSelected(AutocompletePrediction prediction) async {
     print("Selected place: ${prediction.description}");
 
+    // Save destination name for UI
+    _selectedDestinationName = prediction.description;
+
+    // Get place details from Google
     final details = await googlePlace.details.get(prediction.placeId!);
-    if (details == null) {
-      print("Failed to get place details");
+    if (details == null || details.result?.geometry?.location == null) {
+      print("Failed to get place details or location");
       return;
     }
 
-    final loc = details.result?.geometry?.location;
-    if (loc != null) {
-      final newDestination = LatLng(loc.lat!, loc.lng!);
+    final loc = details.result!.geometry!.location!;
+    final newDestination = LatLng(loc.lat!, loc.lng!);
 
-      // Always update destination and move camera even if same location
-      setState(() {
-        _destinationPosition = newDestination;
-        _carMarker = null; // Reset car marker if needed
-      });
-
-      _mapController?.animateCamera(
-        CameraUpdate.newLatLngZoom(newDestination, 17),
+    // Get start location name using reverse geocoding
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        _currentPosition!.latitude,
+        _currentPosition!.longitude,
       );
-      if (_currentPosition != null && _destinationPosition != null) {
-        await _getDirectionsPolyline(_currentPosition!, _destinationPosition!);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        _startLocationName = '${place.name}, ${place.locality}';
       }
-    } else {
-      print("No location found in place details");
+    } catch (e) {
+      _startLocationName = "My Location";
+      print("Error getting start location name: $e");
     }
+
+    // Set destination and draw polyline
+    setState(() {
+      _destinationPosition = newDestination;
+      _carMarker = null;
+    });
+
+    await _getDirectionsPolyline(_currentPosition!, _destinationPosition!);
+
+    // Adjust camera bounds to fit the entire route (even short ones)
+    LatLng southwest = LatLng(
+      min(_currentPosition!.latitude, _destinationPosition!.latitude),
+      min(_currentPosition!.longitude, _destinationPosition!.longitude),
+    );
+
+    LatLng northeast = LatLng(
+      max(_currentPosition!.latitude, _destinationPosition!.latitude),
+      max(_currentPosition!.longitude, _destinationPosition!.longitude),
+    );
+
+    // Widen bounds for short routes
+    if ((northeast.latitude - southwest.latitude).abs() < 0.002 &&
+        (northeast.longitude - southwest.longitude).abs() < 0.002) {
+      const adjustment = 0.001; // About 100m
+      southwest = LatLng(
+        southwest.latitude - adjustment,
+        southwest.longitude - adjustment,
+      );
+      northeast = LatLng(
+        northeast.latitude + adjustment,
+        northeast.longitude + adjustment,
+      );
+    }
+
+    final bounds = LatLngBounds(southwest: southwest, northeast: northeast);
+
+    await Future.delayed(const Duration(milliseconds: 300)); // Wait before moving
+
+    await _mapController?.animateCamera(
+      CameraUpdate.newLatLngBounds(bounds, 120),
+    );
+
+// ✅ NOW: ensure update happens *after* camera animation
+    await Future.delayed(const Duration(milliseconds: 400));
+    _updateMarkerLabels();
+
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -173,6 +271,9 @@ class _UberStyleMapScreenState extends State<UberStyleMapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("StartOffset: $_startOffset");
+    print("DestinationOffset: $_destinationOffset");
+
     if (_currentPosition == null ||
         _carIcon == null ||
         _startIcon == null ||
@@ -222,76 +323,141 @@ class _UberStyleMapScreenState extends State<UberStyleMapScreen> {
             polylines: _polylines,
             myLocationEnabled: false,
             myLocationButtonEnabled: false,
+            onCameraMove: (_) => _updateMarkerLabels(),
           ),
+
           Positioned(
             top: 40,
             left: 15,
             right: 15,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5)],
-              ),
-              child: Autocomplete<AutocompletePrediction>(
-                optionsBuilder: (TextEditingValue textEditingValue) async {
-                  if (textEditingValue.text.isEmpty)
-                    return const Iterable<AutocompletePrediction>.empty();
+            child: Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Autocomplete<AutocompletePrediction>(
+                  optionsBuilder: (TextEditingValue textEditingValue) async {
+                    if (textEditingValue.text.isEmpty) {
+                      return const Iterable<AutocompletePrediction>.empty();
+                    }
 
-                  final result = await googlePlace.autocomplete.get(
-                    textEditingValue.text,
-                    location:
-                        _currentPosition == null
-                            ? null
-                            : LatLon(
-                              _currentPosition!.latitude,
-                              _currentPosition!.longitude,
-                            ),
-                    radius: 50000,
-                    strictbounds: true,
-                  );
+                    final result = await googlePlace.autocomplete.get(
+                      textEditingValue.text,
+                      location:
+                          _currentPosition == null
+                              ? null
+                              : LatLon(
+                                _currentPosition!.latitude,
+                                _currentPosition!.longitude,
+                              ),
+                      radius: 50000,
+                      strictbounds: true,
+                    );
 
-                  if (result == null || result.predictions == null) {
-                    return const Iterable<AutocompletePrediction>.empty();
-                  }
-
-                  return result.predictions!;
-                },
-
-                displayStringForOption:
-                    (AutocompletePrediction option) => option.description!,
-                fieldViewBuilder: (
-                  context,
-                  controller,
-                  focusNode,
-                  onEditingComplete,
-                ) {
-                  return TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    decoration: InputDecoration(
-                      hintText: 'Search destination',
-                      border: InputBorder.none,
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          controller.clear();
-                          _searchController.clear();
-                          setState(() {
-                            _polylines.clear();
-                            _destinationPosition = null;
-                          });
-                        },
+                    return result?.predictions ??
+                        const Iterable<AutocompletePrediction>.empty();
+                  },
+                  displayStringForOption:
+                      (AutocompletePrediction option) =>
+                          option.description ?? '',
+                  fieldViewBuilder: (
+                    context,
+                    controller,
+                    focusNode,
+                    onEditingComplete,
+                  ) {
+                    return TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      decoration: InputDecoration(
+                        hintText: 'Search destination',
+                        hintStyle: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                        border: InputBorder.none,
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: Colors.grey,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.grey),
+                          onPressed: () {
+                            controller.clear();
+                            _searchController.clear();
+                            setState(() {
+                              _polylines.clear();
+                              _destinationPosition = null;
+                            });
+                          },
+                        ),
                       ),
-                    ),
-                  );
-                },
+                      style: const TextStyle(fontSize: 14),
+                    );
+                  },
 
-                onSelected: _onPlaceSelected,
+                  /// 👇 Custom dropdown UI as ListView-style
+                  optionsViewBuilder: (context, onSelected, options) {
+                    return Align(
+                      alignment: Alignment.topLeft,
+                      child: Material(
+                        elevation: 4,
+                        borderRadius: BorderRadius.circular(8),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 300),
+                          child: ListView.separated(
+                            padding: EdgeInsets.zero,
+                            itemCount: options.length,
+                            separatorBuilder:
+                                (_, __) => const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final option = options.elementAt(index);
+                              return ListTile(
+                                dense: true,
+                                leading: const Icon(
+                                  Icons.location_on_outlined,
+                                  color: Colors.blueGrey,
+                                ),
+                                title: Text(
+                                  option.description ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                                onTap: () => onSelected(option),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  onSelected: _onPlaceSelected,
+                ),
               ),
             ),
           ),
+          if (_startOffset != null)
+            Positioned(
+              left: _startOffset!.dx - 40,
+              top: _startOffset!.dy - 40,
+              child: IgnorePointer(
+                child: _buildMarkerLabel(_startLocationName ?? "My Location"),
+              ),
+            ),
+
+
+          if (_destinationOffset != null)
+            Positioned(
+              left: _destinationOffset!.dx-50,
+              top: _destinationOffset!.dy,
+              child: _buildMarkerLabel(_destinationLocationName ?? "Destination"),
+            ),
+
         ],
       ),
     );

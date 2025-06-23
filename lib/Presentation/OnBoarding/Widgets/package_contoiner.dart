@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dotted_line/dotted_line.dart';
 import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
@@ -100,11 +101,115 @@ class PackageContainer {
     );
   }
 
-  static customPlainContainers({
+  static Widget customPlainContainers({
     required Color containerColor,
     required String leadingImage,
     required String title,
-    required String subTitle, VoidCallback? onClear, // <- add this
+    required String subTitle,
+    required String userNameAndPhn,
+    required bool isSelected,
+    VoidCallback? onClear,
+    VoidCallback? onTap,
+    Color? subColor = Colors.black45,
+    Color? iconColor = AppColors.commonBlack,
+    Color? trailingColor = AppColors.commonBlack,
+    Color? titleColor = AppColors.commonBlack,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: containerColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.commonBlack.withOpacity(0.08),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Image.asset(leadingImage, height: 22, width: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: titleColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subTitle,
+                    style: TextStyle(color: subColor, fontSize: 13),
+                  ),
+                  if (isSelected) ...[
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      height: 2,
+                      child: DottedLine(
+                        direction: Axis.horizontal,
+                        dashColor: Colors.grey.shade400,
+                        lineThickness: 1,
+                        dashLength: 5,
+                        dashGapLength: 4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      userNameAndPhn,
+                      style: TextStyle(color: subColor, fontSize: 13),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            isSelected
+                ? Row(
+                  children: [
+                    GestureDetector(
+                      onTap: onTap,
+                      child: Image.asset(
+                        AppImages.edit,
+                        height: 20,
+                        width: 20,
+                        color: iconColor,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    if (onClear != null)
+                      GestureDetector(
+                        onTap: onClear,
+                        child: Icon(Icons.close, size: 20, color: iconColor),
+                      ),
+                  ],
+                )
+                : GestureDetector(
+                  onTap: onTap,
+                  child: Icon(Icons.add, size: 22, color: trailingColor),
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static customPlainContainerss({
+    required Color containerColor,
+    required String leadingImage,
+    required String title,
+    required String subTitle,
+    VoidCallback? onClear, // <- add this
     VoidCallback? onTap,
     Color? subColor = Colors.black45,
     Color? trailingColor = AppColors.commonBlack,
@@ -122,19 +227,23 @@ class PackageContainer {
           borderRadius: BorderRadius.circular(10),
         ),
         child: ListTile(
-          leading: Image.asset(leadingImage, height: 22, width: 22),
-          trailing: onClear != null
-              ? IconButton(
-            icon: const Icon(Icons.clear, size: 20),
-            color: trailingColor,
-            onPressed: onClear,
-          )
-              : Image.asset(
-            AppImages.add,
-            height: 20,
-            width: 20,
-            color: trailingColor,
+          leading: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [Image.asset(leadingImage, height: 22, width: 22)],
           ),
+          trailing:
+              onClear != null
+                  ? IconButton(
+                    icon: const Icon(Icons.clear, size: 20),
+                    color: trailingColor,
+                    onPressed: onClear,
+                  )
+                  : Image.asset(
+                    AppImages.add,
+                    height: 20,
+                    width: 20,
+                    color: trailingColor,
+                  ),
 
           title: CustomTextFields.textWithStyles600(
             fontSize: 15,
@@ -174,13 +283,12 @@ class PackageContainer {
     );
   }
 
-
-  static   customWalletContainer({
+  static customWalletContainer({
     required VoidCallback onTap,
     required String title,
     FontWeight? fontWeight = FontWeight.w600,
     required String leadingImagePath,
-    Widget? trailing ,
+    Widget? trailing,
     Color containerColor = Colors.white,
     Color borderColor = const Color(0xFFE0E0E0),
     Color textColor = Colors.black,
@@ -190,10 +298,7 @@ class PackageContainer {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(
-            color: borderColor,
-            width: 1,
-          ),
+          border: Border.all(color: borderColor, width: 1),
           color: containerColor,
           borderRadius: BorderRadius.circular(10),
         ),
@@ -218,5 +323,4 @@ class PackageContainer {
       ),
     );
   }
-
 }

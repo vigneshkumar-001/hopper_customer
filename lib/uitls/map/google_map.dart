@@ -158,7 +158,6 @@ class _MapScreenState extends State<MapScreen> {
 
     _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16));
 
-    // Show info window after a small delay (map must finish updating)
     Future.delayed(const Duration(milliseconds: 300), () {
       _mapController?.showMarkerInfoWindow(markerId);
     });
@@ -178,7 +177,7 @@ class _MapScreenState extends State<MapScreen> {
             bottom: MediaQuery.of(context).viewInsets.bottom,
             left: 20,
             right: 20,
-            top: 20,
+            top: 60,
           ),
           child: SingleChildScrollView(
             child: Form(
@@ -244,7 +243,7 @@ class _MapScreenState extends State<MapScreen> {
                     type: TextInputType.number,
                     controller: phoneController,
                     tittle: 'Mobile Number',
-                    hintText: 'Senders\'s Mobile Number',
+                    hintText: 'Sender\'s Mobile Number',
                   ),
                   const SizedBox(height: 20),
                   AppButtons.button(
@@ -283,7 +282,12 @@ class _MapScreenState extends State<MapScreen> {
     return Scaffold(
       body:
           _targetLocation == null
-              ? const Center(child: CircularProgressIndicator())
+              ? Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.commonBlack,
+                  strokeWidth: 2,
+                ),
+              )
               : Stack(
                 children: [
                   GoogleMap(
@@ -292,10 +296,20 @@ class _MapScreenState extends State<MapScreen> {
                       target: _targetLocation!,
                       zoom: 17,
                     ),
-                    markers: _markers,
+                    // markers: _markers,
                     onTap: (latLng) => _getAddressFromLatLng(latLng),
                   ),
-
+                  Center(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 40),
+                      child: Image.asset(
+                        AppImages.pinLocation,
+                        height: 40,
+                        width: 25,
+                        color: AppColors.commonBlack,
+                      ),
+                    ),
+                  ),
                   // Search bar
                   Positioned(
                     top: 40,
@@ -313,11 +327,15 @@ class _MapScreenState extends State<MapScreen> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: CustomTextFields.plainTextField(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
                             autofocus: false,
                             suffixIcon: IconButton(
                               onPressed: () {
-                                _searchResults.clear();
-                                _searchController.text = '';
+                                Navigator.pop(context);
+                                // _searchResults.clear();
+                                // _searchController.text = '';
                               },
                               icon: Icon(Icons.clear, size: 19),
                             ),

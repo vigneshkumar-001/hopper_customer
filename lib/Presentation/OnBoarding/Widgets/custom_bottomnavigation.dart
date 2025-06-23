@@ -18,10 +18,10 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
 
   static List<Widget> _screens = <Widget>[
     HomeScreens(),
-    UberStyleMapScreen(),
-    HomeScreens(),
     PackageScreens(),
-    HomeScreens(),
+    PackageScreens(),
+    PackageScreens(),
+    PackageScreens(),
   ];
 
   void _onItemTapped(int index) {

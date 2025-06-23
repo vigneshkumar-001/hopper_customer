@@ -6,6 +6,7 @@ import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hopper/uitls/map/google_map.dart'; // Make sure this MapScreen accepts LatLng too
 
@@ -22,20 +23,74 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
 
   List<dynamic> _searchResults = [];
 
+  // void _searchPlaces(String query) async {
+  //   final url =
+  //       'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$_apiKey&components=country:in';
+  //   final response = await http.get(Uri.parse(url));
+  //   final data = json.decode(response.body);
+  //
+  //   if (response.statusCode == 200 && data['status'] == 'OK') {
+  //     setState(() {
+  //       _searchResults = data['predictions'];
+  //     });
+  //   }
+  // }
   void _searchPlaces(String query) async {
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
     final url =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$_apiKey&components=country:in';
     final response = await http.get(Uri.parse(url));
     final data = json.decode(response.body);
 
     if (response.statusCode == 200 && data['status'] == 'OK') {
+      List<dynamic> predictions = data['predictions'];
+
+      List<dynamic> updatedResults = [];
+
+      for (var prediction in predictions) {
+        final placeId = prediction['place_id'];
+
+        // Get coordinates
+        final detailUrl =
+            'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$_apiKey';
+        final detailRes = await http.get(Uri.parse(detailUrl));
+        final detailData = json.decode(detailRes.body);
+
+        if (detailRes.statusCode == 200 && detailData['status'] == 'OK') {
+          final location = detailData['result']['geometry']['location'];
+          final lat = location['lat'];
+          final lng = location['lng'];
+
+          // Calculate distance
+          final distance = Geolocator.distanceBetween(
+            position.latitude,
+            position.longitude,
+            lat,
+            lng,
+          );
+          final km = (distance / 1000).toStringAsFixed(1);
+
+          // Append distance
+          prediction['distance'] = '$km km';
+        }
+
+        updatedResults.add(prediction);
+      }
+
       setState(() {
-        _searchResults = data['predictions'];
+        _searchResults = updatedResults;
       });
     }
   }
 
-  void _getPlaceDetailsAndNavigate(String placeId, String placeName) async {
+  void _getPlaceDetailsAndNavigate(
+    String placeId,
+    String placeName,
+    String distance,
+  ) async {
     final url =
         'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$_apiKey';
     final response = await http.get(Uri.parse(url));
@@ -87,10 +142,19 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
                 elevation: 2,
                 margin: EdgeInsets.symmetric(vertical: 5),
                 shape: RoundedRectangleBorder(
-                  side: BorderSide(color: AppColors.containerColor.withOpacity(0.2)),
+                  side: BorderSide(
+                    color: AppColors.containerColor.withOpacity(0.2),
+                  ),
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: CustomTextFields.plainTextField(
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      _searchResults.clear();
+                      _searchController.text = '';
+                    },
+                    icon: Icon(Icons.clear, size: 19),
+                  ),
                   hintStyle: TextStyle(fontSize: 12),
                   imgHeight: 18,
 
@@ -119,12 +183,25 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
                   final place = _searchResults[index];
                   return ListTile(
                     leading: const Icon(Icons.location_on_outlined),
-                    title: Text(place['description']),
-                    onTap:
-                        () => _getPlaceDetailsAndNavigate(
-                          place['place_id'],
-                          place['description'],
-                        ),
+                    title: Text(
+                      place['description'],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: Text(place['distance'] ?? ''),
+                    onTap: () {
+                      _getPlaceDetailsAndNavigate(
+                        place['place_id'],
+                        place['description'],
+                        place['distance'] ?? '',
+                      );
+                      setState(() => _searchResults.clear());
+                      _searchController.text = '';
+                    },
                   );
                 },
               ),

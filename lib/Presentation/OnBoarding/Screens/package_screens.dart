@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Core/Consents/app_texts.dart';
@@ -55,6 +54,7 @@ class _PackageScreensState extends State<PackageScreens> {
     return Scaffold(
       body: SafeArea(
         child: Container(
+          height: double.infinity,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -112,7 +112,6 @@ class _PackageScreensState extends State<PackageScreens> {
                           builder: (_) => const CommonLocationSearch(),
                         ),
                       );
-
                       if (result != null) {
                         setState(() {
                           senderData = AddressModel(
@@ -133,21 +132,24 @@ class _PackageScreensState extends State<PackageScreens> {
                               });
                             }
                             : null,
+                    isSelected: senderData != null,
                     containerColor: AppColors.commonWhite,
-                    title:
+                    leadingImage: AppImages.colorUpArrow,
+                    title: 'Set pick up location',
+                    subTitle:
                         senderData == null
                             ? 'Collect from'
                             : '${senderData!.address}, ${senderData!.landmark}, ${senderData!.mapAddress}',
-                    subTitle:
+                    userNameAndPhn:
                         senderData == null
-                            ? 'Add Sender Address'
+                            ? ''
                             : '${senderData!.name} (${senderData!.phone})',
-                    leadingImage: AppImages.colorUpArrow,
                   ),
 
                   SizedBox(height: 20),
 
                   PackageContainer.customPlainContainers(
+                    isSelected: receiverData != null,
                     onTap: () async {
                       final result = await Navigator.push(
                         context,
@@ -176,19 +178,19 @@ class _PackageScreensState extends State<PackageScreens> {
                               });
                             }
                             : null,
-                    trailingColor: AppColors.commonWhite,
+                    containerColor: AppColors.commonBlack,
                     titleColor: AppColors.commonWhite,
                     subColor: AppColors.commonWhite.withOpacity(0.7),
-                    containerColor: AppColors.commonBlack,
+                    trailingColor: AppColors.commonWhite,
+                    iconColor: AppColors.commonWhite,
+                    title: 'Set pick up location',
                     subTitle:
                         receiverData == null
-                            ? AppTexts.addRecipientAddress
-                            : '${receiverData!.name} (${receiverData!.phone})',
-                    title:
-                        receiverData == null
                             ? AppTexts.sendTo
-                            : '${receiverData!.address} ${receiverData!.landmark} ${receiverData!.mapAddress}',
+                            : '${receiverData!.address}, ${receiverData!.landmark}, ${receiverData!.mapAddress}',
                     leadingImage: AppImages.colorDownArrow,
+                    userNameAndPhn:
+                        '${receiverData?.name ?? ''} (${receiverData?.phone ?? ''})',
                   ),
 
                   SizedBox(height: 20),
@@ -257,21 +259,49 @@ class _PackageScreensState extends State<PackageScreens> {
                     const SizedBox(height: 5),
                     Row(
                       children: [
-                        Checkbox(
-                          value: receiveWithOtp,
-                          onChanged: (bool? newValue) {
-                            setState(() {
-                              receiveWithOtp = newValue ?? false;
-                              AppLogger.log.i(
-                                'Receive with OTP: $receiveWithOtp',
-                              );
-                            });
-                          },
+                        Transform.scale(
+                          scale: 1,
+                          child: Checkbox(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            value: receiveWithOtp,
+                            activeColor: Color(0xFF357AE9),
+                            checkColor: Colors.white,
+                            onChanged: (bool? newValue) {
+                              setState(() {
+                                receiveWithOtp = newValue ?? false;
+                                AppLogger.log.i(
+                                  'Receive with OTP: $receiveWithOtp',
+                                );
+                              });
+                            },
+                          ),
                         ),
                         const Text("Receive parcel with OTP"),
                       ],
                     ),
 
+                    // Row(
+                    //   children: [
+                    //     GestureDetector(
+                    //       onTap: () {
+                    //         setState(() {
+                    //           receiveWithOtp = !receiveWithOtp;
+                    //         });
+                    //       },
+                    //       child: Image.asset(
+                    //         receiveWithOtp
+                    //             ? 'assets/images/checkbox_checked.png'
+                    //             : 'assets/images/checkbox_unchecked.png',
+                    //         height: 24,
+                    //         width: 24,
+                    //       ),
+                    //     ),
+                    //     const SizedBox(width: 8),
+                    //     const Text("Receive with OTP"),
+                    //   ],
+                    // ),
                     const SizedBox(height: 5),
                   ],
 
@@ -335,7 +365,6 @@ class _PackageScreensState extends State<PackageScreens> {
                       MaterialPageRoute(
                         builder:
                             (_) => ConfirmationScreen(
-
                               parcelType: selectedParcel,
                               sender: senderData!,
                               receiver: receiverData!,

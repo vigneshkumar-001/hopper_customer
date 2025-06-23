@@ -33,5 +33,7 @@ class AppImages {
   static String cash = "assets/images/cash.png";
   static String wallet = "assets/images/wallet.png";
   static String borderAdd = "assets/images/borderAdd.png";
+  static String edit = "assets/images/edit.png";
+  static String square = "assets/images/square.png";
 
 }

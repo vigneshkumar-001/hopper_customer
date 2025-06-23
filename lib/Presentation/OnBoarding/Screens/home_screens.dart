@@ -5,6 +5,7 @@ import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
 import 'package:hopper/uber_screen.dart';
@@ -28,13 +29,19 @@ class _HomeScreensState extends State<HomeScreens>
   bool _isCameraMoving = false;
   String _address = 'Search...';
   BitmapDescriptor? _customIcon;
+  LatLng? _pickedPosition;
+  double? _lastZoom;
+  bool _isZooming = false;
+
+  final double _zoomThreshold = 0.01;
+  final double _moveThreshold = 0.00005;
 
   Future<void> _loadCustomMarker() async {
     _customIcon = await BitmapDescriptor.asset(
       const ImageConfiguration(),
       AppImages.pinLocation,
-      height: 35,
-      width: 20,
+      height: 40,
+      width: 25,
     );
     setState(() {});
   }
@@ -53,12 +60,12 @@ class _HomeScreensState extends State<HomeScreens>
 
   Future<void> _getAddressFromLatLng(LatLng position) async {
     try {
-      final placemarkss = await placemarkFromCoordinates(
+      final placemarks = await placemarkFromCoordinates(
         position.latitude,
         position.longitude,
       );
-      if (placemarkss.isNotEmpty) {
-        final placemark = placemarkss.first;
+      if (placemarks.isNotEmpty) {
+        final placemark = placemarks.first;
         setState(() {
           _address = "${placemark.street}, ${placemark.locality}";
         });
@@ -127,31 +134,70 @@ class _HomeScreensState extends State<HomeScreens>
                                 target: _currentPosition!,
                                 zoom: 16,
                               ),
-                              markers: {
-                                Marker(
-                                  markerId: const MarkerId('current'),
-                                  position: _currentPosition!,
-                                  icon:
-                                      _customIcon ??
-                                      BitmapDescriptor.defaultMarker,
-                                ),
-                              },
+                              // markers: {
+                              //   Marker(
+                              //     markerId: const MarkerId('current'),
+                              //     position: _currentPosition!,
+                              //     icon:
+                              //         _customIcon ??
+                              //         BitmapDescriptor.defaultMarker,
+                              //   ),
+                              // },
                               onMapCreated: (controller) {
                                 _mapController = controller;
                               },
-                              onCameraMove: (position) {
-                                _isCameraMoving = true;
-                                _currentPosition = position.target;
+                              onCameraMove: (CameraPosition position) {
+                                // Save camera target every frame
+                                _pickedPosition = position.target;
+
+                                // Check if this is a zoom action
+                                if (_lastZoom != null &&
+                                    (position.zoom - _lastZoom!).abs() >
+                                        _zoomThreshold) {
+                                  // It's zooming — ignore
+                                  _lastZoom = position.zoom;
+                                  return;
+                                }
+
+                                _lastZoom = position.zoom;
                               },
 
-                              onCameraIdle: () {
-                                if (_isCameraMoving &&
-                                    _currentPosition != null) {
-                                  _isCameraMoving = false;
-                                  _getAddressFromLatLng(_currentPosition!);
-                                  setState(() {}); // only when needed
+                              onCameraIdle: () async {
+                                LatLngBounds? bounds =
+                                    await _mapController?.getVisibleRegion();
+                                if (bounds != null) {
+                                  final centerLat =
+                                      (bounds.northeast.latitude +
+                                          bounds.southwest.latitude) /
+                                      2;
+                                  final centerLng =
+                                      (bounds.northeast.longitude +
+                                          bounds.southwest.longitude) /
+                                      2;
+
+                                  _currentPosition = LatLng(
+                                    centerLat,
+                                    centerLng,
+                                  );
+                                  await _getAddressFromLatLng(
+                                    _currentPosition!,
+                                  );
+                                  setState(() {});
                                 }
                               },
+
+                              //
+                              // onCameraIdle: () {
+                              //   if (_isCameraMoving &&
+                              //       _currentPosition != null) {
+                              //     _isCameraMoving = false;
+                              //     _getAddressFromLatLng(_currentPosition!);
+                              //     setState(() {
+                              //       // Only update on confirm, or if you want to auto update:
+                              //       // _currentPosition = _pickedPosition;
+                              //     });
+                              //   }
+                              // },
                               myLocationEnabled: true,
                               myLocationButtonEnabled: false,
                               mapToolbarEnabled: false,
@@ -163,41 +209,63 @@ class _HomeScreensState extends State<HomeScreens>
                                 ),
                               },
                             ),
+                            Center(
+                              child: Padding(
+                                padding: EdgeInsets.only(bottom: 40),
+                                child: Image.asset(
+                                  AppImages.pinLocation,
+                                  height: 40,
+                                  width: 25,
+                                  color: AppColors.commonBlack,
+                                ),
+                              ),
+                            ),
                             Positioned(
                               top: 50,
                               left: 16,
                               right: 16,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black12,
-                                      blurRadius: 4,
+                              child: GestureDetector(
+                                onTap: (){
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => CommonBottomNavigation(initialIndex: 3,),
                                     ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.menu, size: 20),
-                                    SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        _address,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black12,
+                                        blurRadius: 4,
                                       ),
-                                    ),
-                                    Icon(Icons.favorite_border, size: 20),
-                                  ],
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.menu, size: 20),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _address,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Icon(Icons.favorite_border, size: 20),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -269,7 +337,9 @@ class _HomeScreensState extends State<HomeScreens>
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (context) => UberStyleMapScreen(),
+                                          (context) =>  CommonBottomNavigation(
+                                            initialIndex: 3,
+                                          ),
                                     ),
                                   );
                                 },

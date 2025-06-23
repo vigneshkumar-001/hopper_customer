@@ -31,17 +31,44 @@ class ConfirmationScreen extends StatefulWidget {
 class _ConfirmationScreenState extends State<ConfirmationScreen> {
   String? selectedParcel;
   bool isSendSelected = true;
+  final GlobalKey senderKey = GlobalKey();
+  final GlobalKey receiverKey = GlobalKey();
+  double dottedLineHeight = 50; // Default
 
-  late AddressModel senderData;
-  late AddressModel receiverData;
+  AddressModel? senderData;
+  AddressModel? receiverData;
 
   List<String> parcelTypes = ['Food', 'Documents', 'Clothes', 'Others'];
+  void _updateDottedLineHeight() {
+    final senderBox =
+        senderKey.currentContext?.findRenderObject() as RenderBox?;
+    final receiverBox =
+        receiverKey.currentContext?.findRenderObject() as RenderBox?;
+
+    if (senderBox != null && receiverBox != null) {
+      final senderPos = senderBox.localToGlobal(Offset.zero);
+      final receiverPos = receiverBox.localToGlobal(Offset.zero);
+
+      final newHeight =
+          receiverPos.dy - senderPos.dy - senderBox.size.height + 10;
+
+      if (mounted) {
+        setState(() {
+          dottedLineHeight = newHeight.clamp(40.0, 300.0); // Optional clamp
+        });
+      }
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     senderData = widget.sender;
     receiverData = widget.receiver;
+
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _updateDottedLineHeight(),
+    );
   }
 
   @override
@@ -88,99 +115,128 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                     fontSize: 16,
                   ),
                   const SizedBox(height: 20),
-                  PackageContainer.customPlainContainers(
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CommonLocationSearch(),
-                        ),
-                      );
+                  Stack(
+                    children: [
+                      Column(
+                        children: [
+                          Container(
+                            key: senderKey,
+                            child: PackageContainer.customPlainContainers(
+                              isSelected: senderData != null,
+                              userNameAndPhn:
+                                  senderData != null
+                                      ? '${senderData!.name} (${senderData!.phone})'
+                                      : '',
+                              onTap: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => const CommonLocationSearch(),
+                                  ),
+                                );
 
-                      if (result != null) {
-                        setState(() {
-                          senderData = AddressModel(
-                            name: result['name'],
-                            phone: result['phone'],
-                            address: result['address'],
-                            landmark: result['landmark'],
-                            mapAddress: result['mapAddress'],
-                          );
-                        });
-                      }
-                    },
-                    onClear: () {
-                      setState(() {
-                        senderData = AddressModel(
-                          name: 'Add Sender Address',
-                          phone: '',
-                          address: '',
-                          landmark: '',
-                          mapAddress: 'Collect from',
-                        );
-                      });
-                    },
-                    containerColor: AppColors.commonWhite,
-                    title:
-                        senderData.address.isEmpty &&
-                                senderData.landmark.isEmpty
-                            ? senderData.mapAddress
-                            : '${senderData.address}, ${senderData.landmark}, ${senderData.mapAddress}',
-                    subTitle:
-                        senderData.name == 'Add Sender Address' &&
-                                senderData.phone.isEmpty
-                            ? senderData.name
-                            : '${senderData.name} (${senderData.phone})',
-                    leadingImage: AppImages.colorUpArrow,
-                  ),
-                  const SizedBox(height: 20),
+                                if (result != null) {
+                                  setState(() {
+                                    senderData = AddressModel(
+                                      name: result['name'],
+                                      phone: result['phone'],
+                                      address: result['address'],
+                                      landmark: result['landmark'],
+                                      mapAddress: result['mapAddress'],
+                                    );
+                                  });
+                                  WidgetsBinding.instance.addPostFrameCallback(
+                                    (_) => _updateDottedLineHeight(),
+                                  );
+                                }
+                              },
+                              onClear: () {
+                                setState(() {
+                                  senderData = null;
+                                });
+                                WidgetsBinding.instance.addPostFrameCallback(
+                                  (_) => _updateDottedLineHeight(),
+                                );
+                              },
+                              containerColor: AppColors.commonWhite,
+                              title: 'Set pick up location',
+                              subTitle:
+                                  senderData != null
+                                      ? '${senderData!.address}, ${senderData!.landmark}, ${senderData!.mapAddress}'
+                                      : 'Collect from',
+                              leadingImage: AppImages.colorUpArrow,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Container(
+                            key: receiverKey,
+                            child: PackageContainer.customPlainContainers(
+                              isSelected: receiverData != null,
+                              onTap: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => const CommonLocationSearch(),
+                                  ),
+                                );
 
-                  /// Receiver
-                  PackageContainer.customPlainContainers(
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CommonLocationSearch(),
-                        ),
-                      );
-
-                      if (result != null) {
-                        setState(() {
-                          receiverData = AddressModel(
-                            name: result['name'],
-                            phone: result['phone'],
-                            address: result['address'],
-                            landmark: result['landmark'],
-                            mapAddress: result['mapAddress'],
-                          );
-                        });
-                      }
-                    },
-                    onClear: () {
-                      setState(() {
-                        receiverData = AddressModel(
-                          name: '',
-                          phone: '',
-                          address: '',
-                          landmark: '',
-                          mapAddress: '',
-                        );
-                      });
-                    },
-                    trailingColor: AppColors.commonWhite,
-                    titleColor: AppColors.commonWhite,
-                    subColor: AppColors.commonWhite.withOpacity(0.7),
-                    containerColor: AppColors.commonBlack,
-                    subTitle:
-                        receiverData.name.isEmpty
-                            ? AppTexts.addRecipientAddress
-                            : '${receiverData.name} (${receiverData.phone})',
-                    title:
-                        receiverData.address.isEmpty
-                            ? AppTexts.sendTo
-                            : '${receiverData.address}, ${receiverData.landmark}, ${receiverData.mapAddress}',
-                    leadingImage: AppImages.colorDownArrow,
+                                if (result != null) {
+                                  setState(() {
+                                    receiverData = AddressModel(
+                                      name: result['name'],
+                                      phone: result['phone'],
+                                      address: result['address'],
+                                      landmark: result['landmark'],
+                                      mapAddress: result['mapAddress'],
+                                    );
+                                  });
+                                  WidgetsBinding.instance.addPostFrameCallback(
+                                    (_) => _updateDottedLineHeight(),
+                                  );
+                                }
+                              },
+                              onClear: () {
+                                setState(() {
+                                  receiverData = null;
+                                });
+                                WidgetsBinding.instance.addPostFrameCallback(
+                                  (_) => _updateDottedLineHeight(),
+                                );
+                              },
+                              trailingColor: AppColors.commonWhite,
+                              titleColor: AppColors.commonWhite,
+                              iconColor: AppColors.commonWhite,
+                              subColor: AppColors.commonWhite.withOpacity(0.7),
+                              containerColor: AppColors.commonBlack,
+                              title: 'Set drop up location',
+                              subTitle:
+                                  receiverData == null
+                                      ? AppTexts.sendTo
+                                      : '${receiverData!.address}, ${receiverData!.landmark}, ${receiverData!.mapAddress}',
+                              leadingImage: AppImages.colorDownArrow,
+                              userNameAndPhn:
+                                  '${receiverData?.name ?? ''} (${receiverData?.phone ?? ''})',
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Positioned(
+                      //   top: 55,
+                      //   left: 23,
+                      //   child: SizedBox(
+                      //     height: dottedLineHeight,
+                      //     child: DottedLine(
+                      //       direction: Axis.vertical,
+                      //       dashColor: Colors.grey.shade400,
+                      //       lineThickness: 1,
+                      //       dashLength: 5,
+                      //       dashGapLength: 4,
+                      //     ),
+                      //   ),
+                      // ),
+                    ],
                   ),
 
                   const SizedBox(height: 20),
