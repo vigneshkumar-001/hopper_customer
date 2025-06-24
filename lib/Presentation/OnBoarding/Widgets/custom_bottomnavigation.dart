@@ -16,7 +16,7 @@ class CommonBottomNavigation extends StatefulWidget {
 class CommonBottomNavigationState extends State<CommonBottomNavigation> {
   int _selectedIndex = 0;
 
-  static List<Widget> _screens = <Widget>[
+  final List<Widget> _screens = <Widget>[
     HomeScreens(),
     PackageScreens(),
     PackageScreens(),

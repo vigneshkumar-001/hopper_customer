@@ -40,6 +40,12 @@ class _PackageScreensState extends State<PackageScreens> {
   String recipientName = '';
   String recipientPhone = '';
   int selectedIndex = 0;
+
+  String capitalizeFirstLetter(String name) {
+    if (name.isEmpty) return '';
+    return name[0].toUpperCase() + name.substring(1).toLowerCase();
+  }
+
   List<String> parcelTypes = [
     'Food',
     'Medicines',
@@ -51,69 +57,60 @@ class _PackageScreensState extends State<PackageScreens> {
 
   @override
   Widget build(BuildContext context) {
+    final pickUpData = isSendSelected ? senderData : receiverData;
+    final dropOffData = isSendSelected ? receiverData : senderData;
+
     return Scaffold(
       body: SafeArea(
-        child: Container(
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFFFFD), Color(0xFFF6F7FF)],
-            ),
-          ),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 25,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Center(
-                        child: Image.asset(AppImages.hopprPackage, height: 24),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 25),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Center(
+                      child: Image.asset(AppImages.hopprPackage, height: 24),
+                    ),
+                    Positioned(
+                      right: 0,
+                      child: Image.asset(
+                        AppImages.history,
+                        height: 20,
+                        width: 20,
                       ),
-                      Positioned(
-                        right: 0,
-                        child: Image.asset(
-                          AppImages.history,
-                          height: 20,
-                          width: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 30),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 30),
 
-                  PackageContainer.customContainers(
-                    isSendSelected: isSendSelected,
-                    onSelectionChanged: (selected) {
+                PackageContainer.customContainers(
+                  isSendSelected: isSendSelected,
+                  onSelectionChanged: (selected) {
+                    setState(() {
+                      isSendSelected = selected;
+                    });
+                  },
+                ),
+                SizedBox(height: 20),
+                CustomTextFields.textWithStyles700(
+                  fontSize: 16,
+                  AppTexts.sendOrReceiveParcel,
+                ),
+                SizedBox(height: 20),
+                PackageContainer.customPlainContainers(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CommonLocationSearch(),
+                      ),
+                    );
+                    if (result != null) {
                       setState(() {
-                        isSendSelected = selected;
-                      });
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  CustomTextFields.textWithStyles700(
-                    fontSize: 16,
-                    AppTexts.sendOrReceiveParcel,
-                  ),
-                  SizedBox(height: 20),
-
-                  PackageContainer.customPlainContainers(
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CommonLocationSearch(),
-                        ),
-                      );
-                      if (result != null) {
-                        setState(() {
+                        if (isSendSelected) {
                           senderData = AddressModel(
                             name: result['name'],
                             phone: result['phone'],
@@ -121,45 +118,7 @@ class _PackageScreensState extends State<PackageScreens> {
                             landmark: result['landmark'],
                             mapAddress: result['mapAddress'],
                           );
-                        });
-                      }
-                    },
-                    onClear:
-                        senderData != null
-                            ? () {
-                              setState(() {
-                                senderData = null;
-                              });
-                            }
-                            : null,
-                    isSelected: senderData != null,
-                    containerColor: AppColors.commonWhite,
-                    leadingImage: AppImages.colorUpArrow,
-                    title: 'Set pick up location',
-                    subTitle:
-                        senderData == null
-                            ? 'Collect from'
-                            : '${senderData!.address}, ${senderData!.landmark}, ${senderData!.mapAddress}',
-                    userNameAndPhn:
-                        senderData == null
-                            ? ''
-                            : '${senderData!.name} (${senderData!.phone})',
-                  ),
-
-                  SizedBox(height: 20),
-
-                  PackageContainer.customPlainContainers(
-                    isSelected: receiverData != null,
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CommonLocationSearch(),
-                        ),
-                      );
-
-                      if (result != null) {
-                        setState(() {
+                        } else {
                           receiverData = AddressModel(
                             name: result['name'],
                             phone: result['phone'],
@@ -167,189 +126,436 @@ class _PackageScreensState extends State<PackageScreens> {
                             landmark: result['landmark'],
                             mapAddress: result['mapAddress'],
                           );
-                        });
-                      }
-                    },
-                    onClear:
-                        receiverData != null
-                            ? () {
-                              setState(() {
+                        }
+                      });
+                    }
+                  },
+                  onClear:
+                      pickUpData != null
+                          ? () {
+                            setState(() {
+                              if (isSendSelected) {
+                                senderData = null;
+                              } else {
                                 receiverData = null;
-                              });
-                            }
-                            : null,
-                    containerColor: AppColors.commonBlack,
-                    titleColor: AppColors.commonWhite,
-                    subColor: AppColors.commonWhite.withOpacity(0.7),
-                    trailingColor: AppColors.commonWhite,
-                    iconColor: AppColors.commonWhite,
-                    title: 'Set pick up location',
-                    subTitle:
-                        receiverData == null
-                            ? AppTexts.sendTo
-                            : '${receiverData!.address}, ${receiverData!.landmark}, ${receiverData!.mapAddress}',
-                    leadingImage: AppImages.colorDownArrow,
-                    userNameAndPhn:
-                        '${receiverData?.name ?? ''} (${receiverData?.phone ?? ''})',
-                  ),
+                              }
+                            });
+                          }
+                          : null,
+                  isSelected: pickUpData != null,
+                  containerColor: AppColors.commonWhite,
+                  leadingImage: AppImages.colorUpArrow,
+                  title:  pickUpData == null? 'Collect from' : 'Pick up Location',
+                  subTitle:
+                      pickUpData == null
+                          ? 'Add Sender Address'
+                          : '${pickUpData!.address}, ${pickUpData!.landmark}, ${pickUpData!.mapAddress}',
+                  userNameAndPhn:
+                      pickUpData == null
+                          ? ''
+                          : '${capitalizeFirstLetter(pickUpData.name)} (${pickUpData.phone})',
+                ),
 
-                  SizedBox(height: 20),
-                  if (senderData != null && receiverData != null) ...[
-                    CustomTextFields.textWithStyles600(
-                      'Parcel type',
-                      fontSize: 16,
-                    ),
-                    SizedBox(height: 10),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children:
-                          parcelTypes.map((title) {
-                            return ChoiceChip(
-                              checkmarkColor:
-                                  selectedParcel == title
-                                      ? AppColors.choiceChipColor
-                                      : Colors.grey.shade300,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                side: BorderSide(
+                SizedBox(height: 20),
+
+                // Drop Off Container
+                PackageContainer.customPlainContainers(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (_) => const CommonLocationSearch(type: 'receiver'),
+                      ),
+                    );
+                    if (result != null) {
+                      setState(() {
+                        if (isSendSelected) {
+                          receiverData = AddressModel(
+                            name: result['name'],
+                            phone: result['phone'],
+                            address: result['address'],
+                            landmark: result['landmark'],
+                            mapAddress: result['mapAddress'],
+                          );
+                        } else {
+                          senderData = AddressModel(
+                            name: result['name'],
+                            phone: result['phone'],
+                            address: result['address'],
+                            landmark: result['landmark'],
+                            mapAddress: result['mapAddress'],
+                          );
+                        }
+                      });
+                    }
+                  },
+                  onClear:
+                      dropOffData != null
+                          ? () {
+                            setState(() {
+                              if (isSendSelected) {
+                                receiverData = null;
+                              } else {
+                                senderData = null;
+                              }
+                            });
+                          }
+                          : null,
+                  isSelected: dropOffData != null,
+                  containerColor: AppColors.commonBlack,
+                  titleColor: AppColors.commonWhite,
+                  subColor: AppColors.commonWhite.withOpacity(0.7),
+                  trailingColor: AppColors.commonWhite,
+                  iconColor: AppColors.commonWhite,
+                  title: dropOffData == null? 'Send to' : 'Drop up Location',
+                  subTitle:
+                      dropOffData == null
+                          ? AppTexts.addRecipientAddress
+                          : '${dropOffData!.address}, ${dropOffData!.landmark}, ${dropOffData!.mapAddress}',
+                  leadingImage: AppImages.colorDownArrow,
+                  userNameAndPhn:
+                      dropOffData == null
+                          ? ''
+                          : '${capitalizeFirstLetter(dropOffData.name)} (${dropOffData.phone})',
+                ),
+
+                /*                PackageContainer.customPlainContainers(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CommonLocationSearch(),
+                      ),
+                    );
+                    if (result != null) {
+                      setState(() {
+                        if (isSendSelected) {
+                          senderData = AddressModel(
+                            name: result['name'],
+                            phone: result['phone'],
+                            address: result['address'],
+                            landmark: result['landmark'],
+                            mapAddress: result['mapAddress'],
+                          );
+                        } else {
+                          receiverData = AddressModel(
+                            name: result['name'],
+                            phone: result['phone'],
+                            address: result['address'],
+                            landmark: result['landmark'],
+                            mapAddress: result['mapAddress'],
+                          );
+                        }
+                      });
+                    }
+                  },
+                  onClear:
+                      senderData != null
+                          ? () {
+                            setState(() {
+                              senderData = null;
+                            });
+                          }
+                          : null,
+                  isSelected: senderData != null,
+                  containerColor: AppColors.commonWhite,
+                  leadingImage: AppImages.colorUpArrow,
+                  title: 'Set pick up location',
+                  subTitle:
+                      senderData == null
+                          ? 'Collect from'
+                          : '${senderData!.address}, ${senderData!.landmark}, ${senderData!.mapAddress}',
+                  userNameAndPhn:
+                      senderData == null
+                          ? ''
+                          : '${capitalizeFirstLetter(senderData?.name ?? '')} (${senderData?.phone ?? ''})',
+                ),
+
+                SizedBox(height: 20),
+
+                PackageContainer.customPlainContainers(
+                  isSelected: receiverData != null,
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (_) => const CommonLocationSearch(type: 'receiver'),
+                      ),
+                    );
+
+                    if (result != null) {
+                      setState(() {
+                        receiverData = AddressModel(
+                          name: result['name'],
+                          phone: result['phone'],
+                          address: result['address'],
+                          landmark: result['landmark'],
+                          mapAddress: result['mapAddress'],
+                        );
+                      });
+                    }
+                  },
+                  onClear:
+                      receiverData != null
+                          ? () {
+                            setState(() {
+                              receiverData = null;
+                            });
+                          }
+                          : null,
+                  containerColor: AppColors.commonBlack,
+                  titleColor: AppColors.commonWhite,
+                  subColor: AppColors.commonWhite.withOpacity(0.7),
+                  trailingColor: AppColors.commonWhite,
+                  iconColor: AppColors.commonWhite,
+                  title: 'Set pick up location',
+                  subTitle:
+                      receiverData == null
+                          ? AppTexts.sendTo
+                          : '${receiverData!.address}, ${receiverData!.landmark}, ${receiverData!.mapAddress}',
+                  leadingImage: AppImages.colorDownArrow,
+                  userNameAndPhn:
+                      '${capitalizeFirstLetter(receiverData?.name ?? '')} (${receiverData?.phone ?? ''})',
+                ),*/
+                SizedBox(height: 20),
+                if (senderData != null && receiverData != null) ...[
+                  CustomTextFields.textWithStyles600(
+                    'Parcel type',
+                    fontSize: 16,
+                  ),
+                  SizedBox(height: 10),
+                  GridView.count(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 2.8,
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    children:
+                        parcelTypes.map((title) {
+                          final isSelected = selectedParcel == title;
+
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedParcel = isSelected ? null : title;
+                                AppLogger.log.i(
+                                  "Selected Parcel: $selectedParcel",
+                                );
+                              });
+                            },
+                            child: Container(
+                              height: 40,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? AppColors.choiceChipColor.withOpacity(
+                                          0.1,
+                                        )
+                                        : AppColors.commonWhite,
+                                border: Border.all(
                                   color:
-                                      selectedParcel == title
+                                      isSelected
                                           ? AppColors.choiceChipColor
                                           : AppColors.containerColor,
                                   width: 1.5,
                                 ),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              label: Text(
+                              child: Text(
                                 title,
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
                                   color:
-                                      selectedParcel == title
+                                      isSelected
                                           ? AppColors.choiceChipColor
                                           : Colors.black,
-                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              selectedColor: AppColors.choiceChipColor
-                                  .withOpacity(0.1),
-                              backgroundColor: AppColors.commonWhite,
-                              selected: selectedParcel == title,
-                              onSelected: (bool selected) {
-                                setState(() {
-                                  selectedParcel = selected ? title : null;
-                                  AppLogger.log.i(
-                                    "Selected Parcel: $selectedParcel",
-                                  );
-                                });
-                              },
-                            );
-                          }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-
-                    CustomTextFields.textAndField(
-                      tittle: 'Descriptional (Optional)',
-                      hintText: 'Eg., Glass Item',
-                    ),
-                    const SizedBox(height: 12),
-                    CustomTextFields.textAndField(
-                      tittle: 'Delivery Instruction',
-                      hintText: 'Eg., Glass Items are here Please keep it safe',
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      children: [
-                        Transform.scale(
-                          scale: 1,
-                          child: Checkbox(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
                             ),
-                            value: receiveWithOtp,
-                            activeColor: Color(0xFF357AE9),
-                            checkColor: Colors.white,
-                            onChanged: (bool? newValue) {
+                          );
+                        }).toList(),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  CustomTextFields.textAndField(
+
+                    tittle: 'Descriptional (Optional)',
+                    hintText: 'Eg., Glass Item',
+                  ),
+                  const SizedBox(height: 12),
+                  CustomTextFields.textAndField(
+
+                    tittle: 'Delivery Instruction',
+                    hintText: 'Eg., Glass Items are here Please keep it safe',
+                  ),
+                  const SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        receiveWithOtp = !receiveWithOtp;
+                      });
+                    },
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color:
+                                receiveWithOtp
+                                    ? const Color(0xFF357AE9)
+                                    : Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color:
+                                  receiveWithOtp
+                                      ? const Color(0xFF357AE9)
+                                      : Colors.grey.shade400,
+                              width: 2,
+                            ),
+                          ),
+                          child:
+                              receiveWithOtp
+                                  ? const Icon(
+                                    Icons.check,
+                                    size: 16,
+                                    color: Colors.white,
+                                  )
+                                  : null,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
                               setState(() {
-                                receiveWithOtp = newValue ?? false;
-                                AppLogger.log.i(
-                                  'Receive with OTP: $receiveWithOtp',
-                                );
+                                receiveWithOtp = !receiveWithOtp;
                               });
                             },
+                            child: CustomTextFields.textWithStyles600(
+                              'Receive parcel with OTP',
+                              color: AppColors.commonBlack,
+                            ),
                           ),
                         ),
-                        const Text("Receive parcel with OTP"),
                       ],
                     ),
+                  ),
 
-                    // Row(
-                    //   children: [
-                    //     GestureDetector(
-                    //       onTap: () {
-                    //         setState(() {
-                    //           receiveWithOtp = !receiveWithOtp;
-                    //         });
-                    //       },
-                    //       child: Image.asset(
-                    //         receiveWithOtp
-                    //             ? 'assets/images/checkbox_checked.png'
-                    //             : 'assets/images/checkbox_unchecked.png',
-                    //         height: 24,
-                    //         width: 24,
-                    //       ),
-                    //     ),
-                    //     const SizedBox(width: 8),
-                    //     const Text("Receive with OTP"),
-                    //   ],
-                    // ),
-                    const SizedBox(height: 5),
-                  ],
+                  // Stack(
+                  //   children: [
+                  //     Container(
+                  //       width: double.infinity,
+                  //       padding: const EdgeInsets.symmetric(
+                  //         vertical: 14,
+                  //         horizontal: 40,
+                  //       ),
+                  //       child: Text(
+                  //         AppTexts.receiveParcelWithOTP,
+                  //         style: const TextStyle(
+                  //           fontSize: 14,
+                  //           fontWeight: FontWeight.w600,
+                  //           color: Colors.black,
+                  //         ),
+                  //       ),
+                  //     ),
+                  //     Positioned(
+                  //       left: 0,
+                  //       top: 0,
+                  //       bottom: 0,
+                  //       child: Center(
+                  //         child: GestureDetector(
+                  //           onTap: () {
+                  //             setState(() {
+                  //               receiveWithOtp = !receiveWithOtp;
+                  //             });
+                  //           },
+                  //           child: Container(
+                  //             width: 22,
+                  //             height: 22,
+                  //             decoration: BoxDecoration(
+                  //               border: Border.all(
+                  //                 color:
+                  //                     receiveWithOtp
+                  //                         ? const Color(0xFF357AE9)
+                  //                         : Colors.grey.shade400,
+                  //                 width: 2,
+                  //               ),
+                  //               borderRadius: BorderRadius.circular(4),
+                  //               color:
+                  //                   receiveWithOtp
+                  //                       ? const Color(0xFF357AE9)
+                  //                       : Colors.white,
+                  //             ),
+                  //             child:
+                  //                 receiveWithOtp
+                  //                     ? const Icon(
+                  //                       Icons.check,
+                  //                       size: 16,
+                  //                       color: Colors.white,
+                  //                     )
+                  //                     : null,
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
+                  const SizedBox(height: 20),
+                ],
 
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: AppColors.commonBlack.withOpacity(0.1),
-                        width: 1.5,
-                      ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.commonWhite,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.commonBlack.withOpacity(0.1),
+                      width: 1.5,
                     ),
-                    child: ListTile(
-                      title: CustomTextFields.textWithStyles600(
-                        AppTexts.thingsToKeepInMind,
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5.0),
-                        child: Column(
-                          spacing: 5,
-                          children: [
-                            Row(
-                              children: [
-                                Image.asset(AppImages.pencilBike, height: 20),
-                                SizedBox(width: 10),
-                                Text(AppTexts.fitOnaTwoWheeler),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Image.asset(AppImages.emptyBox, height: 20),
-                                SizedBox(width: 10),
-                                Text(AppTexts.avoidSendingExpensive),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Image.asset(AppImages.avoidDrinks, height: 20),
-                                SizedBox(width: 10),
-                                Text(AppTexts.noAlcohol),
-                              ],
-                            ),
-                          ],
-                        ),
+                  ),
+                  child: ListTile(
+                    title: CustomTextFields.textWithStyles600(
+                      AppTexts.thingsToKeepInMind,
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5.0),
+                      child: Column(
+                        spacing: 5,
+                        children: [
+                          Row(
+                            children: [
+                              Image.asset(AppImages.pencilBike, height: 20),
+                              SizedBox(width: 10),
+                              Text(AppTexts.fitOnaTwoWheeler),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Image.asset(AppImages.emptyBox, height: 20),
+                              SizedBox(width: 10),
+                              Text(AppTexts.avoidSendingExpensive),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Image.asset(AppImages.avoidDrinks, height: 20),
+                              SizedBox(width: 10),
+                              Text(AppTexts.noAlcohol),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

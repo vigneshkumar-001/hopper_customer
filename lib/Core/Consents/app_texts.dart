@@ -13,6 +13,7 @@ class AppTexts {
   static String verify = 'Verify';
   static String locationPermission = 'Location permission Required';
   static String sendOrReceiveParcel = 'Send or Receive Parcel';
+  static String receiveParcelWithOTP = 'Receive parcel with OTP';
   static String collectFrom = 'Collect from';
   static String sendTo = 'Send to';
   static String reviewYourOrderToAvoidCancellations = 'Review your order to avoid cancellations';

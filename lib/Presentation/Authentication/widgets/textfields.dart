@@ -195,6 +195,8 @@ class CustomTextFields {
     required String hintText,
     TextEditingController? controller,
     TextInputType? type,
+    FontWeight? fontWeight = FontWeight.w400,
+    int? maxLines,
     ValueChanged<String>? onChanged,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
@@ -210,6 +212,7 @@ class CustomTextFields {
         ),
         SizedBox(height: 8),
         TextFormField(
+          maxLines: maxLines,
           cursorColor: Colors.black,
 
           autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -228,8 +231,14 @@ class CustomTextFields {
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+
             hintText: hintText,
-            hintStyle: TextStyle(color: Color(0xff666666)),
+            hintStyle: TextStyle(
+              color: Color(0xff666666),
+              fontWeight: fontWeight,
+            ),
             border: OutlineInputBorder(
               borderSide: BorderSide(color: AppColors.containerColor),
             ),

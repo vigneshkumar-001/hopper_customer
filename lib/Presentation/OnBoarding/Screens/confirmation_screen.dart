@@ -37,6 +37,10 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
 
   AddressModel? senderData;
   AddressModel? receiverData;
+  String capitalizeFirstLetter(String name) {
+    if (name.isEmpty) return '';
+    return name[0].toUpperCase() + name.substring(1).toLowerCase();
+  }
 
   List<String> parcelTypes = ['Food', 'Documents', 'Clothes', 'Others'];
   void _updateDottedLineHeight() {
@@ -125,7 +129,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                               isSelected: senderData != null,
                               userNameAndPhn:
                                   senderData != null
-                                      ? '${senderData!.name} (${senderData!.phone})'
+                                      ? '${capitalizeFirstLetter(senderData?.name ?? '')} (${senderData?.phone ?? ''})'
                                       : '',
                               onTap: () async {
                                 final result = await Navigator.push(
@@ -160,11 +164,15 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                 );
                               },
                               containerColor: AppColors.commonWhite,
-                              title: 'Set pick up location',
+
+                              title:
+                                  senderData != null
+                                      ? 'Pick up Location'
+                                      : 'Collect from',
                               subTitle:
                                   senderData != null
                                       ? '${senderData!.address}, ${senderData!.landmark}, ${senderData!.mapAddress}'
-                                      : 'Collect from',
+                                      : AppTexts.addSenderAddress,
                               leadingImage: AppImages.colorUpArrow,
                             ),
                           ),
@@ -210,14 +218,17 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                               iconColor: AppColors.commonWhite,
                               subColor: AppColors.commonWhite.withOpacity(0.7),
                               containerColor: AppColors.commonBlack,
-                              title: 'Set drop up location',
+                              title:
+                                  receiverData != null
+                                      ? 'Drop up Location'
+                                      : 'Send to',
                               subTitle:
                                   receiverData == null
-                                      ? AppTexts.sendTo
+                                      ? AppTexts.addRecipientAddress
                                       : '${receiverData!.address}, ${receiverData!.landmark}, ${receiverData!.mapAddress}',
                               leadingImage: AppImages.colorDownArrow,
                               userNameAndPhn:
-                                  '${receiverData?.name ?? ''} (${receiverData?.phone ?? ''})',
+                                  '${capitalizeFirstLetter(receiverData?.name ?? '')} (${receiverData?.phone ?? ''})',
                             ),
                           ),
                         ],
@@ -293,14 +304,22 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(AppTexts.senderDetails),
-                                Text(widget.sender.name),
+                                Text(
+                                  capitalizeFirstLetter(
+                                    widget.sender.name ?? '',
+                                  ),
+                                ),
                               ],
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(AppTexts.recipientDetails),
-                                Text(widget.receiver.name),
+                                Text(
+                                  capitalizeFirstLetter(
+                                    widget.receiver.name ?? '',
+                                  ),
+                                ),
                               ],
                             ),
                             Row(
@@ -384,7 +403,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                           ),
                           CustomTextFields.textWithStyles600(
                             'Read Policy',
-                            color: AppColors.justInColor,
+                            color: AppColors.resendBlue,
                           ),
                         ],
                       ),

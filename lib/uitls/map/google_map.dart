@@ -1,10 +1,14 @@
 import 'dart:convert';
+import 'package:hopper/Core/Consents/app_logger.dart';
+
+import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
+import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
@@ -12,8 +16,14 @@ import 'package:geolocator/geolocator.dart';
 class MapScreen extends StatefulWidget {
   final String searchQuery;
   final LatLng? location;
+  final String? type;
 
-  const MapScreen({super.key, required this.searchQuery, this.location});
+  const MapScreen({
+    super.key,
+    required this.searchQuery,
+    this.location,
+    this.type,
+  });
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -31,10 +41,12 @@ class _MapScreenState extends State<MapScreen> {
   final TextEditingController landmarkController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-
+  String? selectedParcel;
   String _selectedAddress = "Fetching address...";
   List<dynamic> _searchResults = [];
-  LatLng? _currentPosition;
+  LatLng? _cameraPosition;
+  bool receiveWithOtp = true;
+  List<String> parcelTypes = ['Home', 'Work', 'Other'];
   @override
   void initState() {
     super.initState();
@@ -111,7 +123,7 @@ class _MapScreenState extends State<MapScreen> {
 
     final response = await http.get(Uri.parse(url));
     final data = jsonDecode(response.body);
-
+    if (!mounted) return;
     if (data['status'] == 'OK') {
       final formattedAddress = data['results'][0]['formatted_address'];
       _updateLocation(latLng, formattedAddress);
@@ -125,7 +137,7 @@ class _MapScreenState extends State<MapScreen> {
 
     final response = await http.get(Uri.parse(url));
     final data = json.decode(response.body);
-
+    if (!mounted) return;
     if (response.statusCode == 200) {
       final location = data['result']['geometry']['location'];
       final latLng = LatLng(location['lat'], location['lng']);
@@ -139,6 +151,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _updateLocation(LatLng latLng, String address) {
+    if (!mounted) return;
     final markerId = const MarkerId("selected");
 
     setState(() {
@@ -158,9 +171,11 @@ class _MapScreenState extends State<MapScreen> {
 
     _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16));
 
-    Future.delayed(const Duration(milliseconds: 300), () {
-      _mapController?.showMarkerInfoWindow(markerId);
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   Future.delayed(const Duration(milliseconds: 500), () {
+    //     _mapController?.showMarkerInfoWindow(markerId);
+    //   });
+    // });
   }
 
   void _onConfirmLocation() {
@@ -172,106 +187,244 @@ class _MapScreenState extends State<MapScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 20,
-            right: 20,
-            top: 60,
-          ),
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Enter Address Details",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-
-                  const SizedBox(height: 12),
-                  CustomTextFields.textAndField(
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter Your Address';
-                      } /*else if (value.length != 11) {
-                            return 'Must be exactly 11 digits';
-                          }*/
-                      return null;
-                    },
-                    controller: addressController,
-                    tittle: 'Enter Address',
-                    hintText: 'Enter Your Address',
-                  ),
-                  const SizedBox(height: 16),
-
-                  CustomTextFields.textAndField(
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty)
-                        return 'Enter landmark';
-                      return null;
-                    },
-
-                    controller: landmarkController,
-                    tittle: 'Land Mark',
-                    hintText: 'Enter a Land Mark',
-                  ),
-                  const SizedBox(height: 12),
-                  CustomTextFields.textAndField(
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty)
-                        return 'Enter name';
-                      return null;
-                    },
-
-                    controller: nameController,
-                    tittle: 'Sender Name',
-                    hintText: 'Enter Sender Name',
-                  ),
-                  const SizedBox(height: 12),
-                  CustomTextFields.textAndField(
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty)
-                        return 'Enter phone number';
-                      if (value.length != 10) return 'Must be 10 digits';
-                      return null;
-                    },
-
-                    inputFormatters: [LengthLimitingTextInputFormatter(20)],
-
-                    type: TextInputType.number,
-                    controller: phoneController,
-                    tittle: 'Mobile Number',
-                    hintText: 'Sender\'s Mobile Number',
-                  ),
-                  const SizedBox(height: 20),
-                  AppButtons.button(
-                    onTap: () {
-                      if (_formKey.currentState!.validate()) {
-                        if (_targetLocation != null &&
-                            _selectedAddress.isNotEmpty) {
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                          Navigator.pop(context, {
-                            'location': _targetLocation,
-                            'mapAddress': _selectedAddress,
-                            'address': addressController.text.trim(),
-                            'landmark': landmarkController.text.trim(),
-                            'name': nameController.text.trim(),
-                            'phone': phoneController.text.trim(),
-                          });
-                        }
-                      }
-                    },
-
-                    text: 'Proceed',
-                  ),
-                  const SizedBox(height: 20),
-                ],
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 20,
+                right: 20,
+                top: 60,
               ),
-            ),
-          ),
+              child: SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Enter Address Details",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Address
+                      CustomTextFields.textAndField(
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter Your Address';
+                          }
+                          return null;
+                        },
+                        controller: addressController,
+                        tittle: 'Enter Address',
+                        hintText: 'Enter Your Address',
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Landmark
+                      CustomTextFields.textAndField(
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty)
+                            return 'Enter landmark';
+                          return null;
+                        },
+                        controller: landmarkController,
+                        tittle: 'Land Mark',
+                        hintText: 'Enter your Land Mark',
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Name
+                      CustomTextFields.textAndField(
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty)
+                            return 'Enter name';
+                          return null;
+                        },
+                        controller: nameController,
+                        tittle:
+                            widget.type == 'receiver'
+                                ? 'Recipient Name'
+                                : 'Sender Name',
+                        hintText:
+                            widget.type == 'receiver'
+                                ? 'Enter Recipient Name'
+                                : 'Enter Sender Name',
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Phone Number
+                      CustomTextFields.textAndField(
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty)
+                            return 'Enter phone number';
+                          if (value.length != 10) return 'Must be 10 digits';
+                          return null;
+                        },
+                        inputFormatters: [LengthLimitingTextInputFormatter(10)],
+                        type: TextInputType.number,
+                        controller: phoneController,
+                        tittle: 'Mobile Number',
+                        hintText:
+                            widget.type == 'receiver'
+                                ? 'Recipient\'s Mobile Number'
+                                : 'Sender\'s Mobile Number',
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Dotted Line
+                      SizedBox(
+                        height: 2,
+                        child: DottedLine(
+                          direction: Axis.horizontal,
+                          dashColor: AppColors.commonBlack.withOpacity(0.1),
+                          lineThickness: 1,
+                          dashLength: 5,
+                          dashGapLength: 4,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+
+                      GestureDetector(
+                        onTap: () {
+                          setModalState(() {
+                            receiveWithOtp = !receiveWithOtp;
+                          });
+                        },
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color:
+                                    receiveWithOtp
+                                        ? const Color(0xFF357AE9)
+                                        : Colors.white,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color:
+                                      receiveWithOtp
+                                          ? const Color(0xFF357AE9)
+                                          : Colors.grey.shade400,
+                                  width: 2,
+                                ),
+                              ),
+                              child:
+                                  receiveWithOtp
+                                      ? const Icon(
+                                        Icons.check,
+                                        size: 16,
+                                        color: Colors.white,
+                                      )
+                                      : null,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Add to saved address',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.commonBlack,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Parcel Type Grid
+                      GridView.count(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 2.8,
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        children:
+                            parcelTypes.map((title) {
+                              final isSelected = selectedParcel == title;
+                              return GestureDetector(
+                                onTap: () {
+                                  setModalState(() {
+                                    selectedParcel = isSelected ? null : title;
+                                    AppLogger.log.i(
+                                      "Selected Parcel: $selectedParcel",
+                                    );
+                                  });
+                                },
+                                child: Container(
+                                  height: 40,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isSelected
+                                            ? AppColors.addToAddress
+                                            : AppColors.commonWhite,
+                                    border: Border.all(
+                                      color:
+                                          isSelected
+                                              ? AppColors.addToAddress
+                                              : AppColors.containerColor,
+                                      width: 1.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    title,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                      color:
+                                          isSelected
+                                              ? AppColors.commonWhite
+                                              : Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      // Proceed Button
+                      AppButtons.button(
+                        onTap: () {
+                          if (_formKey.currentState!.validate()) {
+                            if (_targetLocation != null &&
+                                _selectedAddress.isNotEmpty) {
+                              Navigator.pop(context); // Close modal
+                              Navigator.pop(context); // Close map screen
+                              Navigator.pop(context, {
+                                'location': _targetLocation,
+                                'mapAddress': _selectedAddress,
+                                'address': addressController.text.trim(),
+                                'landmark': landmarkController.text.trim(),
+                                'name': nameController.text.trim(),
+                                'phone': phoneController.text.trim(),
+                              });
+                            }
+                          }
+                        },
+                        text: 'Proceed',
+                      ),
+
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -282,12 +435,7 @@ class _MapScreenState extends State<MapScreen> {
     return Scaffold(
       body:
           _targetLocation == null
-              ? Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.commonBlack,
-                  strokeWidth: 2,
-                ),
-              )
+              ? Center(child: AppLoader.appLoader())
               : Stack(
                 children: [
                   GoogleMap(
@@ -297,7 +445,15 @@ class _MapScreenState extends State<MapScreen> {
                       zoom: 17,
                     ),
                     // markers: _markers,
-                    onTap: (latLng) => _getAddressFromLatLng(latLng),
+                    // onTap: (latLng) => _getAddressFromLatLng(latLng),
+                    onCameraMove: (CameraPosition position) {
+                      _cameraPosition = position.target;
+                    },
+                    onCameraIdle: () {
+                      if (_cameraPosition != null) {
+                        _getAddressFromLatLng(_cameraPosition!);
+                      }
+                    },
                   ),
                   Center(
                     child: Padding(
@@ -306,17 +462,111 @@ class _MapScreenState extends State<MapScreen> {
                         AppImages.pinLocation,
                         height: 40,
                         width: 25,
-                        color: AppColors.commonBlack,
                       ),
                     ),
                   ),
-                  // Search bar
                   Positioned(
-                    top: 40,
+                    top:
+                        MediaQuery.of(context).size.height / 3 +
+                        35, // Adjust as needed
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: () {},
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Bubble
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 8,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: const Text(
+                                "Delivery partner will come\nto this location",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  height: 1.3,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+
+                            // Triangle
+                            ClipPath(
+                              clipper: TriangleClipper(),
+                              child: Container(
+                                width: 20,
+                                height: 10,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+
+                    child: Container(
+                      height: 120,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.white,
+                            Colors.white70,
+                            Colors.white38,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  Positioned(
+                    top: 42,
                     left: 16,
                     right: 16,
                     child: Column(
                       children: [
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Image.asset(
+                                AppImages.backImage,
+                                height: 19,
+                                width: 19,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            CustomTextFields.textWithStyles600(
+                              widget.type == 'receiver'
+                                  ? 'Send to'
+                                  : 'Collect from',
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 5),
                         Card(
                           elevation: 2,
                           margin: EdgeInsets.symmetric(vertical: 5),
@@ -406,7 +656,7 @@ class _MapScreenState extends State<MapScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            children: const [
+                            children: [
                               Icon(
                                 Icons.location_on,
                                 color: Colors.black,
@@ -420,9 +670,18 @@ class _MapScreenState extends State<MapScreen> {
                                   fontSize: 18, // Increased size
                                 ),
                               ),
+                              Spacer(),
+                              TextButton(
+                                onPressed: () {},
+                                child: CustomTextFields.textWithStyles700(
+                                  'Search',
+                                  fontSize: 12,
+                                  color: AppColors.resendBlue,
+                                ),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 5),
                           Text(
                             _selectedAddress,
                             style: const TextStyle(
@@ -443,4 +702,19 @@ class _MapScreenState extends State<MapScreen> {
               ),
     );
   }
+}
+
+class TriangleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.moveTo(0, 0);
+    path.lineTo(size.width / 2, size.height);
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

@@ -165,9 +165,10 @@ class PackageContainer {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
+                    CustomTextFields.textWithStylesSmall(
                       userNameAndPhn,
-                      style: TextStyle(color: subColor, fontSize: 13),
+                      colors: titleColor,
+                      fontWeight: FontWeight.w500,
                     ),
                   ],
                 ],
@@ -196,7 +197,17 @@ class PackageContainer {
                 )
                 : GestureDetector(
                   onTap: onTap,
-                  child: Icon(Icons.add, size: 22, color: trailingColor),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Image.asset(
+                        AppImages.add,
+                        height: 20,
+                        width: 20,
+                        color: trailingColor,
+                      ),
+                    ),
+                  ),
                 ),
           ],
         ),

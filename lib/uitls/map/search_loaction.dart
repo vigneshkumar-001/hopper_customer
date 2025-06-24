@@ -11,7 +11,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hopper/uitls/map/google_map.dart'; // Make sure this MapScreen accepts LatLng too
 
 class CommonLocationSearch extends StatefulWidget {
-  const CommonLocationSearch({super.key});
+  final String? type;
+  const CommonLocationSearch({super.key, this.type});
 
   @override
   State<CommonLocationSearch> createState() => _CommonLocationSearchState();
@@ -20,6 +21,7 @@ class CommonLocationSearch extends StatefulWidget {
 class _CommonLocationSearchState extends State<CommonLocationSearch> {
   final TextEditingController _searchController = TextEditingController();
   final String _apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+  bool _showInfoMessage = false;
 
   List<dynamic> _searchResults = [];
 
@@ -37,25 +39,27 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
   // }
   void _searchPlaces(String query) async {
     final position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+      desiredAccuracy: LocationAccuracy.medium,
     );
 
     final url =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$_apiKey&components=country:in';
+        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query'
+        '&location=${position.latitude},${position.longitude}'
+        '&radius=50000' // 50km
+        '&key=$_apiKey';
+
     final response = await http.get(Uri.parse(url));
     final data = json.decode(response.body);
 
     if (response.statusCode == 200 && data['status'] == 'OK') {
       List<dynamic> predictions = data['predictions'];
 
-      List<dynamic> updatedResults = [];
-
-      for (var prediction in predictions) {
+      // Run all detail fetches in parallel
+      final futures = predictions.map((prediction) async {
         final placeId = prediction['place_id'];
-
-        // Get coordinates
         final detailUrl =
             'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$_apiKey';
+
         final detailRes = await http.get(Uri.parse(detailUrl));
         final detailData = json.decode(detailRes.body);
 
@@ -64,27 +68,31 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
           final lat = location['lat'];
           final lng = location['lng'];
 
-          // Calculate distance
           final distance = Geolocator.distanceBetween(
             position.latitude,
             position.longitude,
             lat,
             lng,
           );
-          final km = (distance / 1000).toStringAsFixed(1);
 
-          // Append distance
-          prediction['distance'] = '$km km';
+          prediction['distance'] = '${(distance / 1000).toStringAsFixed(1)} km';
+          prediction['lat'] = lat;
+          prediction['lng'] = lng;
+
+          return prediction;
         }
+        return null;
+      });
 
-        updatedResults.add(prediction);
-      }
+      final detailedResults = await Future.wait(futures);
+      final filteredResults = detailedResults.whereType<Map>().toList();
 
       setState(() {
-        _searchResults = updatedResults;
+        _searchResults = filteredResults;
       });
     }
   }
+
 
   void _getPlaceDetailsAndNavigate(
     String placeId,
@@ -115,7 +123,9 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
   void _locateOnMap() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => MapScreen(searchQuery: '')),
+      MaterialPageRoute(
+        builder: (_) => MapScreen(searchQuery: '', type: widget.type ?? ''),
+      ),
     );
     // final searchText = _searchController.text.trim();
     // if (searchText.isNotEmpty) {
@@ -137,45 +147,85 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Card(
-                elevation: 2,
-                margin: EdgeInsets.symmetric(vertical: 5),
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(
-                    color: AppColors.containerColor.withOpacity(0.2),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Image.asset(
+                          AppImages.backImage,
+                          height: 19,
+                          width: 19,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      CustomTextFields.textWithStyles600(
+                        widget.type == 'receiver' ? 'Send to' : 'Collect from',
+                      ),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: CustomTextFields.plainTextField(
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      _searchResults.clear();
-                      _searchController.text = '';
-                    },
-                    icon: Icon(Icons.clear, size: 19),
+                  SizedBox(height: 10),
+                  Card(
+                    elevation: 2,
+                    margin: EdgeInsets.symmetric(vertical: 5),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        color: AppColors.containerColor.withOpacity(0.2),
+                      ),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: CustomTextFields.plainTextField(
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          _searchResults.clear();
+                          _searchController.text = '';
+                        },
+                        icon: Icon(Icons.clear, size: 19),
+                      ),
+                      hintStyle: TextStyle(fontSize: 12),
+                      imgHeight: 18,
+
+                      containerColor: AppColors.commonWhite,
+
+                      onChanged: (value) {
+                        setState(() {
+                          _showInfoMessage = value.isNotEmpty;
+                        });
+
+                        if (value.isNotEmpty) {
+                          _searchPlaces(value);
+                        } else {
+                          setState(() => _searchResults.clear());
+                        }
+                      },
+                      controller: _searchController,
+                      leadingImage: AppImages.dart,
+                      title: 'Search for an address or landmark',
+                      readOnly: false,
+                    ),
                   ),
-                  hintStyle: TextStyle(fontSize: 12),
-                  imgHeight: 18,
-
-                  containerColor: AppColors.commonWhite,
-
-                  onChanged: (value) {
-                    if (value.isNotEmpty) {
-                      _searchPlaces(value);
-                    } else {
-                      setState(() => _searchResults.clear());
-                    }
-                  },
-                  controller: _searchController,
-                  leadingImage: AppImages.dart,
-                  title: 'Search for an address or landmark',
-                  readOnly: false,
-                ),
+                  SizedBox(height: 20),
+                  if (!_showInfoMessage)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Update your location on the Hoppr homepage to select address from a different city',
+                            style: TextStyle(
+                              color: AppColors.searchDownTextColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
               ),
             ),
 
-            const SizedBox(height: 10),
             Expanded(
               child: ListView.builder(
                 itemCount: _searchResults.length,
@@ -199,8 +249,11 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
                         place['description'],
                         place['distance'] ?? '',
                       );
-                      setState(() => _searchResults.clear());
-                      _searchController.text = '';
+                      setState(() {
+                        _searchResults.clear();
+                        _searchController.text = '';
+                        _showInfoMessage = false;
+                      });
                     },
                   );
                 },

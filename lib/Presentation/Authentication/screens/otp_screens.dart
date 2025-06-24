@@ -87,6 +87,17 @@ class _OtpScreensState extends State<OtpScreens> {
                       Form(
                         key: formKey,
                         child: PinCodeTextField(
+                          onCompleted: (value) async {
+                            if (value.length == 4) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PermissionScreens(),
+                                ),
+                              );
+                            }
+                          },
+
                           autoFocus: true,
                           appContext: context,
                           // pastedTextStyle: TextStyle(

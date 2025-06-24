@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:hopper/Core/Consents/app_colors.dart';
+import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
+import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
@@ -122,10 +124,7 @@ class _HomeScreensState extends State<HomeScreens>
                 background:
                     _currentPosition == null
                         ? Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.commonBlack,
-                            strokeWidth: 2,
-                          ),
+                          child:  AppLoader.appLoader(),
                         )
                         : Stack(
                           children: [
@@ -216,7 +215,7 @@ class _HomeScreensState extends State<HomeScreens>
                                   AppImages.pinLocation,
                                   height: 40,
                                   width: 25,
-                                  color: AppColors.commonBlack,
+
                                 ),
                               ),
                             ),

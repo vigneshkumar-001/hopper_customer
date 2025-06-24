@@ -21,6 +21,9 @@ class AppColors {
   static final resendBlue = Color(0xff006FD0);
   static final couponCard = Color(0xff006FD01A);
   static final justInColor = Color(0xff5700D0);
+  static final addToAddress = Color(0xff357AE9);
+
   static final choiceChipColor = Color(0xff006FD0);
   static final walletCurrencyColor = Color(0xff009721);
+  static final searchDownTextColor = Color(0xff424147);
 }

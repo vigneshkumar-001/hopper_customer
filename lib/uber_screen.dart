@@ -54,19 +54,28 @@ class _UberStyleMapScreenState extends State<UberStyleMapScreen> {
     final screenSize = MediaQuery.of(context).size;
 
     if (_currentPosition != null) {
-      final coord = await _mapController!.getScreenCoordinate(_currentPosition!);
+      final coord = await _mapController!.getScreenCoordinate(
+        _currentPosition!,
+      );
       _startOffset = Offset(
         coord.x.toDouble(),
-        coord.y.toDouble().clamp(0.0, screenSize.height - 50), // Prevent off-screen
+        coord.y.toDouble().clamp(
+          0.0,
+          screenSize.height - 50,
+        ), // Prevent off-screen
       );
     }
 
     if (_destinationPosition != null) {
-      final coord =
-      await _mapController!.getScreenCoordinate(_destinationPosition!);
+      final coord = await _mapController!.getScreenCoordinate(
+        _destinationPosition!,
+      );
       _destinationOffset = Offset(
         coord.x.toDouble(),
-        coord.y.toDouble().clamp(0.0, screenSize.height - 50), // Prevent off-screen
+        coord.y.toDouble().clamp(
+          0.0,
+          screenSize.height - 50,
+        ), // Prevent off-screen
       );
     }
 
@@ -247,16 +256,17 @@ class _UberStyleMapScreenState extends State<UberStyleMapScreen> {
 
     final bounds = LatLngBounds(southwest: southwest, northeast: northeast);
 
-    await Future.delayed(const Duration(milliseconds: 300)); // Wait before moving
+    await Future.delayed(
+      const Duration(milliseconds: 300),
+    ); // Wait before moving
 
     await _mapController?.animateCamera(
       CameraUpdate.newLatLngBounds(bounds, 120),
     );
 
-// ✅ NOW: ensure update happens *after* camera animation
+    // ✅ NOW: ensure update happens *after* camera animation
     await Future.delayed(const Duration(milliseconds: 400));
     _updateMarkerLabels();
-
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -450,14 +460,14 @@ class _UberStyleMapScreenState extends State<UberStyleMapScreen> {
               ),
             ),
 
-
           if (_destinationOffset != null)
             Positioned(
-              left: _destinationOffset!.dx-50,
+              left: _destinationOffset!.dx - 50,
               top: _destinationOffset!.dy,
-              child: _buildMarkerLabel(_destinationLocationName ?? "Destination"),
+              child: _buildMarkerLabel(
+                _destinationLocationName ?? "Destination",
+              ),
             ),
-
         ],
       ),
     );
