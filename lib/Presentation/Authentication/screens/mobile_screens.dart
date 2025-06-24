@@ -27,10 +27,10 @@ class _MobileScreensState extends State<MobileScreens> {
       showPhoneCode: true,
       searchAutofocus: true,
       countryListTheme: CountryListThemeData(
-        flagSize: 25,
+        flagSize: 22,
         backgroundColor: Colors.white,
         // textStyle: TextStyle(fontSize: 16, color: Colors.blueGrey),
-        bottomSheetHeight: 550, // Optional. Country list modal height
+        bottomSheetHeight: 600, // Optional. Country list modal height
         //Optional. Sets the border radius for the bottomsheet.
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(30.0),
@@ -132,7 +132,7 @@ class _MobileScreensState extends State<MobileScreens> {
                                 child: Obx(
                                   () => Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
+                                      horizontal: 10,
                                       vertical: 11,
                                     ),
                                     decoration: BoxDecoration(
@@ -145,9 +145,9 @@ class _MobileScreensState extends State<MobileScreens> {
                                           selectedCountryFlag.isEmpty
                                               ? '🇳🇬'
                                               : selectedCountryFlag,
-                                          style: const TextStyle(fontSize: 18),
+                                          style: const TextStyle(fontSize: 14),
                                         ),
-                                        const SizedBox(width: 4),
+                                        const SizedBox(width: 3),
                                         Text(
                                           controller
                                                   .selectedCountryCode
@@ -157,7 +157,7 @@ class _MobileScreensState extends State<MobileScreens> {
                                               : controller
                                                   .selectedCountryCode
                                                   .value,
-                                          style: const TextStyle(fontSize: 16),
+                                          style: const TextStyle(fontSize: 14),
                                         ),
                                         const Icon(Icons.arrow_drop_down),
                                       ],

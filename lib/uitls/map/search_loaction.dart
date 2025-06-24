@@ -24,6 +24,20 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
   bool _showInfoMessage = false;
 
   List<dynamic> _searchResults = [];
+  Future<void> _openMapScreen() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(searchQuery: ''), // Go to map screen
+      ),
+    );
+
+    if (result != null && result['_selectedAddress'] != null) {
+      setState(() {
+        _searchController.text = result['_selectedAddress']; // Update input
+      });
+    }
+  }
 
   // void _searchPlaces(String query) async {
   //   final url =
@@ -108,7 +122,7 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
       final lat = location['lat'];
       final lng = location['lng'];
 
-      Navigator.push(
+      final result = await Navigator.push(
         context,
         MaterialPageRoute(
           builder:
@@ -116,16 +130,33 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
                   MapScreen(searchQuery: placeName, location: LatLng(lat, lng)),
         ),
       );
+      if (result != null && result['_selectedAddress'] != null) {
+        _searchController.text = result['_selectedAddress']; // update the field
+      }
     }
   }
 
-  void _locateOnMap() {
-    Navigator.push(
+  Future<void> _locateOnMap() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => MapScreen(searchQuery: '', type: widget.type ?? ''),
+        builder:
+            (context) => MapScreen(
+              searchQuery: '',
+              type: widget.type ?? '',
+            ), // replace with your screen class
       ),
     );
+
+    if (result != null && result['_selectedAddress'] != null) {
+      _searchController.text = result['_selectedAddress']; // update the field
+    }
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (_) => MapScreen(searchQuery: '', type: widget.type ?? ''),
+    //   ),
+    // );
     // final searchText = _searchController.text.trim();
     // if (searchText.isNotEmpty) {
     //   Navigator.push(

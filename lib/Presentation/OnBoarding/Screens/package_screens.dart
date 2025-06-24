@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import 'package:dotted_line/dotted_line.dart';
 
 import 'package:hopper/Core/Consents/app_colors.dart';
@@ -11,7 +13,8 @@ import 'package:hopper/Presentation/OnBoarding/Screens/confirmation_screen.dart'
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
 import 'package:get/get.dart';
 import 'package:hopper/Presentation/OnBoarding/models/address_models.dart';
-
+import 'package:hopper/uitls/map/google_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:hopper/uitls/map/search_loaction.dart';
 
 class PackageScreens extends StatefulWidget {
@@ -82,6 +85,11 @@ class _PackageScreensState extends State<PackageScreens> {
     }
   }
 
+  bool isWithin1Km(double lat1, double lon1, double lat2, double lon2) {
+    final distanceInMeters = Geolocator.distanceBetween(lat1, lon1, lat2, lon2);
+    return distanceInMeters < 1000;
+  }
+
   @override
   Widget build(BuildContext context) {
     final pickUpData = isSendSelected ? senderData : receiverData;
@@ -134,14 +142,49 @@ class _PackageScreensState extends State<PackageScreens> {
                         Container(
                           key: _senderKey,
                           child: PackageContainer.customPlainContainers(
-                            onTap: () async {
+                            onEditTap: () async {
                               final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => const CommonLocationSearch(),
+                                  builder:
+                                      (_) => MapScreen(
+                                        cameFromPackage: true,
+                                        searchQuery:
+                                            pickUpData?.mapAddress ?? '',
+                                        initialAddress: pickUpData?.address,
+                                        initialLandmark: pickUpData?.landmark,
+                                        initialName: pickUpData?.name,
+                                        initialPhone: pickUpData?.phone,
+                                        location:
+                                            pickUpData != null
+                                                ? LatLng(
+                                                  pickUpData.latitude,
+                                                  pickUpData.longitude,
+                                                )
+                                                : null,
+                                      ),
                                 ),
                               );
+
                               if (result != null) {
+                                final loc = result['location'];
+                                if (receiverData != null &&
+                                    isWithin1Km(
+                                      receiverData!.latitude,
+                                      receiverData!.longitude,
+                                      loc.latitude,
+                                      loc.longitude,
+                                    )) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Sender and receiver cannot be the same or within 1km.",
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+
                                 setState(() {
                                   if (isSendSelected) {
                                     senderData = AddressModel(
@@ -150,6 +193,8 @@ class _PackageScreensState extends State<PackageScreens> {
                                       address: result['address'],
                                       landmark: result['landmark'],
                                       mapAddress: result['mapAddress'],
+                                      latitude: loc.latitude,
+                                      longitude: loc.longitude,
                                     );
                                   } else {
                                     receiverData = AddressModel(
@@ -158,9 +203,71 @@ class _PackageScreensState extends State<PackageScreens> {
                                       address: result['address'],
                                       landmark: result['landmark'],
                                       mapAddress: result['mapAddress'],
+                                      latitude: loc.latitude,
+                                      longitude: loc.longitude,
                                     );
                                   }
                                 });
+
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  _calculateLineHeight();
+                                });
+                              }
+                            },
+
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const CommonLocationSearch(),
+                                ),
+                              );
+
+                              if (result != null) {
+                                final loc = result['location'];
+                                if (receiverData != null &&
+                                    isWithin1Km(
+                                      receiverData!.latitude,
+                                      receiverData!.longitude,
+                                      loc.latitude,
+                                      loc.longitude,
+                                    )) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Sender and receiver cannot be the same or within 1km.",
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                setState(() {
+                                  if (isSendSelected) {
+                                    senderData = AddressModel(
+                                      name: result['name'],
+                                      phone: result['phone'],
+                                      address: result['address'],
+                                      landmark: result['landmark'],
+                                      mapAddress: result['mapAddress'],
+                                      latitude: loc.latitude,
+                                      longitude: loc.longitude,
+                                    );
+                                  } else {
+                                    receiverData = AddressModel(
+                                      name: result['name'],
+                                      phone: result['phone'],
+                                      address: result['address'],
+                                      landmark: result['landmark'],
+                                      mapAddress: result['mapAddress'],
+                                      latitude: loc.latitude,
+                                      longitude: loc.longitude,
+                                    );
+                                  }
+                                });
+
                                 WidgetsBinding.instance.addPostFrameCallback((
                                   _,
                                 ) {
@@ -201,11 +308,85 @@ class _PackageScreensState extends State<PackageScreens> {
                                     : '${capitalizeFirstLetter(pickUpData.name)} (${pickUpData.phone})',
                           ),
                         ),
-
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 12),
                         Container(
                           key: _receiverKey,
                           child: PackageContainer.customPlainContainers(
+                            onEditTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => MapScreen(
+                                        cameFromPackage: true,
+                                        searchQuery:
+                                            dropOffData?.mapAddress ?? '',
+                                        initialAddress: dropOffData?.address,
+                                        initialLandmark: dropOffData?.landmark,
+                                        initialName: dropOffData?.name,
+                                        initialPhone: dropOffData?.phone,
+                                        location:
+                                            dropOffData != null
+                                                ? LatLng(
+                                                  dropOffData.latitude,
+                                                  dropOffData.longitude,
+                                                )
+                                                : null,
+                                      ),
+                                ),
+                              );
+
+                              if (result != null) {
+                                final loc = result['location'];
+                                if (senderData != null &&
+                                    isWithin1Km(
+                                      senderData!.latitude,
+                                      senderData!.longitude,
+                                      loc.latitude,
+                                      loc.longitude,
+                                    )) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Sender and receiver cannot be the same or within 1km.",
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                setState(() {
+                                  if (isSendSelected) {
+                                    receiverData = AddressModel(
+                                      name: result['name'],
+                                      phone: result['phone'],
+                                      address: result['address'],
+                                      landmark: result['landmark'],
+                                      mapAddress: result['mapAddress'],
+                                      latitude: loc.latitude,
+                                      longitude: loc.longitude,
+                                    );
+                                  } else {
+                                    senderData = AddressModel(
+                                      name: result['name'],
+                                      phone: result['phone'],
+                                      address: result['address'],
+                                      landmark: result['landmark'],
+                                      mapAddress: result['mapAddress'],
+                                      latitude: loc.latitude,
+                                      longitude: loc.longitude,
+                                    );
+                                  }
+                                });
+
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  _calculateLineHeight();
+                                });
+                              }
+                            },
+
                             onTap: () async {
                               final result = await Navigator.push(
                                 context,
@@ -216,7 +397,26 @@ class _PackageScreensState extends State<PackageScreens> {
                                       ),
                                 ),
                               );
+
                               if (result != null) {
+                                final loc = result['location'];
+                                if (senderData != null &&
+                                    isWithin1Km(
+                                      senderData!.latitude,
+                                      senderData!.longitude,
+                                      loc.latitude,
+                                      loc.longitude,
+                                    )) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Sender and receiver cannot be the same or within 1km.",
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+
                                 setState(() {
                                   if (isSendSelected) {
                                     receiverData = AddressModel(
@@ -225,6 +425,8 @@ class _PackageScreensState extends State<PackageScreens> {
                                       address: result['address'],
                                       landmark: result['landmark'],
                                       mapAddress: result['mapAddress'],
+                                      latitude: loc.latitude,
+                                      longitude: loc.longitude,
                                     );
                                   } else {
                                     senderData = AddressModel(
@@ -233,9 +435,12 @@ class _PackageScreensState extends State<PackageScreens> {
                                       address: result['address'],
                                       landmark: result['landmark'],
                                       mapAddress: result['mapAddress'],
+                                      latitude: loc.latitude,
+                                      longitude: loc.longitude,
                                     );
                                   }
                                 });
+
                                 WidgetsBinding.instance.addPostFrameCallback((
                                   _,
                                 ) {
@@ -272,19 +477,19 @@ class _PackageScreensState extends State<PackageScreens> {
                             subTitle:
                                 dropOffData == null
                                     ? AppTexts.addRecipientAddress
-                                    : '${dropOffData!.address}, ${dropOffData!.landmark}, ${dropOffData!.mapAddress}',
+                                    : '${dropOffData.address}, ${dropOffData.landmark}, ${dropOffData.mapAddress}',
                             leadingImage: AppImages.colorDownArrow,
                             userNameAndPhn:
                                 dropOffData == null
                                     ? ''
                                     : '${capitalizeFirstLetter(dropOffData.name)} (${dropOffData.phone})',
                           ),
-                        ), // space
+                        ),
                       ],
                     ),
 
                     Positioned(
-                      top: 45,
+                      top: 47,
                       left: 24,
                       child: SizedBox(
                         height: lineHeight,

@@ -17,19 +17,33 @@ class MapScreen extends StatefulWidget {
   final String searchQuery;
   final LatLng? location;
   final String? type;
+  final String? initialAddress;
+  final String? initialLandmark;
+  final String? initialName;
+  final bool cameFromPackage;
+
+  final String? initialPhone;
 
   const MapScreen({
     super.key,
     required this.searchQuery,
     this.location,
     this.type,
+    this.initialAddress,
+    this.initialLandmark,
+    this.initialName,
+    this.cameFromPackage = false, // default: false
+    this.initialPhone,
   });
 
   @override
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   GoogleMapController? _mapController;
   LatLng? _targetLocation;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -69,6 +83,10 @@ class _MapScreenState extends State<MapScreen> {
     } else {
       _initLocation();
     }
+    addressController.text = widget.initialAddress ?? '';
+    landmarkController.text = widget.initialLandmark ?? '';
+    nameController.text = widget.initialName ?? '';
+    phoneController.text = widget.initialPhone ?? '';
   }
 
   Future<void> _getLocationFromQuery(String query) async {
@@ -419,16 +437,39 @@ class _MapScreenState extends State<MapScreen> {
                           if (_formKey.currentState!.validate()) {
                             if (_targetLocation != null &&
                                 _selectedAddress.isNotEmpty) {
-                              Navigator.pop(context); // Close modal
-                              Navigator.pop(context); // Close map screen
-                              Navigator.pop(context, {
+                              // Navigator.pop(context);
+                              // Navigator.pop(context);
+                              // Navigator.pop(context, {
+                              //   'location': _targetLocation,
+                              //   'mapAddress': _selectedAddress,
+                              //   'address': addressController.text.trim(),
+                              //   'landmark': landmarkController.text.trim(),
+                              //   'name': nameController.text.trim(),
+                              //   'phone': phoneController.text.trim(),
+                              // });
+                              final result = {
                                 'location': _targetLocation,
                                 'mapAddress': _selectedAddress,
                                 'address': addressController.text.trim(),
                                 'landmark': landmarkController.text.trim(),
                                 'name': nameController.text.trim(),
                                 'phone': phoneController.text.trim(),
-                              });
+                              };
+
+                              if (widget.cameFromPackage) {
+                                Navigator.pop(context);
+                                Navigator.pop(
+                                  context,
+                                  result,
+                                ); // just pop Map → return to Package
+                              } else {
+                                Navigator.pop(context);
+                                Navigator.pop(context);
+                                Navigator.pop(
+                                  context,
+                                  result,
+                                ); // pop Package → return to Search
+                              }
                             }
                           }
                         },
@@ -449,6 +490,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       body:
           _targetLocation == null
@@ -500,9 +542,7 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                   if (!_isDragging)
                     Positioned(
-                      top:
-                          MediaQuery.of(context).size.height / 3 +
-                          35, // Adjust as needed
+                      top: MediaQuery.of(context).size.height / 3 + 25,
                       left: 0,
                       right: 0,
                       child: Center(
@@ -532,7 +572,7 @@ class _MapScreenState extends State<MapScreen> {
                                   "Delivery partner will come\nto this location",
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 13,
+                                    fontSize: 12,
                                     height: 1.3,
                                     fontWeight: FontWeight.w500,
                                   ),

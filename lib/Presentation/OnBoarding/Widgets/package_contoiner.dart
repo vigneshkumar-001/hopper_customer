@@ -107,6 +107,7 @@ class PackageContainer {
     required bool isSelected,
     VoidCallback? onClear,
     VoidCallback? onTap,
+    VoidCallback? onEditTap,
     Color? subColor = Colors.black45,
     Color? iconColor = AppColors.commonBlack,
     Color? trailingColor = AppColors.commonBlack,
@@ -176,7 +177,7 @@ class PackageContainer {
                 ? Row(
                   children: [
                     GestureDetector(
-                      onTap: onTap,
+                      onTap: onEditTap,
                       child: Image.asset(
                         AppImages.edit,
                         height: 20,
