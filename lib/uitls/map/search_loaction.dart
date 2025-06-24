@@ -93,7 +93,6 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
     }
   }
 
-
   void _getPlaceDetailsAndNavigate(
     String placeId,
     String placeName,
@@ -206,7 +205,7 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
                       readOnly: false,
                     ),
                   ),
-                  SizedBox(height: 20),
+                  !_showInfoMessage ? SizedBox(height: 10) : SizedBox.shrink(),
                   if (!_showInfoMessage)
                     Row(
                       children: [

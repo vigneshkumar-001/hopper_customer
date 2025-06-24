@@ -16,10 +16,9 @@ class PackageContainer {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 2.0),
         child: Row(
           children: [
-            // Send Parcel
             Expanded(
               child: GestureDetector(
                 onTap: () => onSelectionChanged(true),
@@ -39,14 +38,14 @@ class PackageContainer {
                     title: Text(
                       'Send Parcel',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
                       ),
                     ),
                     trailing:
                         isSendSelected
-                            ? Image.asset(AppImages.tick, height: 20, width: 20)
+                            ? Image.asset(AppImages.tick, height: 15, width: 15)
                             : null,
                     subtitle: Text(
                       'Send Within City Limit',
@@ -56,9 +55,7 @@ class PackageContainer {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
 
-            // Receive Parcel
             Expanded(
               child: GestureDetector(
                 onTap: () => onSelectionChanged(false),
@@ -78,14 +75,14 @@ class PackageContainer {
                     title: Text(
                       'Receive Parcel',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
                       ),
                     ),
                     trailing:
                         !isSendSelected
-                            ? Image.asset(AppImages.tick, height: 20, width: 20)
+                            ? Image.asset(AppImages.tick, height: 15, width: 15)
                             : null,
                     subtitle: Text(
                       'Get Parcel Within City Limit',
@@ -131,8 +128,8 @@ class PackageContainer {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Image.asset(leadingImage, height: 22, width: 22),
+              padding:   EdgeInsets.only(top: isSelected? 5 : 10),
+              child: Image.asset(leadingImage, height: 21, width: 21),
             ),
             const SizedBox(width: 12),
             Expanded(

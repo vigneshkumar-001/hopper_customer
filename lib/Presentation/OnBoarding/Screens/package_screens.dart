@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dotted_line/dotted_line.dart';
 
 import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
@@ -46,6 +47,16 @@ class _PackageScreensState extends State<PackageScreens> {
     return name[0].toUpperCase() + name.substring(1).toLowerCase();
   }
 
+  final GlobalKey _senderKey = GlobalKey();
+  final GlobalKey _receiverKey = GlobalKey();
+
+  double lineHeight = 110;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _calculateLineHeight());
+  }
+
   List<String> parcelTypes = [
     'Food',
     'Medicines',
@@ -54,6 +65,22 @@ class _PackageScreensState extends State<PackageScreens> {
     'Electronics',
     'Other',
   ];
+  void _calculateLineHeight() {
+    final senderBox =
+        _senderKey.currentContext?.findRenderObject() as RenderBox?;
+    final receiverBox =
+        _receiverKey.currentContext?.findRenderObject() as RenderBox?;
+
+    if (senderBox != null && receiverBox != null) {
+      final senderPos = senderBox.localToGlobal(Offset.zero);
+      final receiverPos = receiverBox.localToGlobal(Offset.zero);
+
+      final calculatedHeight = receiverPos.dy - senderPos.dy - 30;
+      setState(() {
+        lineHeight = calculatedHeight > 0 ? calculatedHeight : 0;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,226 +126,180 @@ class _PackageScreensState extends State<PackageScreens> {
                   fontSize: 16,
                   AppTexts.sendOrReceiveParcel,
                 ),
-                SizedBox(height: 20),
-                PackageContainer.customPlainContainers(
-                  onTap: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const CommonLocationSearch(),
-                      ),
-                    );
-                    if (result != null) {
-                      setState(() {
-                        if (isSendSelected) {
-                          senderData = AddressModel(
-                            name: result['name'],
-                            phone: result['phone'],
-                            address: result['address'],
-                            landmark: result['landmark'],
-                            mapAddress: result['mapAddress'],
-                          );
-                        } else {
-                          receiverData = AddressModel(
-                            name: result['name'],
-                            phone: result['phone'],
-                            address: result['address'],
-                            landmark: result['landmark'],
-                            mapAddress: result['mapAddress'],
-                          );
-                        }
-                      });
-                    }
-                  },
-                  onClear:
-                      pickUpData != null
-                          ? () {
-                            setState(() {
-                              if (isSendSelected) {
-                                senderData = null;
-                              } else {
-                                receiverData = null;
+                const SizedBox(height: 20),
+                Stack(
+                  children: [
+                    Column(
+                      children: [
+                        Container(
+                          key: _senderKey,
+                          child: PackageContainer.customPlainContainers(
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const CommonLocationSearch(),
+                                ),
+                              );
+                              if (result != null) {
+                                setState(() {
+                                  if (isSendSelected) {
+                                    senderData = AddressModel(
+                                      name: result['name'],
+                                      phone: result['phone'],
+                                      address: result['address'],
+                                      landmark: result['landmark'],
+                                      mapAddress: result['mapAddress'],
+                                    );
+                                  } else {
+                                    receiverData = AddressModel(
+                                      name: result['name'],
+                                      phone: result['phone'],
+                                      address: result['address'],
+                                      landmark: result['landmark'],
+                                      mapAddress: result['mapAddress'],
+                                    );
+                                  }
+                                });
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  _calculateLineHeight();
+                                });
                               }
-                            });
-                          }
-                          : null,
-                  isSelected: pickUpData != null,
-                  containerColor: AppColors.commonWhite,
-                  leadingImage: AppImages.colorUpArrow,
-                  title:  pickUpData == null? 'Collect from' : 'Pick up Location',
-                  subTitle:
-                      pickUpData == null
-                          ? 'Add Sender Address'
-                          : '${pickUpData!.address}, ${pickUpData!.landmark}, ${pickUpData!.mapAddress}',
-                  userNameAndPhn:
-                      pickUpData == null
-                          ? ''
-                          : '${capitalizeFirstLetter(pickUpData.name)} (${pickUpData.phone})',
-                ),
+                            },
+                            onClear:
+                                pickUpData != null
+                                    ? () {
+                                      setState(() {
+                                        if (isSendSelected) {
+                                          senderData = null;
+                                        } else {
+                                          receiverData = null;
+                                        }
+                                      });
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
+                                            _calculateLineHeight();
+                                          });
+                                    }
+                                    : null,
+                            isSelected: pickUpData != null,
+                            containerColor: AppColors.commonWhite,
+                            leadingImage: AppImages.colorUpArrow,
+                            title:
+                                pickUpData == null
+                                    ? 'Collect from'
+                                    : 'Pick up Location',
+                            subTitle:
+                                pickUpData == null
+                                    ? 'Add Sender Address'
+                                    : '${pickUpData!.address}, ${pickUpData!.landmark}, ${pickUpData!.mapAddress}',
+                            userNameAndPhn:
+                                pickUpData == null
+                                    ? ''
+                                    : '${capitalizeFirstLetter(pickUpData.name)} (${pickUpData.phone})',
+                          ),
+                        ),
 
-                SizedBox(height: 20),
-
-                // Drop Off Container
-                PackageContainer.customPlainContainers(
-                  onTap: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (_) => const CommonLocationSearch(type: 'receiver'),
-                      ),
-                    );
-                    if (result != null) {
-                      setState(() {
-                        if (isSendSelected) {
-                          receiverData = AddressModel(
-                            name: result['name'],
-                            phone: result['phone'],
-                            address: result['address'],
-                            landmark: result['landmark'],
-                            mapAddress: result['mapAddress'],
-                          );
-                        } else {
-                          senderData = AddressModel(
-                            name: result['name'],
-                            phone: result['phone'],
-                            address: result['address'],
-                            landmark: result['landmark'],
-                            mapAddress: result['mapAddress'],
-                          );
-                        }
-                      });
-                    }
-                  },
-                  onClear:
-                      dropOffData != null
-                          ? () {
-                            setState(() {
-                              if (isSendSelected) {
-                                receiverData = null;
-                              } else {
-                                senderData = null;
+                        const SizedBox(height: 15),
+                        Container(
+                          key: _receiverKey,
+                          child: PackageContainer.customPlainContainers(
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => const CommonLocationSearch(
+                                        type: 'receiver',
+                                      ),
+                                ),
+                              );
+                              if (result != null) {
+                                setState(() {
+                                  if (isSendSelected) {
+                                    receiverData = AddressModel(
+                                      name: result['name'],
+                                      phone: result['phone'],
+                                      address: result['address'],
+                                      landmark: result['landmark'],
+                                      mapAddress: result['mapAddress'],
+                                    );
+                                  } else {
+                                    senderData = AddressModel(
+                                      name: result['name'],
+                                      phone: result['phone'],
+                                      address: result['address'],
+                                      landmark: result['landmark'],
+                                      mapAddress: result['mapAddress'],
+                                    );
+                                  }
+                                });
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  _calculateLineHeight();
+                                });
                               }
-                            });
-                          }
-                          : null,
-                  isSelected: dropOffData != null,
-                  containerColor: AppColors.commonBlack,
-                  titleColor: AppColors.commonWhite,
-                  subColor: AppColors.commonWhite.withOpacity(0.7),
-                  trailingColor: AppColors.commonWhite,
-                  iconColor: AppColors.commonWhite,
-                  title: dropOffData == null? 'Send to' : 'Drop up Location',
-                  subTitle:
-                      dropOffData == null
-                          ? AppTexts.addRecipientAddress
-                          : '${dropOffData!.address}, ${dropOffData!.landmark}, ${dropOffData!.mapAddress}',
-                  leadingImage: AppImages.colorDownArrow,
-                  userNameAndPhn:
-                      dropOffData == null
-                          ? ''
-                          : '${capitalizeFirstLetter(dropOffData.name)} (${dropOffData.phone})',
+                            },
+                            onClear:
+                                dropOffData != null
+                                    ? () {
+                                      setState(() {
+                                        if (isSendSelected) {
+                                          receiverData = null;
+                                        } else {
+                                          senderData = null;
+                                        }
+                                      });
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
+                                            _calculateLineHeight();
+                                          });
+                                    }
+                                    : null,
+                            isSelected: dropOffData != null,
+                            containerColor: AppColors.commonBlack,
+                            titleColor: AppColors.commonWhite,
+                            subColor: AppColors.commonWhite.withOpacity(0.7),
+                            trailingColor: AppColors.commonWhite,
+                            iconColor: AppColors.commonWhite,
+                            title:
+                                dropOffData == null
+                                    ? 'Send to'
+                                    : 'Drop up Location',
+                            subTitle:
+                                dropOffData == null
+                                    ? AppTexts.addRecipientAddress
+                                    : '${dropOffData!.address}, ${dropOffData!.landmark}, ${dropOffData!.mapAddress}',
+                            leadingImage: AppImages.colorDownArrow,
+                            userNameAndPhn:
+                                dropOffData == null
+                                    ? ''
+                                    : '${capitalizeFirstLetter(dropOffData.name)} (${dropOffData.phone})',
+                          ),
+                        ), // space
+                      ],
+                    ),
+
+                    Positioned(
+                      top: 45,
+                      left: 24,
+                      child: SizedBox(
+                        height: lineHeight,
+                        child: DottedLine(
+                          direction: Axis.vertical,
+                          lineLength: lineHeight,
+                          dashLength: 4,
+
+                          dashColor: AppColors.dotLineColor,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
-                /*                PackageContainer.customPlainContainers(
-                  onTap: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const CommonLocationSearch(),
-                      ),
-                    );
-                    if (result != null) {
-                      setState(() {
-                        if (isSendSelected) {
-                          senderData = AddressModel(
-                            name: result['name'],
-                            phone: result['phone'],
-                            address: result['address'],
-                            landmark: result['landmark'],
-                            mapAddress: result['mapAddress'],
-                          );
-                        } else {
-                          receiverData = AddressModel(
-                            name: result['name'],
-                            phone: result['phone'],
-                            address: result['address'],
-                            landmark: result['landmark'],
-                            mapAddress: result['mapAddress'],
-                          );
-                        }
-                      });
-                    }
-                  },
-                  onClear:
-                      senderData != null
-                          ? () {
-                            setState(() {
-                              senderData = null;
-                            });
-                          }
-                          : null,
-                  isSelected: senderData != null,
-                  containerColor: AppColors.commonWhite,
-                  leadingImage: AppImages.colorUpArrow,
-                  title: 'Set pick up location',
-                  subTitle:
-                      senderData == null
-                          ? 'Collect from'
-                          : '${senderData!.address}, ${senderData!.landmark}, ${senderData!.mapAddress}',
-                  userNameAndPhn:
-                      senderData == null
-                          ? ''
-                          : '${capitalizeFirstLetter(senderData?.name ?? '')} (${senderData?.phone ?? ''})',
-                ),
-
-                SizedBox(height: 20),
-
-                PackageContainer.customPlainContainers(
-                  isSelected: receiverData != null,
-                  onTap: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (_) => const CommonLocationSearch(type: 'receiver'),
-                      ),
-                    );
-
-                    if (result != null) {
-                      setState(() {
-                        receiverData = AddressModel(
-                          name: result['name'],
-                          phone: result['phone'],
-                          address: result['address'],
-                          landmark: result['landmark'],
-                          mapAddress: result['mapAddress'],
-                        );
-                      });
-                    }
-                  },
-                  onClear:
-                      receiverData != null
-                          ? () {
-                            setState(() {
-                              receiverData = null;
-                            });
-                          }
-                          : null,
-                  containerColor: AppColors.commonBlack,
-                  titleColor: AppColors.commonWhite,
-                  subColor: AppColors.commonWhite.withOpacity(0.7),
-                  trailingColor: AppColors.commonWhite,
-                  iconColor: AppColors.commonWhite,
-                  title: 'Set pick up location',
-                  subTitle:
-                      receiverData == null
-                          ? AppTexts.sendTo
-                          : '${receiverData!.address}, ${receiverData!.landmark}, ${receiverData!.mapAddress}',
-                  leadingImage: AppImages.colorDownArrow,
-                  userNameAndPhn:
-                      '${capitalizeFirstLetter(receiverData?.name ?? '')} (${receiverData?.phone ?? ''})',
-                ),*/
                 SizedBox(height: 20),
                 if (senderData != null && receiverData != null) ...[
                   CustomTextFields.textWithStyles600(
@@ -385,13 +366,11 @@ class _PackageScreensState extends State<PackageScreens> {
                   const SizedBox(height: 16),
 
                   CustomTextFields.textAndField(
-
                     tittle: 'Descriptional (Optional)',
                     hintText: 'Eg., Glass Item',
                   ),
                   const SizedBox(height: 12),
                   CustomTextFields.textAndField(
-
                     tittle: 'Delivery Instruction',
                     hintText: 'Eg., Glass Items are here Please keep it safe',
                   ),
@@ -533,21 +512,23 @@ class _PackageScreensState extends State<PackageScreens> {
                             children: [
                               Image.asset(AppImages.pencilBike, height: 20),
                               SizedBox(width: 10),
-                              Text(AppTexts.fitOnaTwoWheeler),
+                              Expanded(child: Text(AppTexts.fitOnaTwoWheeler)),
                             ],
                           ),
                           Row(
                             children: [
                               Image.asset(AppImages.emptyBox, height: 20),
                               SizedBox(width: 10),
-                              Text(AppTexts.avoidSendingExpensive),
+                              Expanded(
+                                child: Text(AppTexts.avoidSendingExpensive),
+                              ),
                             ],
                           ),
                           Row(
                             children: [
                               Image.asset(AppImages.avoidDrinks, height: 20),
                               SizedBox(width: 10),
-                              Text(AppTexts.noAlcohol),
+                              Expanded(child: Text(AppTexts.noAlcohol)),
                             ],
                           ),
                         ],

@@ -33,6 +33,7 @@ class _MapScreenState extends State<MapScreen> {
   GoogleMapController? _mapController;
   LatLng? _targetLocation;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isDragging = false;
 
   final FocusNode _focusNode = FocusNode();
   Set<Marker> _markers = {};
@@ -45,6 +46,10 @@ class _MapScreenState extends State<MapScreen> {
   String _selectedAddress = "Fetching address...";
   List<dynamic> _searchResults = [];
   LatLng? _cameraPosition;
+  bool _isFetchingAddress = false;
+
+  bool _isCameraMoving = false;
+
   bool receiveWithOtp = true;
   List<String> parcelTypes = ['Home', 'Work', 'Other'];
   @override
@@ -117,6 +122,9 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _getAddressFromLatLng(LatLng latLng) async {
+    setState(() {
+      _isFetchingAddress = true;
+    });
     const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}&key=$apiKey';
@@ -128,6 +136,9 @@ class _MapScreenState extends State<MapScreen> {
       final formattedAddress = data['results'][0]['formatted_address'];
       _updateLocation(latLng, formattedAddress);
     }
+    setState(() {
+      _isFetchingAddress = false;
+    });
   }
 
   Future<void> _getPlaceDetails(String placeId) async {
@@ -143,14 +154,18 @@ class _MapScreenState extends State<MapScreen> {
       final latLng = LatLng(location['lat'], location['lng']);
       final address = data['result']['formatted_address'];
 
-      _updateLocation(latLng, address);
+      _updateLocation(latLng, address, shouldMoveCamera: true); // Move camera
       _focusNode.unfocus();
       _searchResults.clear();
       _searchController.text = address;
     }
   }
 
-  void _updateLocation(LatLng latLng, String address) {
+  void _updateLocation(
+    LatLng latLng,
+    String address, {
+    bool shouldMoveCamera = false,
+  }) {
     if (!mounted) return;
     final markerId = const MarkerId("selected");
 
@@ -169,7 +184,9 @@ class _MapScreenState extends State<MapScreen> {
       };
     });
 
-    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16));
+    if (shouldMoveCamera) {
+      _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16));
+    }
 
     // WidgetsBinding.instance.addPostFrameCallback((_) {
     //   Future.delayed(const Duration(milliseconds: 500), () {
@@ -444,16 +461,32 @@ class _MapScreenState extends State<MapScreen> {
                       target: _targetLocation!,
                       zoom: 17,
                     ),
-                    // markers: _markers,
-                    // onTap: (latLng) => _getAddressFromLatLng(latLng),
                     onCameraMove: (CameraPosition position) {
+                      _isCameraMoving = true;
+                      _isDragging = true; // hide the bubble
                       _cameraPosition = position.target;
+                      setState(() {}); // update UI immediately
                     },
+
                     onCameraIdle: () {
-                      if (_cameraPosition != null) {
+                      if (_isCameraMoving && _cameraPosition != null) {
+                        _isCameraMoving = false;
                         _getAddressFromLatLng(_cameraPosition!);
+                        _isDragging = false; // show the bubble again
+                        setState(() {});
                       }
                     },
+
+                    // markers: _markers,
+                    // onTap: (latLng) => _getAddressFromLatLng(latLng),
+                    // onCameraMove: (CameraPosition position) {
+                    //   _cameraPosition = position.target;
+                    // },
+                    // onCameraIdle: () {
+                    //   if (_cameraPosition != null) {
+                    //     _getAddressFromLatLng(_cameraPosition!);
+                    //   }
+                    // },
                   ),
                   Center(
                     child: Padding(
@@ -465,61 +498,62 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     ),
                   ),
-                  Positioned(
-                    top:
-                        MediaQuery.of(context).size.height / 3 +
-                        35, // Adjust as needed
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: GestureDetector(
-                        onTap: () {},
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Bubble
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 8,
-                                    offset: Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: const Text(
-                                "Delivery partner will come\nto this location",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  height: 1.3,
-                                  fontWeight: FontWeight.w500,
+                  if (!_isDragging)
+                    Positioned(
+                      top:
+                          MediaQuery.of(context).size.height / 3 +
+                          35, // Adjust as needed
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () {},
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Bubble
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
                                 ),
-                                textAlign: TextAlign.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 8,
+                                      offset: Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: const Text(
+                                  "Delivery partner will come\nto this location",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    height: 1.3,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
-                            ),
 
-                            // Triangle
-                            ClipPath(
-                              clipper: TriangleClipper(),
-                              child: Container(
-                                width: 20,
-                                height: 10,
-                                color: Colors.black,
+                              // Triangle
+                              ClipPath(
+                                clipper: TriangleClipper(),
+                                child: Container(
+                                  width: 20,
+                                  height: 10,
+                                  color: Colors.black,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
                   Positioned(
                     top: 0,
@@ -672,7 +706,11 @@ class _MapScreenState extends State<MapScreen> {
                               ),
                               Spacer(),
                               TextButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.pop(context, {
+                                    '_selectedAddress': _selectedAddress,
+                                  });
+                                },
                                 child: CustomTextFields.textWithStyles700(
                                   'Search',
                                   fontSize: 12,
@@ -686,12 +724,17 @@ class _MapScreenState extends State<MapScreen> {
                             _selectedAddress,
                             style: const TextStyle(
                               color: Colors.black87,
-                              fontSize: 16, // Increased font size
+                              fontSize: 16,
                             ),
                           ),
                           const SizedBox(height: 20),
                           AppButtons.button(
-                            onTap: _onConfirmLocation,
+                            buttonColor:
+                                _isFetchingAddress
+                                    ? Colors.grey
+                                    : AppColors.commonBlack,
+                            onTap:
+                                _isFetchingAddress ? null : _onConfirmLocation,
                             text: 'Confirm Location',
                           ),
                         ],

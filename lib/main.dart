@@ -31,7 +31,12 @@ class MyApp extends StatelessWidget {
     return ScreenUtilInit(
       designSize: const Size(360, 690),
       child: GetMaterialApp(
-        theme: ThemeData(scaffoldBackgroundColor: AppColors.commonWhite),
+        theme: ThemeData(
+          scaffoldBackgroundColor: AppColors.commonWhite,
+          textSelectionTheme: TextSelectionThemeData(
+            selectionHandleColor: Colors.black,
+          ),
+        ),
         debugShowCheckedModeBanner: false,
         home: SplashScreens(),
       ),

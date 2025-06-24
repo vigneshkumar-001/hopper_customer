@@ -212,6 +212,7 @@ class CustomTextFields {
         ),
         SizedBox(height: 8),
         TextFormField(
+          textInputAction: TextInputAction.next,
           maxLines: maxLines,
           cursorColor: Colors.black,
 

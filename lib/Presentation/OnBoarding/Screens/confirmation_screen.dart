@@ -33,8 +33,8 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   bool isSendSelected = true;
   final GlobalKey senderKey = GlobalKey();
   final GlobalKey receiverKey = GlobalKey();
-  double dottedLineHeight = 50; // Default
 
+  double lineHeight = 100;
   AddressModel? senderData;
   AddressModel? receiverData;
   String capitalizeFirstLetter(String name) {
@@ -43,7 +43,17 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   }
 
   List<String> parcelTypes = ['Food', 'Documents', 'Clothes', 'Others'];
-  void _updateDottedLineHeight() {
+
+  @override
+  void initState() {
+    super.initState();
+    senderData = widget.sender;
+    receiverData = widget.receiver;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _calculateLineHeight());
+  }
+
+  void _calculateLineHeight() {
     final senderBox =
         senderKey.currentContext?.findRenderObject() as RenderBox?;
     final receiverBox =
@@ -53,364 +63,370 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
       final senderPos = senderBox.localToGlobal(Offset.zero);
       final receiverPos = receiverBox.localToGlobal(Offset.zero);
 
-      final newHeight =
-          receiverPos.dy - senderPos.dy - senderBox.size.height + 10;
-
-      if (mounted) {
-        setState(() {
-          dottedLineHeight = newHeight.clamp(40.0, 300.0); // Optional clamp
-        });
-      }
+      final calculatedHeight = receiverPos.dy - senderPos.dy - 30;
+      setState(() {
+        lineHeight = calculatedHeight > 0 ? calculatedHeight : 0;
+      });
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    senderData = widget.sender;
-    receiverData = widget.receiver;
-
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _updateDottedLineHeight(),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFFFFD), Color(0xFFF6F7FF)],
-            ),
-          ),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 25,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 25),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Center(
-                        child: Image.asset(AppImages.hopprPackage, height: 24),
-                      ),
-                      Positioned(
-                        right: 0,
-                        child: Image.asset(
-                          AppImages.history,
-                          height: 20,
-                          width: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  CustomTextFields.textWithStyles700(
-                    'Location Details',
-                    fontSize: 16,
-                  ),
-                  const SizedBox(height: 20),
-                  Stack(
-                    children: [
-                      Column(
+                      Stack(
+                        alignment: Alignment.center,
                         children: [
-                          Container(
-                            key: senderKey,
-                            child: PackageContainer.customPlainContainers(
-                              isSelected: senderData != null,
-                              userNameAndPhn:
-                                  senderData != null
-                                      ? '${capitalizeFirstLetter(senderData?.name ?? '')} (${senderData?.phone ?? ''})'
-                                      : '',
-                              onTap: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => const CommonLocationSearch(),
-                                  ),
-                                );
-
-                                if (result != null) {
-                                  setState(() {
-                                    senderData = AddressModel(
-                                      name: result['name'],
-                                      phone: result['phone'],
-                                      address: result['address'],
-                                      landmark: result['landmark'],
-                                      mapAddress: result['mapAddress'],
-                                    );
-                                  });
-                                  WidgetsBinding.instance.addPostFrameCallback(
-                                    (_) => _updateDottedLineHeight(),
-                                  );
-                                }
-                              },
-                              onClear: () {
-                                setState(() {
-                                  senderData = null;
-                                });
-                                WidgetsBinding.instance.addPostFrameCallback(
-                                  (_) => _updateDottedLineHeight(),
-                                );
-                              },
-                              containerColor: AppColors.commonWhite,
-
-                              title:
-                                  senderData != null
-                                      ? 'Pick up Location'
-                                      : 'Collect from',
-                              subTitle:
-                                  senderData != null
-                                      ? '${senderData!.address}, ${senderData!.landmark}, ${senderData!.mapAddress}'
-                                      : AppTexts.addSenderAddress,
-                              leadingImage: AppImages.colorUpArrow,
+                          Center(
+                            child: Image.asset(
+                              AppImages.hopprPackage,
+                              height: 24,
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          Container(
-                            key: receiverKey,
-                            child: PackageContainer.customPlainContainers(
-                              isSelected: receiverData != null,
-                              onTap: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => const CommonLocationSearch(),
-                                  ),
-                                );
-
-                                if (result != null) {
-                                  setState(() {
-                                    receiverData = AddressModel(
-                                      name: result['name'],
-                                      phone: result['phone'],
-                                      address: result['address'],
-                                      landmark: result['landmark'],
-                                      mapAddress: result['mapAddress'],
-                                    );
-                                  });
-                                  WidgetsBinding.instance.addPostFrameCallback(
-                                    (_) => _updateDottedLineHeight(),
-                                  );
-                                }
-                              },
-                              onClear: () {
-                                setState(() {
-                                  receiverData = null;
-                                });
-                                WidgetsBinding.instance.addPostFrameCallback(
-                                  (_) => _updateDottedLineHeight(),
-                                );
-                              },
-                              trailingColor: AppColors.commonWhite,
-                              titleColor: AppColors.commonWhite,
-                              iconColor: AppColors.commonWhite,
-                              subColor: AppColors.commonWhite.withOpacity(0.7),
-                              containerColor: AppColors.commonBlack,
-                              title:
-                                  receiverData != null
-                                      ? 'Drop up Location'
-                                      : 'Send to',
-                              subTitle:
-                                  receiverData == null
-                                      ? AppTexts.addRecipientAddress
-                                      : '${receiverData!.address}, ${receiverData!.landmark}, ${receiverData!.mapAddress}',
-                              leadingImage: AppImages.colorDownArrow,
-                              userNameAndPhn:
-                                  '${capitalizeFirstLetter(receiverData?.name ?? '')} (${receiverData?.phone ?? ''})',
+                          Positioned(
+                            right: 0,
+                            child: Image.asset(
+                              AppImages.history,
+                              height: 20,
+                              width: 20,
                             ),
                           ),
                         ],
                       ),
-                      // Positioned(
-                      //   top: 55,
-                      //   left: 23,
-                      //   child: SizedBox(
-                      //     height: dottedLineHeight,
-                      //     child: DottedLine(
-                      //       direction: Axis.vertical,
-                      //       dashColor: Colors.grey.shade400,
-                      //       lineThickness: 1,
-                      //       dashLength: 5,
-                      //       dashGapLength: 4,
-                      //     ),
-                      //   ),
-                      // ),
-                    ],
-                  ),
+                      const SizedBox(height: 20),
 
-                  const SizedBox(height: 20),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.resendBlue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 15.0,
-                        horizontal: 15,
+                      CustomTextFields.textWithStyles700(
+                        'Location Details',
+                        fontSize: 16,
                       ),
-                      child: Row(
+                      const SizedBox(height: 20),
+                      Stack(
                         children: [
-                          Image.asset(AppImages.tag, height: 24, width: 24),
-                          SizedBox(width: 10),
-                          CustomTextFields.textWithStyles700(
-                            'Apply Coupon',
-                            color: AppColors.resendBlue,
-                            fontSize: 15,
-                          ),
-                          Spacer(),
-                          Image.asset(
-                            AppImages.rightArrow,
-                            width: 24,
-                            height: 24,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  CustomTextFields.textWithStyles700(
-                    'Order Summary',
-                    fontSize: 17,
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: AppColors.commonBlack.withOpacity(0.1),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: ListTile(
-                      subtitle: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5.0),
-                        child: Column(
-                          spacing: 5,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(AppTexts.senderDetails),
-                                Text(
-                                  capitalizeFirstLetter(
-                                    widget.sender.name ?? '',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(AppTexts.recipientDetails),
-                                Text(
-                                  capitalizeFirstLetter(
-                                    widget.receiver.name ?? '',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(AppTexts.itemType),
-                                Text(widget.parcelType ?? ''),
-                              ],
-                            ),
-                            SizedBox(height: 3),
-                            SizedBox(
-                              height: 2,
-                              child: DottedLine(
-                                direction: Axis.horizontal,
-                                lineLength: double.infinity,
-                                lineThickness: 1.4,
-                                dashLength: 4.0,
-                                dashColor: Colors.grey.shade400,
-                              ),
-                            ),
-                            SizedBox(height: 3),
-                            Row(
-                              children: [
-                                Expanded(child: Text(AppTexts.senderDetails)),
-                                CustomTextFields.textWithImage(
-                                  text: '125',
-                                  imagePath: AppImages.nCurrency,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: CustomTextFields.textWithStyles600(
-                                    AppTexts.totalBill,
-                                    fontSize: 14,
-                                  ),
-                                ),
-
-                                CustomTextFields.textWithImage(
-                                  text: '125',
-                                  imagePath: AppImages.nBlackCurrency,
-                                  fontWeight: FontWeight.w900,
-                                  colors: AppColors.commonBlack,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  CustomTextFields.textWithStyles700(
-                    AppTexts.reviewYourOrderToAvoidCancellations,
-                    fontSize: 16,
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: AppColors.commonBlack.withOpacity(0.1),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: ListTile(
-                      subtitle: Column(
-                        spacing: 5,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                          Column(
                             children: [
-                              Expanded(
-                                child: CustomTextFields.textWithStylesSmall(
-                                  AppTexts.readPolicy,
+                              Container(
+                                key: senderKey,
+                                child: PackageContainer.customPlainContainers(
+                                  isSelected: senderData != null,
+                                  userNameAndPhn:
+                                      senderData != null
+                                          ? '${capitalizeFirstLetter(senderData?.name ?? '')} (${senderData?.phone ?? ''})'
+                                          : '',
+                                  onTap: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => const CommonLocationSearch(),
+                                      ),
+                                    );
+
+                                    if (result != null) {
+                                      setState(() {
+                                        senderData = AddressModel(
+                                          name: result['name'],
+                                          phone: result['phone'],
+                                          address: result['address'],
+                                          landmark: result['landmark'],
+                                          mapAddress: result['mapAddress'],
+                                        );
+                                      });
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
+                                            _calculateLineHeight();
+                                          });
+                                    }
+                                  },
+                                  onClear: () {
+                                    setState(() {
+                                      senderData = null;
+                                    });
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                          _calculateLineHeight();
+                                        });
+                                  },
+                                  containerColor: AppColors.commonWhite,
+
+                                  title:
+                                      senderData != null
+                                          ? 'Pick up Location'
+                                          : 'Collect from',
+                                  subTitle:
+                                      senderData != null
+                                          ? '${senderData!.address}, ${senderData!.landmark}, ${senderData!.mapAddress}'
+                                          : AppTexts.addSenderAddress,
+                                  leadingImage: AppImages.colorUpArrow,
+                                ),
+                              ),
+                              const SizedBox(height: 15),
+                              Container(
+                                key: receiverKey,
+                                child: PackageContainer.customPlainContainers(
+                                  isSelected: receiverData != null,
+                                  onTap: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => const CommonLocationSearch(),
+                                      ),
+                                    );
+
+                                    if (result != null) {
+                                      setState(() {
+                                        receiverData = AddressModel(
+                                          name: result['name'],
+                                          phone: result['phone'],
+                                          address: result['address'],
+                                          landmark: result['landmark'],
+                                          mapAddress: result['mapAddress'],
+                                        );
+                                      });
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
+                                            _calculateLineHeight();
+                                          });
+                                    }
+                                  },
+                                  onClear: () {
+                                    setState(() {
+                                      receiverData = null;
+                                    });
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                          _calculateLineHeight();
+                                        });
+                                  },
+                                  trailingColor: AppColors.commonWhite,
+                                  titleColor: AppColors.commonWhite,
+                                  iconColor: AppColors.commonWhite,
+                                  subColor: AppColors.commonWhite.withOpacity(
+                                    0.7,
+                                  ),
+                                  containerColor: AppColors.commonBlack,
+                                  title:
+                                      receiverData != null
+                                          ? 'Drop up Location'
+                                          : 'Send to',
+                                  subTitle:
+                                      receiverData == null
+                                          ? AppTexts.addRecipientAddress
+                                          : '${receiverData!.address}, ${receiverData!.landmark}, ${receiverData!.mapAddress}',
+                                  leadingImage: AppImages.colorDownArrow,
+                                  userNameAndPhn:
+                                      '${capitalizeFirstLetter(receiverData?.name ?? '')} (${receiverData?.phone ?? ''})',
                                 ),
                               ),
                             ],
                           ),
-                          CustomTextFields.textWithStyles600(
-                            'Read Policy',
-                            color: AppColors.resendBlue,
+                          Positioned(
+                            top: 45,
+                            left: 24,
+                            child: SizedBox(
+                              height: lineHeight,
+                              child: DottedLine(
+                                direction: Axis.vertical,
+                                lineLength: lineHeight,
+                                dashLength: 4,
+                                dashColor: AppColors.dotLineColor,
+                              ),
+                            ),
                           ),
                         ],
                       ),
+
+                      const SizedBox(height: 20),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.resendBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 15.0,
+                            horizontal: 15,
+                          ),
+                          child: Row(
+                            children: [
+                              Image.asset(AppImages.tag, height: 24, width: 24),
+                              SizedBox(width: 10),
+                              CustomTextFields.textWithStyles700(
+                                'Apply Coupon',
+                                color: AppColors.resendBlue,
+                                fontSize: 15,
+                              ),
+                              Spacer(),
+                              Image.asset(
+                                AppImages.rightArrow,
+                                width: 24,
+                                height: 24,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      CustomTextFields.textWithStyles700(
+                        'Order Summary',
+                        fontSize: 17,
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppColors.commonBlack.withOpacity(0.1),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: ListTile(
+                          subtitle: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5.0),
+                            child: Column(
+                              spacing: 5,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(AppTexts.senderDetails),
+                                    Text(
+                                      capitalizeFirstLetter(
+                                        widget.sender.name ?? '',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(AppTexts.recipientDetails),
+                                    Text(
+                                      capitalizeFirstLetter(
+                                        widget.receiver.name ?? '',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(AppTexts.itemType),
+                                    Text(widget.parcelType ?? ''),
+                                  ],
+                                ),
+                                SizedBox(height: 3),
+                                SizedBox(
+                                  height: 2,
+                                  child: DottedLine(
+                                    direction: Axis.horizontal,
+                                    lineLength: double.infinity,
+                                    lineThickness: 1.4,
+                                    dashLength: 4.0,
+                                    dashColor: Colors.grey.shade400,
+                                  ),
+                                ),
+                                SizedBox(height: 3),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(AppTexts.senderDetails),
+                                    ),
+                                    CustomTextFields.textWithImage(
+                                      text: '125',
+                                      imagePath: AppImages.nCurrency,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: CustomTextFields.textWithStyles600(
+                                        AppTexts.totalBill,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+
+                                    CustomTextFields.textWithImage(
+                                      text: '125',
+                                      imagePath: AppImages.nBlackCurrency,
+                                      fontWeight: FontWeight.w900,
+                                      colors: AppColors.commonBlack,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  color: Color(0xFFF6F7FF).withOpacity(0.7),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 10),
+                        CustomTextFields.textWithStyles700(
+                          AppTexts.reviewYourOrderToAvoidCancellations,
+                          fontSize: 16,
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.commonWhite,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: AppColors.commonBlack.withOpacity(0.1),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: ListTile(
+                            subtitle: Column(
+                              spacing: 5,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child:
+                                          CustomTextFields.textWithStylesSmall(
+                                            AppTexts.readPolicy,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                CustomTextFields.textWithStyles600(
+                                  'Read Policy',
+                                  color: AppColors.resendBlue,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

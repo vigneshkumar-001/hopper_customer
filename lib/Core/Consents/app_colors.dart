@@ -26,4 +26,5 @@ class AppColors {
   static final choiceChipColor = Color(0xff006FD0);
   static final walletCurrencyColor = Color(0xff009721);
   static final searchDownTextColor = Color(0xff424147);
+  static final dotLineColor = Color(0xff979797);
 }
