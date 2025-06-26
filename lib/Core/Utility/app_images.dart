@@ -36,5 +36,11 @@ class AppImages {
   static String edit = "assets/images/edit.png";
   static String square = "assets/images/square.png";
   static String ladingAnimation = "assets/images/loading-light.gif";
+  static String movingCar = "assets/images/movingCar.png";
+  static String alone = "assets/images/alone.png";
+  static String luxuryCar = "assets/images/luxuryCar.png";
+  static String driverTime = "assets/images/driverTime.png";
+  static String sedan = "assets/images/sedan.png";
+  static String confirmCar = "assets/images/confrimCar.png";
 
 }

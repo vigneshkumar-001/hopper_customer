@@ -22,7 +22,10 @@ class AppTexts {
   static String  fitOnaTwoWheeler = 'Items should fit on a two wheeler';
   static String  senderDetails = 'Sender details';
   static String  totalBill  = 'Total Bill (with convenience fees)';
+  static String  total   = 'Total';
   static String  itemType = 'Item type';
+  static String  baseFare = 'Base Fare';
+  static String  serviceFare = 'Service Fare';
   static String  recipientDetails = 'Recipient details';
   static String  readPolicy = 'A cancellation fee will be charged if an order is cancelled after the delivery has arrived at the Pick up location.';
   static String avoidSendingExpensive = 'Avoid sending expensive or fragile items';

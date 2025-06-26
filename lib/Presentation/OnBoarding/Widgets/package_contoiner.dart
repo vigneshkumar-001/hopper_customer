@@ -38,7 +38,7 @@ class PackageContainer {
                     title: Text(
                       'Send Parcel',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
                       ),
@@ -75,7 +75,7 @@ class PackageContainer {
                     title: Text(
                       'Receive Parcel',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
                       ),
@@ -87,6 +87,96 @@ class PackageContainer {
                     subtitle: Text(
                       'Get Parcel Within City Limit',
                       style: TextStyle(fontSize: 10, color: Colors.black),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget bookContainers({
+    required bool isSendSelected,
+    required ValueChanged<bool> onSelectionChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.containerColor1,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 5),
+        child: Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => onSelectionChanged(true),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSendSelected ? AppColors.commonWhite : null,
+                    borderRadius: BorderRadius.circular(10),
+                    border:
+                        isSendSelected
+                            ? Border.all(
+                              color: AppColors.containerColor,
+                              width: 2,
+                            )
+                            : null,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      children: [
+                        Image.asset(AppImages.alone, height: 20),
+                        SizedBox(width: 15),
+                        Text(
+                          'Ride Only',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            Expanded(
+              child: GestureDetector(
+                onTap: () => onSelectionChanged(false),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: !isSendSelected ? AppColors.commonWhite : null,
+                    borderRadius: BorderRadius.circular(10),
+                    border:
+                        !isSendSelected
+                            ? Border.all(
+                              color: AppColors.containerColor,
+                              width: 2,
+                            )
+                            : null,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      children: [
+                        Image.asset(AppImages.alone, height: 20),
+                        SizedBox(width: 15),
+                        Text(
+                          'Ride Share',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -114,7 +204,7 @@ class PackageContainer {
     Color? titleColor = AppColors.commonBlack,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: isSelected ? null : onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -129,7 +219,7 @@ class PackageContainer {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding:   EdgeInsets.only(top: isSelected? 5 : 10),
+              padding: EdgeInsets.only(top: isSelected ? 5 : 10),
               child: Image.asset(leadingImage, height: 21, width: 21),
             ),
             const SizedBox(width: 12),
@@ -180,16 +270,16 @@ class PackageContainer {
                       onTap: onEditTap,
                       child: Image.asset(
                         AppImages.edit,
-                        height: 20,
-                        width: 20,
+                        height: 22,
+                        width: 22,
                         color: iconColor,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 13),
                     if (onClear != null)
                       GestureDetector(
                         onTap: onClear,
-                        child: Icon(Icons.close, size: 20, color: iconColor),
+                        child: Icon(Icons.close, size: 22, color: iconColor),
                       ),
                   ],
                 )
@@ -283,7 +373,7 @@ class PackageContainer {
         child: ListTile(
           title: Text(
             tittle,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
           ),
           subtitle: Text(subTitle, style: TextStyle(fontSize: 10)),
           trailing: Image.asset(img, height: imgHeight, width: imgWeight),
@@ -328,6 +418,56 @@ class PackageContainer {
             ),
             if (trailing != null) trailing,
           ],
+        ),
+      ),
+    );
+  }
+
+  static bookCarTypeContainer({
+    required VoidCallback onTap,
+    required String carTitle,
+    required String carMinRate,
+    required String carMaxRate,
+    required String carSubTitle,
+    required String arrivingTime,
+    required String carImg,
+    Color borderColor = AppColors.containerColor,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.commonWhite,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: borderColor),
+        ),
+        child: ListTile(
+          leading: Image.asset(carImg, height: 32, width: 65),
+          title: Row(
+            children: [
+              CustomTextFields.textWithStyles600(carTitle),
+              Spacer(),
+              Image.asset(AppImages.nBlackCurrency, height: 14),
+
+              CustomTextFields.textWithStyles600('$carMinRate - '),
+              Image.asset(AppImages.nBlackCurrency, height: 14),
+
+              CustomTextFields.textWithStyles600(' $carMaxRate'),
+            ],
+          ),
+          subtitle: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              CustomTextFields.textWithStylesSmall(carSubTitle),
+              Spacer(),
+              Image.asset(AppImages.driverTime, height: 12, width: 12),
+
+              CustomTextFields.textWithStylesSmall(
+                ' $arrivingTime',
+                colors: AppColors.walletCurrencyColor,
+              ),
+            ],
+          ),
         ),
       ),
     );

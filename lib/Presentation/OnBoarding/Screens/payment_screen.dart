@@ -39,7 +39,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Image.asset(AppImages.backImage, height: 20, width: 20),
+                      GestureDetector(
+                        onTap: (){
+                          Navigator.pop(context);
+                        },
+                        child: Image.asset(
+                          AppImages.backImage,
+                          height: 20,
+                          width: 20,
+                        ),
+                      ),
                       CustomTextFields.textWithStyles700(
                         'Payment Method',
                         fontSize: 20,
@@ -212,7 +221,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ),
       bottomNavigationBar: SafeArea(
         child: SizedBox(
-          height: 100,
+          height: 120,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             child: Row(

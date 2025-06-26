@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:hopper/Core/Consents/app_colors.dart';
@@ -7,10 +8,12 @@ import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/Presentation/BookRide/search_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
 import 'package:hopper/uber_screen.dart';
+import 'package:hopper/uitls/websocket/socket_io_client.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -27,6 +30,7 @@ class HomeScreens extends StatefulWidget {
 class _HomeScreensState extends State<HomeScreens>
     with AutomaticKeepAliveClientMixin {
   GoogleMapController? _mapController;
+  final socketService = SocketService();
   LatLng? _currentPosition;
   bool _isCameraMoving = false;
   String _address = 'Search...';
@@ -34,16 +38,18 @@ class _HomeScreensState extends State<HomeScreens>
   LatLng? _pickedPosition;
   double? _lastZoom;
   bool _isZooming = false;
+  late BitmapDescriptor _carIcon;
+  final Map<String, Marker> _driverMarkers = {};
 
   final double _zoomThreshold = 0.01;
   final double _moveThreshold = 0.00005;
 
   Future<void> _loadCustomMarker() async {
-    _customIcon = await BitmapDescriptor.asset(
+    _carIcon = await BitmapDescriptor.asset(
       const ImageConfiguration(),
-      AppImages.pinLocation,
-      height: 40,
-      width: 25,
+      AppImages.movingCar,
+      height: 50,
+      width: 40,
     );
     setState(() {});
   }
@@ -77,23 +83,120 @@ class _HomeScreensState extends State<HomeScreens>
     }
   }
 
-  @override
-  bool get wantKeepAlive => true;
-  @override
-  void initState() {
-    super.initState();
-    _initLocation();
-    _loadCustomMarker();
-    _getCurrentLocation();
-  }
-
   Future<void> _initLocation() async {
     Position position = await Geolocator.getCurrentPosition();
     setState(() {
       _currentPosition = LatLng(position.latitude, position.longitude);
     });
+    AppLogger.log.i(_currentPosition);
   }
 
+  @override
+  bool get wantKeepAlive => true;
+  @override
+  void initState() {
+    super.initState();
+    socketService.initSocket(
+      'https://hoppr-face-two-dbe557472d7f.herokuapp.com/',
+    );
+
+    _loadCustomMarker().then((_) {
+      socketService.onConnect(() {
+        socketService.emit('register', {
+          'userId': "68593b9efda38c44796aca61",
+          'type': 'customer',
+        });
+      });
+
+      socketService.on('registered', (data) {
+        AppLogger.log.i("✅ Registered → $data");
+      });
+
+      socketService.on('nearby-driver-update', (data) {
+        if (!mounted) return; // 🔐 add this at the top of the callback!
+
+        final String driverId = data['driverId'];
+        final double lat = data['latitude'];
+        final double lng = data['longitude'];
+
+        AppLogger.log.i("📍 Nearby driver update: $data");
+
+        final Marker marker = Marker(
+          markerId: MarkerId(driverId),
+          position: LatLng(lat, lng),
+          icon: _carIcon,
+          anchor: const Offset(0.5, 0.5),
+        );
+
+        setState(() {
+          _driverMarkers[driverId] = marker;
+        });
+      });
+
+      _initLocation();
+      _getCurrentLocation();
+    });
+  }
+
+  @override
+  /*  void initState() {
+    super.initState();
+    // socketService.initSocket(
+    //   'https://hoppr-face-two-dbe557472d7f.herokuapp.com/',
+    // );
+    // socketService.emit('register', {
+    //   'userId': "68593b9efda38c44796aca61",
+    //   'type': 'customer',
+    // });
+    // socketService.on('registered', (data) {
+    //   AppLogger.log.i("📩 Received: $data");
+    // });
+
+    socketService.initSocket(
+      'https://hoppr-face-two-dbe557472d7f.herokuapp.com/',
+    );
+
+    // 2. On connect, register user
+    socketService.onConnect(() {
+      socketService.emit('register', {
+        'userId': "68593b9efda38c44796aca61",
+        'type': 'customer',
+      });
+    });
+
+    // 3. On registration confirmation
+    socketService.on('registered', (data) {
+      AppLogger.log.i("✅ Registered → $data");
+    });
+
+    // 4. Listen to driver location updates
+    socketService.on('nearby-driver-update', (data) {
+      final String driverId = data['driverId'];
+      final double lat = data['latitude'];
+      final double lng = data['longitude'];
+
+      AppLogger.log.i("📍 Nearby driver update: $data");
+      final Marker marker = Marker(
+        markerId: MarkerId(driverId),
+        position: LatLng(lat, lng),
+        icon: _carIcon,
+        anchor: const Offset(0.5, 0.5),
+      );
+
+      setState(() {
+        _driverMarkers[driverId] = marker;
+      });
+    });
+    _loadCarIcon();
+    _initLocation();
+    _loadCustomMarker();
+    _getCurrentLocation();
+  }*/
+  // @override
+  // void dispose() {
+  //   socketService.dispose();
+  //   super.dispose();
+  // }
   Widget build(BuildContext context) {
     super.build(context);
     Set<Marker> _markers = {};
@@ -123,9 +226,7 @@ class _HomeScreensState extends State<HomeScreens>
               flexibleSpace: FlexibleSpaceBar(
                 background:
                     _currentPosition == null
-                        ? Center(
-                          child:  AppLoader.appLoader(),
-                        )
+                        ? Center(child: AppLoader.appLoader())
                         : Stack(
                           children: [
                             GoogleMap(
@@ -133,6 +234,10 @@ class _HomeScreensState extends State<HomeScreens>
                                 target: _currentPosition!,
                                 zoom: 16,
                               ),
+                              markers: {
+                                ..._driverMarkers.values.toSet(),
+                                // Optional: add current location marker
+                              },
                               // markers: {
                               //   Marker(
                               //     markerId: const MarkerId('current'),
@@ -142,8 +247,14 @@ class _HomeScreensState extends State<HomeScreens>
                               //         BitmapDescriptor.defaultMarker,
                               //   ),
                               // },
-                              onMapCreated: (controller) {
+                              onMapCreated: (controller) async {
                                 _mapController = controller;
+                                String style = await DefaultAssetBundle.of(
+                                  context,
+                                ).loadString(
+                                  'assets/map_style/map_style1.json',
+                                );
+                                _mapController!.setMapStyle(style);
                               },
                               onCameraMove: (CameraPosition position) {
                                 // Save camera target every frame
@@ -199,6 +310,7 @@ class _HomeScreensState extends State<HomeScreens>
                               // },
                               myLocationEnabled: true,
                               myLocationButtonEnabled: false,
+
                               mapToolbarEnabled: false,
                               zoomControlsEnabled: false,
 
@@ -215,7 +327,6 @@ class _HomeScreensState extends State<HomeScreens>
                                   AppImages.pinLocation,
                                   height: 40,
                                   width: 25,
-
                                 ),
                               ),
                             ),
@@ -224,12 +335,14 @@ class _HomeScreensState extends State<HomeScreens>
                               left: 16,
                               right: 16,
                               child: GestureDetector(
-                                onTap: (){
+                                onTap: () {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (context) => CommonBottomNavigation(initialIndex: 3,),
+                                          (context) => CommonBottomNavigation(
+                                            initialIndex: 3,
+                                          ),
                                     ),
                                   );
                                 },
@@ -274,22 +387,27 @@ class _HomeScreensState extends State<HomeScreens>
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(15),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 10,
+                ),
                 child: Column(
                   children: [
                     Row(
                       children: [
                         Expanded(
                           child: PackageContainer.customRideContainer(
-                            onTap: () {},
+                            onTap: () {
+                              Get.to(BookRideSearchScreen());
+                            },
                             tittle: 'Book Ride',
                             subTitle: 'Best Drivers',
                             img: AppImages.carImage,
                             imgHeight: 25,
-                            imgWeight: 50,
+                            imgWeight: 45,
                           ),
                         ),
-                        SizedBox(width: 10),
+                        SizedBox(width: 5),
                         Expanded(
                           child: PackageContainer.customRideContainer(
                             onTap: () {
@@ -332,15 +450,7 @@ class _HomeScreensState extends State<HomeScreens>
                               CustomTextFields.plainTextField(
                                 onTap: () {
                                   print('Iam tapped');
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) =>  CommonBottomNavigation(
-                                            initialIndex: 3,
-                                          ),
-                                    ),
-                                  );
+                                  Get.to(BookRideSearchScreen());
                                 },
                                 title: 'Search Destination',
                               ),
@@ -447,276 +557,6 @@ class _HomeScreensState extends State<HomeScreens>
                     ),
                   ],
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-    Set<Marker> _markesrs = {};
-    if (_currentPosition != null && _customIcon != null) {
-      _markers.add(
-        Marker(
-          markerId: const MarkerId('current'),
-          position: _currentPosition!,
-          icon: _customIcon!,
-        ),
-      );
-    }
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Google Map section
-            SizedBox(
-              height: 330,
-              child:
-                  _currentPosition == null
-                      ? const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.commonBlack,
-                          strokeWidth: 2,
-                        ),
-                      )
-                      : Stack(
-                        children: [
-                          GoogleMap(
-                            zoomControlsEnabled: false,
-
-                            initialCameraPosition: CameraPosition(
-                              target: _currentPosition!,
-                              zoom: 17,
-                            ),
-                            markers: _markers,
-                            onMapCreated: (controller) {
-                              _mapController = controller;
-                            },
-                            onCameraMove: (position) {
-                              _currentPosition = position.target;
-                              setState(() {});
-                            },
-                            onCameraIdle: () {
-                              if (_currentPosition != null) {
-                                _getAddressFromLatLng(_currentPosition!);
-                              }
-                            },
-                            myLocationEnabled: true,
-                            myLocationButtonEnabled: true,
-                            mapToolbarEnabled: false,
-                          ),
-                          Positioned(
-                            top: 20,
-                            left: 16,
-                            right: 16,
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.menu, size: 20),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      _address,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Icon(Icons.favorite_border, size: 20),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-            ),
-
-            // Scrollable Content
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: PackageContainer.customRideContainer(
-                          onTap: () {},
-                          tittle: 'Book Ride',
-                          subTitle: 'Best Drivers',
-                          img: AppImages.carImage,
-                          imgHeight: 25,
-                          imgWeight: 50,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: PackageContainer.customRideContainer(
-                          onTap: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => const CommonBottomNavigation(
-                                      initialIndex: 3,
-                                    ),
-                              ),
-                            );
-                          },
-                          tittle: 'Courier',
-                          subTitle: 'Fast Delivery',
-                          img: AppImages.bikeImage,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.containerColor),
-                        borderRadius: BorderRadius.circular(15),
-                        color: AppColors.commonWhite,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 12,
-                        ),
-                        child: Column(
-                          children: [
-                            CustomTextFields.plainTextField(
-                              onTap: () {
-                                print('Iam tapped');
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => UberStyleMapScreen(),
-                                  ),
-                                );
-                              },
-                              title: 'Search Destination',
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(5.0),
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    AppImages.recentHistory,
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  SizedBox(width: 10),
-                                  CustomTextFields.textWithStylesSmall(
-                                    textAlign: TextAlign.center,
-
-                                    colors: AppColors.commonBlack,
-
-                                    fontWeight: FontWeight.w500,
-
-                                    'Castleton Ave, Staten Island',
-                                  ),
-
-                                  Spacer(),
-                                  Icon(Icons.keyboard_arrow_right),
-                                ],
-                              ),
-                            ),
-                            Divider(indent: 10, endIndent: 15),
-                            Padding(
-                              padding: const EdgeInsets.all(5.0),
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    AppImages.recentHistory,
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  SizedBox(width: 10),
-                                  CustomTextFields.textWithStylesSmall(
-                                    textAlign: TextAlign.center,
-                                    colors: AppColors.commonBlack,
-
-                                    fontWeight: FontWeight.w500,
-
-                                    'Castleton Ave, Staten Island',
-                                  ),
-
-                                  Spacer(),
-                                  Icon(Icons.keyboard_arrow_right),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            CustomTextFields.textWithStylesSmall(
-                              textAlign: TextAlign.center,
-                              AppTexts.tellUsYourDestination,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: AppColors.advertisementColor,
-                    ),
-                    child: ListTile(
-                      title: RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'JUST IN ',
-                              style: TextStyle(
-                                color: AppColors.justInColor,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 16,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Now, Pay at the drop location with ',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.normal,
-                                fontSize: 16,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'COD',
-                              style: TextStyle(
-                                color: AppColors.commonBlack,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      trailing: Image.asset(AppImages.advertisement),
-                    ),
-                  ),
-                ],
               ),
             ),
           ],

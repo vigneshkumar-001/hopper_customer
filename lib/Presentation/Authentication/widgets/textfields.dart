@@ -83,6 +83,7 @@ class CustomTextFields {
     double imgHeight = 10,
     double imgWidth = 10,
     Widget? prefixIcon,
+    TextStyle?  Style,
 
     required String title,
     TextEditingController? controller,
@@ -96,6 +97,8 @@ class CustomTextFields {
         color: containerColor,
       ),
       child: TextFormField(
+        style: Style,
+        cursorHeight: 16,
         autofocus: autofocus,
         onChanged: onChanged,
         onTap: onTap,
@@ -105,11 +108,11 @@ class CustomTextFields {
         cursorColor: AppColors.commonBlack,
         decoration: InputDecoration(
           prefixIcon: Padding(
-            padding: EdgeInsets.all(imgHeight),
+            padding: EdgeInsets.symmetric(horizontal: imgHeight),
             child: Image.asset(
               leadingImage ?? AppImages.search,
-              height: 9,
-              width: 10,
+              height: 5,
+              width: 2,
             ),
           ),
           // focusedBorder: OutlineInputBorder(
@@ -129,7 +132,7 @@ class CustomTextFields {
                 color: AppColors.commonBlack,
                 fontSize: 16,
               ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 10),
+          contentPadding: EdgeInsets.symmetric(horizontal: 10,vertical: 5),
         ),
       ),
     );

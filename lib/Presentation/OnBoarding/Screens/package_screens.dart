@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import 'package:hopper/Core/Utility/app_toasts.dart ';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:dotted_line/dotted_line.dart';
@@ -175,12 +178,9 @@ class _PackageScreensState extends State<PackageScreens> {
                                       loc.latitude,
                                       loc.longitude,
                                     )) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        "Sender and receiver cannot be the same or within 1km.",
-                                      ),
-                                    ),
+                                  AppToasts.customToast(
+                                    context,
+                                    "Pickup and drop locations cannot be the same or within 1km.",
                                   );
                                   return;
                                 }
@@ -234,12 +234,9 @@ class _PackageScreensState extends State<PackageScreens> {
                                       loc.latitude,
                                       loc.longitude,
                                     )) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        "Sender and receiver cannot be the same or within 1km.",
-                                      ),
-                                    ),
+                                  AppToasts.customToast(
+                                    context,
+                                    "Pickup and drop locations cannot be the same or within 1km.",
                                   );
                                   return;
                                 }
@@ -318,6 +315,7 @@ class _PackageScreensState extends State<PackageScreens> {
                                 MaterialPageRoute(
                                   builder:
                                       (_) => MapScreen(
+                                        type: 'receiver',
                                         cameFromPackage: true,
                                         searchQuery:
                                             dropOffData?.mapAddress ?? '',
@@ -345,12 +343,9 @@ class _PackageScreensState extends State<PackageScreens> {
                                       loc.latitude,
                                       loc.longitude,
                                     )) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        "Sender and receiver cannot be the same or within 1km.",
-                                      ),
-                                    ),
+                                  AppToasts.customToast(
+                                    context,
+                                    "Pickup and drop locations cannot be the same or within 1km.",
                                   );
                                   return;
                                 }
@@ -407,12 +402,9 @@ class _PackageScreensState extends State<PackageScreens> {
                                       loc.latitude,
                                       loc.longitude,
                                     )) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        "Sender and receiver cannot be the same or within 1km.",
-                                      ),
-                                    ),
+                                  AppToasts.customToast(
+                                    context,
+                                    "Pickup and drop locations cannot be the same or within 1km.",
                                   );
                                   return;
                                 }
@@ -748,23 +740,25 @@ class _PackageScreensState extends State<PackageScreens> {
       ),
       bottomNavigationBar:
           senderData != null && receiverData != null
-              ? Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: AppButtons.button(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (_) => ConfirmationScreen(
-                              parcelType: selectedParcel,
-                              sender: senderData!,
-                              receiver: receiverData!,
-                            ),
-                      ),
-                    );
-                  },
-                  text: 'Checkout',
+              ? SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: AppButtons.button(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ConfirmationScreen(
+                                parcelType: selectedParcel,
+                                sender: senderData!,
+                                receiver: receiverData!,
+                              ),
+                        ),
+                      );
+                    },
+                    text: 'Checkout',
+                  ),
                 ),
               )
               : SizedBox.shrink(),

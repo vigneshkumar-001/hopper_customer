@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:get/get.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
 
 import 'package:dotted_line/dotted_line.dart';
@@ -10,6 +11,7 @@ import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/uitls/map/search_loaction.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 
@@ -20,9 +22,8 @@ class MapScreen extends StatefulWidget {
   final String? initialAddress;
   final String? initialLandmark;
   final String? initialName;
-  final bool cameFromPackage;
-
   final String? initialPhone;
+  final bool cameFromPackage;
 
   const MapScreen({
     super.key,
@@ -48,6 +49,7 @@ class _MapScreenState extends State<MapScreen>
   LatLng? _targetLocation;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isDragging = false;
+  bool _bottomSheetShown = false;
 
   final FocusNode _focusNode = FocusNode();
   Set<Marker> _markers = {};
@@ -116,7 +118,7 @@ class _MapScreenState extends State<MapScreen>
         desiredAccuracy: LocationAccuracy.high,
       );
       final latLng = LatLng(position.latitude, position.longitude);
-      _getAddressFromLatLng(latLng); // 👈 This will update map + marker
+      _getAddressFromLatLng(latLng);
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -190,6 +192,7 @@ class _MapScreenState extends State<MapScreen>
     setState(() {
       _targetLocation = latLng;
       _selectedAddress = address;
+      _searchController.text = _selectedAddress; // ✅ ADD THIS LINE
       _markers = {
         Marker(
           markerId: markerId,
@@ -430,23 +433,48 @@ class _MapScreenState extends State<MapScreen>
                       ),
 
                       const SizedBox(height: 25),
-
-                      // Proceed Button
                       AppButtons.button(
                         onTap: () {
                           if (_formKey.currentState!.validate()) {
                             if (_targetLocation != null &&
                                 _selectedAddress.isNotEmpty) {
-                              // Navigator.pop(context);
-                              // Navigator.pop(context);
-                              // Navigator.pop(context, {
-                              //   'location': _targetLocation,
-                              //   'mapAddress': _selectedAddress,
-                              //   'address': addressController.text.trim(),
-                              //   'landmark': landmarkController.text.trim(),
-                              //   'name': nameController.text.trim(),
-                              //   'phone': phoneController.text.trim(),
-                              // });
+                              final result = {
+                                'location': _targetLocation,
+                                'mapAddress': _selectedAddress,
+                                'address': addressController.text.trim(),
+                                'landmark': landmarkController.text.trim(),
+                                'name': nameController.text.trim(),
+                                'phone': phoneController.text.trim(),
+                              };
+
+                              // ✅ Reset flag before closing
+                              _bottomSheetShown = false;
+
+                              if (widget.cameFromPackage) {
+                                Navigator.pop(context); // Close bottom sheet
+                                Navigator.pop(
+                                  context,
+                                  result,
+                                ); // Return result to PackageScreen
+                              } else {
+                                Navigator.pop(context); // Bottom Sheet
+                                Navigator.pop(context); // Map Screen
+                                Navigator.pop(
+                                  context,
+                                  result,
+                                ); // Return to search
+                              }
+                            }
+                          }
+                        },
+                        text: 'Proceed',
+                      ),
+
+                      /*       AppButtons.button(
+                        onTap: () {
+                          if (_formKey.currentState!.validate()) {
+                            if (_targetLocation != null &&
+                                _selectedAddress.isNotEmpty) {
                               final result = {
                                 'location': _targetLocation,
                                 'mapAddress': _selectedAddress,
@@ -458,24 +486,17 @@ class _MapScreenState extends State<MapScreen>
 
                               if (widget.cameFromPackage) {
                                 Navigator.pop(context);
-                                Navigator.pop(
-                                  context,
-                                  result,
-                                ); // just pop Map → return to Package
+                                Navigator.pop(context, result);
                               } else {
                                 Navigator.pop(context);
                                 Navigator.pop(context);
-                                Navigator.pop(
-                                  context,
-                                  result,
-                                ); // pop Package → return to Search
+                                Navigator.pop(context, result);
                               }
                             }
                           }
                         },
                         text: 'Proceed',
-                      ),
-
+                      ),*/
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -488,6 +509,16 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
+  void _goToCurrentLocation() async {
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    final latLng = LatLng(position.latitude, position.longitude);
+
+    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 17));
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -498,6 +529,8 @@ class _MapScreenState extends State<MapScreen>
               : Stack(
                 children: [
                   GoogleMap(
+                    myLocationEnabled: true,
+
                     onMapCreated: (controller) => _mapController = controller,
                     initialCameraPosition: CameraPosition(
                       target: _targetLocation!,
@@ -518,18 +551,18 @@ class _MapScreenState extends State<MapScreen>
                         setState(() {});
                       }
                     },
-
-                    // markers: _markers,
-                    // onTap: (latLng) => _getAddressFromLatLng(latLng),
-                    // onCameraMove: (CameraPosition position) {
-                    //   _cameraPosition = position.target;
-                    // },
-                    // onCameraIdle: () {
-                    //   if (_cameraPosition != null) {
-                    //     _getAddressFromLatLng(_cameraPosition!);
-                    //   }
-                    // },
                   ),
+                  Positioned(
+                    bottom: 280,
+                    right: 15,
+                    child: FloatingActionButton(
+                      mini: true,
+                      backgroundColor: Colors.white,
+                      onPressed: _goToCurrentLocation,
+                      child: Icon(Icons.my_location, color: Colors.black),
+                    ),
+                  ),
+
                   Center(
                     child: Padding(
                       padding: EdgeInsets.only(bottom: 40),
@@ -651,13 +684,115 @@ class _MapScreenState extends State<MapScreen>
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: CustomTextFields.plainTextField(
-                            onTap: () {
-                              Navigator.pop(context);
+                            /*     onTap: () async {
+                              if (widget.cameFromPackage) {
+                                final result = await Get.to(
+                                  () => CommonLocationSearch(
+                                    Loaction: _selectedAddress,
+                                    initialAddress: addressController.text,
+                                    initialLandmark: landmarkController.text,
+                                    initialName: nameController.text,
+                                    initialPhone: phoneController.text,
+                                    type: widget.type,
+                                  ),
+                                );
+
+                                if (result != null &&
+                                    result['mapAddress'] != null) {
+                                  setState(() {
+                                    _selectedAddress = result['mapAddress'];
+                                    _searchController.text = _selectedAddress;
+
+                                    addressController.text =
+                                        result['address'] ?? '';
+                                    landmarkController.text =
+                                        result['landmark'] ?? '';
+                                    nameController.text = result['name'] ?? '';
+                                    phoneController.text =
+                                        result['phone'] ?? '';
+                                    _targetLocation =
+                                        result['location']; // ✅ important
+                                  });
+
+                                  // Open bottom sheet with fresh data
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    _onConfirmLocation(); // now has updated values
+                                  });
+                                }
+                              } else {
+                                Navigator.pop(context, {
+                                  '_selectedAddress': _selectedAddress,
+                                });
+                              }
+                            },*/
+                            onTap: () async {
+                              if (widget.cameFromPackage) {
+                                final result = await Get.to(
+                                  () => CommonLocationSearch(
+                                    Loaction: _selectedAddress,
+                                    initialAddress: addressController.text,
+                                    initialLandmark: landmarkController.text,
+                                    initialName: nameController.text,
+                                    initialPhone: phoneController.text,
+                                    type: widget.type,
+                                  ),
+                                );
+
+                                if (result != null &&
+                                    result['mapAddress'] != null) {
+                                  final locationResult = {
+                                    'location': result['location'],
+                                    'mapAddress': result['mapAddress'],
+                                    'address': result['address'] ?? '',
+                                    'landmark': result['landmark'] ?? '',
+                                    'name': result['name'] ?? '',
+                                    'phone': result['phone'] ?? '',
+                                  };
+
+                                  Navigator.pop(context, locationResult);
+                                }
+                              } else {
+                                Navigator.pop(context, {
+                                  '_selectedAddress': _selectedAddress,
+                                });
+                              }
                             },
+
                             autofocus: false,
                             suffixIcon: IconButton(
-                              onPressed: () {
-                                Navigator.pop(context);
+                              onPressed: () async {
+                                if (widget.cameFromPackage) {
+                                  final result = await Get.to(
+                                    () => CommonLocationSearch(
+                                      Loaction: _selectedAddress,
+                                      initialAddress: addressController.text,
+                                      initialLandmark: landmarkController.text,
+                                      initialName: nameController.text,
+                                      initialPhone: phoneController.text,
+                                      type: widget.type,
+                                    ),
+                                  );
+
+                                  if (result != null &&
+                                      result['mapAddress'] != null) {
+                                    final locationResult = {
+                                      'location': result['location'],
+                                      'mapAddress': result['mapAddress'],
+                                      'address': result['address'] ?? '',
+                                      'landmark': result['landmark'] ?? '',
+                                      'name': result['name'] ?? '',
+                                      'phone': result['phone'] ?? '',
+                                    };
+
+                                    Navigator.pop(context, locationResult);
+                                  }
+                                } else {
+                                  Navigator.pop(context, {
+                                    '_selectedAddress': _selectedAddress,
+                                  });
+                                }
                                 // _searchResults.clear();
                                 // _searchController.text = '';
                               },
@@ -678,7 +813,7 @@ class _MapScreenState extends State<MapScreen>
                             controller: _searchController,
                             leadingImage: AppImages.dart,
                             title: 'Search for an address or landmark',
-                            readOnly: false,
+                            readOnly: true,
                           ),
                         ),
 
@@ -746,13 +881,41 @@ class _MapScreenState extends State<MapScreen>
                               ),
                               Spacer(),
                               TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context, {
-                                    '_selectedAddress': _selectedAddress,
-                                  });
+                                onPressed: () async {
+                                  if (widget.cameFromPackage) {
+                                    final result = await Get.to(
+                                      () => CommonLocationSearch(
+                                        Loaction: _selectedAddress,
+                                        initialAddress: addressController.text,
+                                        initialLandmark:
+                                            landmarkController.text,
+                                        initialName: nameController.text,
+                                        initialPhone: phoneController.text,
+                                        type: widget.type,
+                                      ),
+                                    );
+
+                                    if (result != null &&
+                                        result['mapAddress'] != null) {
+                                      final locationResult = {
+                                        'location': result['location'],
+                                        'mapAddress': result['mapAddress'],
+                                        'address': result['address'] ?? '',
+                                        'landmark': result['landmark'] ?? '',
+                                        'name': result['name'] ?? '',
+                                        'phone': result['phone'] ?? '',
+                                      };
+
+                                      Navigator.pop(context, locationResult);
+                                    }
+                                  } else {
+                                    Navigator.pop(context, {
+                                      '_selectedAddress': _selectedAddress,
+                                    });
+                                  }
                                 },
                                 child: CustomTextFields.textWithStyles700(
-                                  'Search',
+                                  'Edit',
                                   fontSize: 12,
                                   color: AppColors.resendBlue,
                                 ),

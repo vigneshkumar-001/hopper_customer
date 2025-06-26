@@ -12,7 +12,20 @@ import 'package:hopper/uitls/map/google_map.dart'; // Make sure this MapScreen a
 
 class CommonLocationSearch extends StatefulWidget {
   final String? type;
-  const CommonLocationSearch({super.key, this.type});
+  final String? Loaction;
+  final String? initialAddress;
+  final String? initialLandmark;
+  final String? initialName;
+  final String? initialPhone;
+  const CommonLocationSearch({
+    super.key,
+    this.type,
+    this.Loaction,
+    this.initialAddress,
+    this.initialLandmark,
+    this.initialName,
+    this.initialPhone,
+  });
 
   @override
   State<CommonLocationSearch> createState() => _CommonLocationSearchState();
@@ -22,13 +35,23 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
   final TextEditingController _searchController = TextEditingController();
   final String _apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
   bool _showInfoMessage = false;
+  @override
+  void initState() {
+    super.initState();
+    if (widget.Loaction != null && widget.Loaction!.isNotEmpty) {
+      _searchController.text = widget.Loaction!;
+    }
+  }
 
   List<dynamic> _searchResults = [];
   Future<void> _openMapScreen() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => MapScreen(searchQuery: ''), // Go to map screen
+        builder:
+            (_) => MapScreen(
+              searchQuery: widget.Loaction ?? '',
+            ), // Go to map screen
       ),
     );
 
@@ -126,8 +149,14 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
         context,
         MaterialPageRoute(
           builder:
-              (_) =>
-                  MapScreen(searchQuery: placeName, location: LatLng(lat, lng)),
+              (_) => MapScreen(
+                searchQuery: placeName,
+                location: LatLng(lat, lng),
+                initialAddress: widget.initialAddress,
+                initialLandmark: widget.initialLandmark,
+                initialName: widget.initialName,
+                initialPhone: widget.initialPhone,
+              ),
         ),
       );
       if (result != null && result['_selectedAddress'] != null) {
@@ -137,6 +166,34 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
   }
 
   Future<void> _locateOnMap() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => MapScreen(
+              searchQuery: '',
+              type: widget.type ?? '',
+              initialAddress: widget.initialAddress,
+              initialLandmark: widget.initialLandmark,
+              initialName: widget.initialName,
+              initialPhone: widget.initialPhone,
+            ),
+      ),
+    );
+
+    if (result != null && result['mapAddress'] != null) {
+      Navigator.pop(context, {
+        'mapAddress': result['mapAddress'],
+        'location': result['location'],
+        'address': result['address'],
+        'landmark': result['landmark'],
+        'name': result['name'],
+        'phone': result['phone'],
+      });
+    }
+  }
+
+  /*  Future<void> _locateOnMap() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -168,7 +225,7 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
     //     context,
     //   ).showSnackBar(const SnackBar(content: Text("Please enter an address.")));
     // }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {

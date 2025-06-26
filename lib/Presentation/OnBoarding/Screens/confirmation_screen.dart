@@ -4,10 +4,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:dotted_line/dotted_line.dart';
 
 import 'package:hopper/Core/Consents/app_colors.dart';
-import 'package:hopper/Core/Consents/app_logger.dart';
+
 import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
+import 'package:hopper/Core/Utility/app_toasts.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/payment_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
@@ -176,14 +177,9 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                             loc.latitude,
                                             loc.longitude,
                                           )) {
-                                        ScaffoldMessenger.of(
+                                        AppToasts.customToast(
                                           context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              "Sender and receiver cannot be the same or within 1km.",
-                                            ),
-                                          ),
+                                          "Pickup and drop locations cannot be the same or within 1km.",
                                         );
                                         return;
                                       }
@@ -222,14 +218,9 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                             loc.latitude,
                                             loc.longitude,
                                           )) {
-                                        ScaffoldMessenger.of(
+                                        AppToasts.customToast(
                                           context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              "Sender and receiver cannot be the same or within 1km.",
-                                            ),
-                                          ),
+                                          "Pickup and drop locations cannot be the same or within 1km.",
                                         );
                                         return;
                                       }
@@ -327,14 +318,9 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                             loc.latitude,
                                             loc.longitude,
                                           )) {
-                                        ScaffoldMessenger.of(
+                                        AppToasts.customToast(
                                           context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              "Sender and receiver cannot be the same or within 1km.",
-                                            ),
-                                          ),
+                                          "Pickup and drop locations cannot be the same or within 1km.",
                                         );
                                         return;
                                       }
@@ -375,14 +361,9 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                             loc.latitude,
                                             loc.longitude,
                                           )) {
-                                        ScaffoldMessenger.of(
+                                        AppToasts.customToast(
                                           context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              "Sender and receiver cannot be the same or within 1km.",
-                                            ),
-                                          ),
+                                          "Pickup and drop locations cannot be the same or within 1km.",
                                         );
                                         return;
                                       }
@@ -570,6 +551,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                 ),
                 Container(
                   color: Color(0xFFF6F7FF).withOpacity(0.7),
+
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Column(
@@ -613,6 +595,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                             ),
                           ),
                         ),
+                        SizedBox(height: 25),
                       ],
                     ),
                   ),

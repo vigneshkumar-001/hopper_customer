@@ -17,12 +17,14 @@ class AppButtons {
     double? fontSize = 16,
     Color? buttonColor = AppColors.commonBlack,
     Color? textColor = Colors.white,
-    Color  borderColor = const Color(0xff3F5FF2),
+    Color borderColor = const Color(0xff3F5FF2),
 
     bool? isLoading,
     bool hasBorder = false,
 
     String? imagePath,
+    String? rightImagePath,
+    String? rightImagePathText,
   }) {
     return SizedBox(
       width: size,
@@ -59,6 +61,23 @@ class AppButtons {
                 color: textColor,
               ),
             ),
+            if (rightImagePath != null) ...[
+              SizedBox(width: 10.w),
+              Image.asset(
+                rightImagePath,
+                height: 24.sp,
+                width: 24.sp,
+                color: AppColors.commonWhite,
+              ),
+              Text(
+                 rightImagePathText ?? '',
+                style: TextStyle(
+                  fontFamily: "Roboto-normal",
+                  fontSize: 20,
+                  color: textColor,
+                ),
+              ),
+            ],
           ],
         ),
       ),
