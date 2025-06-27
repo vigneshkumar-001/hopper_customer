@@ -4,15 +4,18 @@ import 'package:get/get.dart';
 import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
+import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
-import 'package:hopper/Presentation/BookRide/confirm_booking.dart';
-import 'package:hopper/Presentation/BookRide/search_screen.dart';
+import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
+import 'package:hopper/Presentation/BookRide/Screens/confirm_booking.dart';
+import 'package:hopper/Presentation/BookRide/Screens/search_screen.dart';
 
 import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
+import 'package:hopper/driver_detail_controller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -36,6 +39,7 @@ class BookMapScreen extends StatefulWidget {
 class _BookMapScreenState extends State<BookMapScreen> {
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _destController = TextEditingController();
+  DriverSearchController driverController = Get.put(DriverSearchController());
   LatLng? _pickupPosition;
   LatLng? _destinationPosition;
   Set<Polyline> _polylines = {};
@@ -55,6 +59,13 @@ class _BookMapScreenState extends State<BookMapScreen> {
     _destinationPosition = LatLng(
       widget.destinationData['lat'],
       widget.destinationData['lng'],
+    );
+
+    driverController.getDriverSearch(
+      pickupLat: _pickupPosition!.latitude,
+      pickupLng: _pickupPosition!.longitude,
+      dropLat: _destinationPosition!.latitude,
+      dropLng: _destinationPosition!.longitude,
     );
 
     _drawPolyline();
@@ -411,42 +422,88 @@ class _BookMapScreenState extends State<BookMapScreen> {
                       },
                     ),
                     SizedBox(height: 20),
-                    PackageContainer.bookCarTypeContainer(
-                      borderColor:
-                          _selectedCarType == 'Luxury'
-                              ? AppColors.commonBlack
-                              : AppColors.containerColor,
-                      carImg: AppImages.luxuryCar,
-                      onTap: () {
-                        setState(() {
-                          _selectedCarType = 'Luxury';
-                        });
-                      },
-                      carTitle: 'Luxury',
-                      carMinRate: '100',
-                      carMaxRate: '125',
-                      carSubTitle: 'Luxurious, Comfy',
-                      arrivingTime: '7 min',
-                    ),
+                    Obx(() {
+                      if (driverController.serviceType.isEmpty) {
+                        return AppLoader.circularLoader(); // show loader while fetching
+                      }
+                      if (driverController.serviceType.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'No drivers in your location',
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        );
+                      }
 
-                    SizedBox(height: 20),
-                    PackageContainer.bookCarTypeContainer(
-                      borderColor:
-                          _selectedCarType == 'Sedan'
-                              ? AppColors.commonBlack
-                              : AppColors.containerColor,
-                      carImg: AppImages.sedan,
-                      onTap: () {
-                        setState(() {
-                          _selectedCarType = 'Sedan';
-                        });
-                      },
-                      carTitle: 'Sedan',
-                      carMinRate: '63',
-                      carMaxRate: '85',
-                      carSubTitle: 'Comfy, Economical Cars',
-                      arrivingTime: '7 min',
-                    ),
+                      final luxuryDriver = driverController.serviceType
+                          .firstWhereOrNull(
+                            (e) =>
+                                e.driverId.carType?.toLowerCase() == 'luxury',
+                          );
+
+                      final sedanDriver = driverController.serviceType
+                          .firstWhereOrNull(
+                            (e) => e.driverId.carType?.toLowerCase() == 'sedan',
+                          );
+
+                      if (luxuryDriver == null && sedanDriver == null) {
+                        return Center(
+                          child: Text(
+                            'Car not found',
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        );
+                      }
+
+                      return Column(
+                        children: [
+                          if (luxuryDriver != null)
+                            PackageContainer.bookCarTypeContainer(
+                              borderColor:
+                                  _selectedCarType == 'Luxury'
+                                      ? AppColors.commonBlack
+                                      : AppColors.containerColor,
+                              carImg: AppImages.luxuryCar,
+                              onTap: () {
+                                setState(() {
+                                  _selectedCarType = 'Luxury';
+                                });
+                              },
+                              carTitle: 'Luxury',
+                              carMinRate:
+                                  luxuryDriver.estimatedPrice.toString(),
+                              carMaxRate:
+                                  (luxuryDriver.estimatedPrice + 30).toString(),
+
+                              carSubTitle: 'Comfy, Economical Cars',
+                              arrivingTime:
+                                  '${luxuryDriver.estimatedTime ?? 0} min',
+                            ),
+                          const SizedBox(height: 20),
+                          if (sedanDriver != null)
+                            PackageContainer.bookCarTypeContainer(
+                              borderColor:
+                                  _selectedCarType == 'Sedan'
+                                      ? AppColors.commonBlack
+                                      : AppColors.containerColor,
+                              carImg: AppImages.sedan,
+                              onTap: () {
+                                setState(() {
+                                  _selectedCarType = 'Sedan';
+                                });
+                              },
+                              carTitle: 'Sedan',
+                              carMinRate: sedanDriver.estimatedPrice.toString(),
+
+                              carMaxRate:
+                                  (sedanDriver.estimatedPrice + 32).toString(),
+                              carSubTitle: 'Comfy, Economical Cars',
+                              arrivingTime:
+                                  '${sedanDriver.estimatedTime ?? 0} min',
+                            ),
+                        ],
+                      );
+                    }),
                   ],
                 ),
               ),
@@ -455,27 +512,59 @@ class _BookMapScreenState extends State<BookMapScreen> {
         ),
       ),
       bottomNavigationBar: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: AppButtons.button(
-          buttonColor:
-              _selectedCarType == null
-                  ? AppColors.containerColor
-                  : AppColors.commonBlack,
-          textColor: Colors.white,
-          onTap:
-              _selectedCarType == null
-                  ? null
-                  : () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ConfirmBooking( selectedCarType: _selectedCarType,)),
-                    );
-                    print("Booking: $_selectedCarType");
-                  },
-          text:
-              _selectedCarType == null
-                  ? 'Select Car to Book'
-                  : 'Book $_selectedCarType',
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Obx(
+          () =>
+              driverController.isLoading.value
+                  ? AppLoader.circularLoader()
+                  : AppButtons.button(
+                    buttonColor:
+                        _selectedCarType == null
+                            ? AppColors.containerColor
+                            : AppColors.commonBlack,
+                    textColor: Colors.white,
+                    onTap: () async {
+                      if (_selectedCarType == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please select a car to proceed.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+
+                      String? result = await driverController.createBookingCar(
+                        fromLatitude: _pickupPosition?.latitude ?? 0.0,
+                        fromLongitude: _pickupPosition?.longitude ?? 0.0,
+                        toLatitude: _destinationPosition?.latitude ?? 0.0,
+                        toLongitude: _destinationPosition?.longitude ?? 0.0,
+                        customerId: '', // <-- Replace with actual ID
+                        context: context,
+                      );
+
+                      print("Booking: $_selectedCarType");
+
+                      if (result != null)
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => ConfirmBooking(
+                                  selectedCarType: _selectedCarType!,
+                                  pickupData: widget.pickupData,
+                                  destinationData: widget.destinationData,
+                                  pickupAddress: widget.pickupAddress,
+                                  destinationAddress: widget.destinationAddress,
+                                ),
+                          ),
+                        );
+                    },
+                    text:
+                        _selectedCarType == null
+                            ? 'Book'
+                            : 'Book $_selectedCarType',
+                  ),
         ),
       ),
     );

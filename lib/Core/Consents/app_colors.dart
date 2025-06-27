@@ -19,6 +19,7 @@ class AppColors {
   static const errorRed = Color(0xFFEA4335);
   static final errorBorder = Colors.red;
   static final resendBlue = Color(0xff006FD0);
+  static final changeButtonColor = Color(0xff357AE9);
   static final couponCard = Color(0xff006FD01A);
   static final justInColor = Color(0xff5700D0);
   static final addToAddress = Color(0xff357AE9);
@@ -29,5 +30,6 @@ class AppColors {
   static final dotLineColor = Color(0xff979797);
   static final linearIndicatorColor = Color(0xff3AC267);
   static final cancelRideColor = Color(0xffFF1744);
+  static final carTypeColor = Color(0xff8C8C8C);
 
 }

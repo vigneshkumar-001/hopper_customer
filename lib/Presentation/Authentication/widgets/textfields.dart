@@ -83,7 +83,7 @@ class CustomTextFields {
     double imgHeight = 10,
     double imgWidth = 10,
     Widget? prefixIcon,
-    TextStyle?  Style,
+    TextStyle? Style,
 
     required String title,
     TextEditingController? controller,
@@ -132,7 +132,7 @@ class CustomTextFields {
                 color: AppColors.commonBlack,
                 fontSize: 16,
               ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 10,vertical: 5),
+          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         ),
       ),
     );
@@ -276,38 +276,57 @@ class CustomTextFields {
 
   static Widget textWithImage({
     required String text,
+    String? rightImagePathText,
+    VoidCallback? onTap,
     String? imagePath,
+    String? rightImagePath,
     double imageSize = 16,
     double fontSize = 13,
     TextAlign textAlign = TextAlign.start,
     FontWeight? fontWeight,
+    Color? textColor = Colors. black,
     Color? colors = Colors.black45,
     Color? imageColors = Colors.black,
   }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        if (imagePath != null)
-          Image.asset(
-            imagePath,
-            height: imageSize,
-            width: imageSize,
-            color: imageColors,
-          ),
-        const SizedBox(width: 5),
-        Flexible(
-          child: Text(
-            text,
-            textAlign: textAlign,
-            style: TextStyle(
-              color: colors,
-              fontSize: fontSize,
-              fontWeight: fontWeight,
+    return GestureDetector(
+      onTap: onTap ,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (imagePath != null)
+            Image.asset(
+              imagePath,
+              height: imageSize,
+              width: imageSize,
+              color: imageColors,
+            ),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              text,
+              textAlign: textAlign,
+              style: TextStyle(
+                color: colors,
+                fontSize: fontSize,
+                fontWeight: fontWeight,
+              ),
             ),
           ),
-        ),
-      ],
+          SizedBox(width: 10),
+          if (rightImagePath != null)
+            Image.asset(rightImagePath, height: imageSize, width: imageSize),
+          Text(
+            rightImagePathText ?? '',
+            style: TextStyle(
+              fontFamily: "Roboto-normal",
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

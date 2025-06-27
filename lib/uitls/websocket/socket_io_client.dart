@@ -12,14 +12,23 @@ class SocketService {
   SocketService._internal();
 
   void initSocket(String url) {
-    if (_initialized) return;
+    if (_initialized) {
+      if (_socket.disconnected) {
+        _socket.connect(); // reconnect if not connected
+      }
+      return;
+    }
+
     _initialized = true;
 
     _socket = IO.io(
       url,
       IO.OptionBuilder()
           .setTransports(['websocket'])
+          .enableReconnection()
           .enableAutoConnect()
+          .setReconnectionAttempts(5)
+          .setReconnectionDelay(2000)
           .build(),
     );
 
@@ -41,9 +50,16 @@ class SocketService {
       AppLogger.log.e("❗ General socket error: $err");
     });
 
-    // 💡 Debug: log all incoming events
+    // Optional: log all incoming events
     _socket.onAny((event, data) {
       AppLogger.log.i("📦 [onAny] Event: $event, Data: $data");
+    });
+  }
+
+  void registerUser(String userId) {
+    emit('register', {
+      'userId': userId,
+      'type': 'customer',
     });
   }
 
@@ -55,20 +71,17 @@ class SocketService {
   }
 
   void on(String event, Function(dynamic) callback) {
-    AppLogger.log.i("👂 Listening to: $event");
-    AppLogger.log.i("👂 callback to: $callback");
     _socket.on(event, callback);
   }
 
   void emit(String event, dynamic data) {
-    AppLogger.log.i("📤 Emitting → $event");
-    AppLogger.log.i("🧾 Payload: $data");
     _socket.emit(event, data);
+  }
+  void off(String event) {
+    _socket.off(event);
   }
 
   void dispose() {
-    AppLogger.log.w("🔌 Disposing socket");
-    _socket.disconnect();
     _socket.dispose();
     _initialized = false;
   }

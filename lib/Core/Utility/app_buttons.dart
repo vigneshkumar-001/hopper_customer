@@ -70,7 +70,7 @@ class AppButtons {
                 color: AppColors.commonWhite,
               ),
               Text(
-                 rightImagePathText ?? '',
+                rightImagePathText ?? '',
                 style: TextStyle(
                   fontFamily: "Roboto-normal",
                   fontSize: 20,

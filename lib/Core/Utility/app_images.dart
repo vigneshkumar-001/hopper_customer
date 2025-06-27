@@ -42,5 +42,10 @@ class AppImages {
   static String driverTime = "assets/images/driverTime.png";
   static String sedan = "assets/images/sedan.png";
   static String confirmCar = "assets/images/confrimCar.png";
+  static String clrTick = "assets/images/clrTick.png";
+  static String digiPay = "assets/images/digiPay.png";
+  static String cancel = "assets/images/cancel.png";
+  static String share = "assets/images/share.png";
+  static String support = "assets/images/support.png";
 
 }

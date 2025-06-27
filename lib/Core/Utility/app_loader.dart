@@ -13,9 +13,11 @@ class AppLoader {
   }
 
   static circularLoader() {
-    return CircularProgressIndicator(
-      color: AppColors.commonBlack,
-      strokeWidth: 2,
+    return Center(
+      child: CircularProgressIndicator(
+        color: AppColors.commonBlack,
+        strokeWidth: 2,
+      ),
     );
   }
 }

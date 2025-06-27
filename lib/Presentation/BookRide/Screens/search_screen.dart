@@ -5,7 +5,8 @@ import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
-import 'package:hopper/Presentation/BookRide/book_map_screen.dart';
+import 'package:hopper/Presentation/BookRide/Screens/book_map_screen.dart';
+
 import 'package:hopper/uitls/map/search.dart';
 
 class BookRideSearchScreen extends StatefulWidget {
@@ -184,7 +185,6 @@ class _BookRideSearchScreenState extends State<BookRideSearchScreen> {
               ),
             ),
 
-            // 👇 Scrollable results
             Expanded(
               child:
                   resultsToShow.isNotEmpty

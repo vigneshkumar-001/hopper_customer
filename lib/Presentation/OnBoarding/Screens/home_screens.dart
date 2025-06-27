@@ -8,7 +8,8 @@ import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
-import 'package:hopper/Presentation/BookRide/search_screen.dart';
+import 'package:hopper/Presentation/BookRide/Screens/search_screen.dart';
+
 import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
@@ -96,46 +97,44 @@ class _HomeScreensState extends State<HomeScreens>
   @override
   void initState() {
     super.initState();
+
+    final userId = "68593b9efda38c44796aca61";
+
     socketService.initSocket(
       'https://hoppr-face-two-dbe557472d7f.herokuapp.com/',
     );
 
-    _loadCustomMarker().then((_) {
-      socketService.onConnect(() {
-        socketService.emit('register', {
-          'userId': "68593b9efda38c44796aca61",
-          'type': 'customer',
-        });
-      });
-
-      socketService.on('registered', (data) {
-        AppLogger.log.i("✅ Registered → $data");
-      });
-
-      socketService.on('nearby-driver-update', (data) {
-        if (!mounted) return; // 🔐 add this at the top of the callback!
-
-        final String driverId = data['driverId'];
-        final double lat = data['latitude'];
-        final double lng = data['longitude'];
-
-        AppLogger.log.i("📍 Nearby driver update: $data");
-
-        final Marker marker = Marker(
-          markerId: MarkerId(driverId),
-          position: LatLng(lat, lng),
-          icon: _carIcon,
-          anchor: const Offset(0.5, 0.5),
-        );
-
-        setState(() {
-          _driverMarkers[driverId] = marker;
-        });
-      });
-
-      _initLocation();
-      _getCurrentLocation();
+    socketService.onConnect(() {
+      socketService.registerUser(userId);
     });
+    socketService.off(
+      'nearby-driver-update',
+    ); // 👈 Important to remove existing listener
+    socketService.on('registered', (data) {
+      AppLogger.log.i("✅ Registered → $data");
+    });
+
+    socketService.on('nearby-driver-update', (data) {
+      if (!mounted) return;
+
+      final String driverId = data['driverId'];
+      final double lat = data['latitude'];
+      final double lng = data['longitude'];
+
+      final Marker marker = Marker(
+        markerId: MarkerId(driverId),
+        position: LatLng(lat, lng),
+        icon: _carIcon,
+        anchor: const Offset(0.5, 0.5),
+      );
+
+      setState(() {
+        _driverMarkers[driverId] = marker;
+      });
+    });
+
+    _loadCustomMarker();
+    _initLocation();
   }
 
   @override
