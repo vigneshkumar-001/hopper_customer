@@ -1,6 +1,7 @@
 import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Presentation/BookRide/Models/create_booking_model.dart';
 import 'package:hopper/Presentation/BookRide/Models/driver_search_models.dart';
+import 'package:hopper/Presentation/BookRide/Models/send_driver_request_models.dart';
 
 import 'package:hopper/api/repository/api_consents.dart';
 
@@ -110,6 +111,49 @@ class ApiDataSource extends BaseApiDataSource {
       if (response.statusCode == 200) {
         if (response.data['status'] == 200) {
           return Right(CreateBookingModel.fromJson(response.data));
+        } else {
+          return Left(ServerFailure(response.data['message'] ?? " "));
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
+  Future<Either<Failure, SendDriverRequestModels>> sendDriverRequest({
+    required double pickupLatitude,
+    required double pickupLongitude,
+    required double dropLatitude,
+    required double dropLongitude,
+    required String bookingId,
+  }) async {
+    try {
+      final url = ApiConsents. sendDriverRequest ;
+      AppLogger.log.i(url);
+
+      dynamic response = await Request.sendRequest(
+        url,
+        {
+          "bookingId": bookingId,
+          "pickupLatitude": pickupLatitude,
+          "pickupLongitude": pickupLongitude,
+          "dropLatitude": dropLatitude,
+          "dropLongitude": dropLongitude
+
+        },
+        'Post',
+        false,
+      );
+      if (response.statusCode == 200) {
+        if (response.data['status'] == 200) {
+          return Right(SendDriverRequestModels.fromJson(response.data));
         } else {
           return Left(ServerFailure(response.data['message'] ?? " "));
         }

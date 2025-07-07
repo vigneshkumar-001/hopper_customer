@@ -57,10 +57,7 @@ class SocketService {
   }
 
   void registerUser(String userId) {
-    emit('register', {
-      'userId': userId,
-      'type': 'customer',
-    });
+    emit('register', {'userId': userId, 'type': 'customer'});
   }
 
   void onConnect(Function() callback) {
@@ -77,6 +74,7 @@ class SocketService {
   void emit(String event, dynamic data) {
     _socket.emit(event, data);
   }
+
   void off(String event) {
     _socket.off(event);
   }

@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +9,7 @@ import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/uitls/websocket/socket_io_client.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
@@ -27,11 +31,23 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   final TextEditingController _destController = TextEditingController();
   LatLng? _currentPosition;
   bool isDriverConfirmed = false;
+  final socketService = SocketService();
   GoogleMapController? _mapController;
   LatLng? _pickedPosition;
   double? _lastZoom;
   final double _zoomThreshold = 0.01;
+  Marker? _driverMarker;
+  Set<Marker> _markers = {};
+
+  LatLng? _customerLatLng; // ✅ Persist customer location
+  LatLng? _currentDriverLatLng; // ✅ Persist driver location
+
   String _address = 'Search...';
+  String plateNumber = '';
+  String driverName = '';
+  double driverRating = 0.0;
+  String carDetails = '';
+  Set<Polyline> _polylines = {};
   Future<void> _initLocation() async {
     Position position = await Geolocator.getCurrentPosition();
     setState(() {
@@ -80,12 +96,293 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 17));
   }
 
-  @override
+  /*  @override
   void initState() {
     super.initState();
 
+    socketService.onConnect(() {
+      AppLogger.log.i("✅ Socket connected on booking screen");
+    });
+
+    /// 🔄 DRIVER ACCEPTED EVENT
+    socketService.on('driver-accepted', (data) {
+      if (!mounted) return;
+
+      final String bookingId = data['bookingId'] ?? '';
+      final String status = data['status'] ?? '';
+      final String driverId = data['driverId'] ?? '';
+      final String userId = data['userId'] ?? '';
+
+      AppLogger.log.i(
+        "✅ Driver accepted: bookingId=$bookingId, driverId=$driverId, status=$status",
+      );
+
+      if (status == "SUCCESS") {
+        AppLogger.log.i("🎉 Driver accepted the ride!");
+
+        // Join booking
+        socketService.emit('join-booking', {
+          'bookingId': bookingId,
+          'userId': driverId,
+        });
+      }
+    });
+
+    /// ✅ JOINED BOOKING EVENT
+    socketService.on('joined-booking', (data) {
+      if (!mounted) return;
+
+      final vehicle = data['vehicle'] ?? {};
+      final String driverId = data['driverId'] ?? '';
+      final String driverFullName = data['driverName'] ?? '';
+      final double rating =
+          double.tryParse(data['driverRating'].toString()) ?? 0.0;
+      final String color = vehicle['color'] ?? '';
+      final String model = vehicle['model'] ?? '';
+      final bool driverAccepted = data['driver_accept_status'] == true;
+      final String type = vehicle['type'] ?? '';
+      final String plate = vehicle['plateNumber'] ?? '';
+      final driverLoc = data['driverLocation'];
+      final customerLoc = data['customerLocation'];
+
+      _currentDriverLatLng = LatLng(
+        driverLoc['latitude'],
+        driverLoc['longitude'],
+      );
+      _customerLatLng = LatLng(
+        customerLoc['fromLatitude'],
+        customerLoc['fromLongitude'],
+      );
+
+      _drawPolylineFromDriverToCustomer(
+        driverLatLng: _currentDriverLatLng!,
+        customerLatLng: _customerLatLng!,
+      );
+
+      setState(() {
+        plateNumber = plate;
+        driverName = '$driverFullName ⭐ $rating';
+        carDetails = '$color - $type $model';
+        isDriverConfirmed = driverAccepted;
+      });
+
+      AppLogger.log.i("🚕 Joined booking data: $data");
+
+      // Start tracking
+      if (driverId.trim().isNotEmpty) {
+        AppLogger.log.i("📍 Tracking driver: $driverId");
+        socketService.emit('track-driver', {'driverId': driverId.trim()});
+      }
+    });
+
+    /// 📍 LIVE DRIVER LOCATION UPDATES
+    socketService.on('nearby-driver-update', (data) {
+      if (!mounted) return;
+
+      final updatedDriverLatLng = LatLng(data['latitude'], data['longitude']);
+
+      // Avoid unnecessary redraws
+      if (_currentDriverLatLng != null &&
+          _currentDriverLatLng == updatedDriverLatLng) {
+        return;
+      }
+
+      _currentDriverLatLng = updatedDriverLatLng;
+
+      if (_customerLatLng != null) {
+        _drawPolylineFromDriverToCustomer(
+          driverLatLng: updatedDriverLatLng,
+          customerLatLng: _customerLatLng!,
+        );
+      }
+    });
+
     _initLocation();
     _goToCurrentLocation();
+  }*/
+
+  @override
+  void initState() {
+    super.initState();
+    socketService.onConnect(() {
+      AppLogger.log.i("✅ Socket connected on booking screen");
+    });
+
+    // Listen for driver accepted
+    socketService.on('driver-accepted', (data) {
+      if (!mounted) return;
+
+      final String bookingId = data['bookingId'] ?? '';
+      final String status = data['status'] ?? '';
+      final String driverId = data['driverId'] ?? '';
+      final String userId = data['userId'] ?? '';
+
+      AppLogger.log.i("👉 status: $status");
+      AppLogger.log.i(
+        "✅ Driver accepted: bookingId=$bookingId, driverId=$driverId, userId=$userId,status=$status",
+      );
+      if (status == "SUCCESS") {
+        AppLogger.log.i("🎉 Driver accepted the ride!");
+      }
+
+      // Emit join-booking after driver accepts
+      socketService.emit('join-booking', {
+        'bookingId': bookingId,
+        'userId': driverId,
+      });
+    });
+
+    // ✅ Correct Flutter way to handle joined-booking event
+    socketService.on('joined-booking', (data) {
+      if (!mounted) return;
+
+      final vehicle = data['vehicle'] ?? {};
+      final String driverId = data['driverId'] ?? '';
+      final String driverFullName = data['driverName'] ?? '';
+      final double rating =
+          double.tryParse(data['driverRating'].toString()) ?? 0.0;
+      final String color = vehicle['color'] ?? '';
+      final String model = vehicle['model'] ?? '';
+      final bool driverAccepted = data['driver_accept_status'] == true;
+      final String type = vehicle['type'] ?? '';
+      final String plate = vehicle['plateNumber'] ?? '';
+      final driverLoc = data['driverLocation'];
+      final customerLoc = data['customerLocation'];
+
+      final driverLatLng = LatLng(
+        driverLoc['latitude'],
+        driverLoc['longitude'],
+      );
+
+      final customerLatLng = LatLng(
+        customerLoc['fromLatitude'],
+        customerLoc['fromLongitude'],
+      );
+
+      // _drawPolylineFromDriverToCustomer(
+      //   driverLatLng: driverLatLng,
+      //   customerLatLng: customerLatLng,
+      // );
+      _driverMarker = Marker(
+        markerId: const MarkerId("driver_marker"),
+        position: driverLatLng,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+      );
+
+      setState(() {
+        plateNumber = plate;
+        driverName = '$driverFullName ⭐ $rating';
+        carDetails = '$color - $type $model';
+        isDriverConfirmed = driverAccepted;
+        _markers.add(_driverMarker!);
+      });
+      AppLogger.log.i("🚕 Joined booking data: $data");
+      AppLogger.log.i("🚕 driverAccepted ==  $driverAccepted");
+
+      // You can store joined bookings in your local state if needed
+      // Example: _joinedBookingIds.add(bookingId);
+
+      if (driverId != null && driverId.trim().isNotEmpty) {
+        AppLogger.log.i("📍 Tracking driver: $driverId");
+        socketService.emit('track-driver', {'driverId': driverId.trim()});
+      }
+    });
+    socketService.on('tracked-driver-location', (data) {
+      if (!mounted) return;
+
+      final updatedDriverLatLng = LatLng(data['latitude'], data['longitude']);
+      _drawPolylineFromDriverToCustomer(
+        driverLatLng: updatedDriverLatLng,
+        customerLatLng: _customerLatLng!,
+      );
+
+      _driverMarker = _driverMarker!.copyWith(
+        positionParam: updatedDriverLatLng,
+      );
+      setState(() {
+        _markers
+          ..removeWhere((m) => m.markerId == const MarkerId("driver_marker"))
+          ..add(_driverMarker!);
+      });
+      // Optional: check if the location has changed meaningfully
+      if (_currentDriverLatLng != null &&
+          _currentDriverLatLng == updatedDriverLatLng) {
+        return;
+      }
+
+      _currentDriverLatLng = updatedDriverLatLng;
+
+      // Redraw polyline from updated driver location to customer
+      _drawPolylineFromDriverToCustomer(
+        driverLatLng: updatedDriverLatLng,
+        customerLatLng: _customerLatLng!,
+      );
+    });
+
+    _initLocation();
+    _goToCurrentLocation();
+  }
+
+  Future<void> _drawPolylineFromDriverToCustomer({
+    required LatLng driverLatLng,
+    required LatLng customerLatLng,
+  }) async {
+    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+
+    final url =
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${driverLatLng.latitude},${driverLatLng.longitude}&destination=${customerLatLng.latitude},${customerLatLng.longitude}&key=$apiKey';
+
+    final response = await http.get(Uri.parse(url));
+    final data = json.decode(response.body);
+
+    if (data['status'] == 'OK') {
+      final encoded = data['routes'][0]['overview_polyline']['points'];
+      final points = _decodePolyline(encoded);
+
+      setState(() {
+        _polylines = {
+          Polyline(
+            polylineId: const PolylineId("driver_to_customer"),
+            points: points,
+            color: Colors.black,
+            width: 4,
+          ),
+        };
+      });
+    } else {
+      print("❗ Error fetching directions: ${data['status']}");
+    }
+  }
+
+  List<LatLng> _decodePolyline(String encoded) {
+    List<LatLng> points = [];
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
+
+    while (index < len) {
+      int b, shift = 0, result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.add(LatLng(lat / 1E5, lng / 1E5));
+    }
+
+    return points;
   }
 
   @override
@@ -101,6 +398,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                 target: _currentPosition ?? LatLng(0, 0),
                 zoom: 16,
               ),
+              markers: _markers,
               onMapCreated: (controller) async {
                 _mapController = controller;
                 String style = await DefaultAssetBundle.of(
@@ -108,6 +406,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                 ).loadString('assets/map_style/map_style1.json');
                 _mapController?.setMapStyle(style);
               },
+              polylines: _polylines,
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
@@ -263,12 +562,12 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               CustomTextFields.textWithStylesSmall(
-                                'KJA978AZ',
+                                plateNumber,
                                 colors: AppColors.commonBlack,
                                 fontWeight: FontWeight.w500,
                               ),
                               CustomTextFields.textWithStylesSmall(
-                                'Oluwaseun Michael ⭐ 4.5',
+                                '${driverName}',
                                 colors: AppColors.commonBlack,
                                 fontWeight: FontWeight.w500,
                               ),

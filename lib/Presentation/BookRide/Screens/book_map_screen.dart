@@ -513,58 +513,50 @@ class _BookMapScreenState extends State<BookMapScreen> {
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: Obx(
-          () =>
-              driverController.isLoading.value
-                  ? AppLoader.circularLoader()
-                  : AppButtons.button(
-                    buttonColor:
-                        _selectedCarType == null
-                            ? AppColors.containerColor
-                            : AppColors.commonBlack,
-                    textColor: Colors.white,
-                    onTap: () async {
-                      if (_selectedCarType == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please select a car to proceed.'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                        return;
-                      }
+        child: AppButtons.button(
+          buttonColor:
+              _selectedCarType == null
+                  ? AppColors.containerColor
+                  : AppColors.commonBlack,
+          textColor: Colors.white,
+          onTap: () async {
+            if (_selectedCarType == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please select a car to proceed.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
 
-                      String? result = await driverController.createBookingCar(
-                        fromLatitude: _pickupPosition?.latitude ?? 0.0,
-                        fromLongitude: _pickupPosition?.longitude ?? 0.0,
-                        toLatitude: _destinationPosition?.latitude ?? 0.0,
-                        toLongitude: _destinationPosition?.longitude ?? 0.0,
-                        customerId: '', // <-- Replace with actual ID
-                        context: context,
-                      );
+            String? result = await driverController.createBookingCar(
+              fromLatitude: _pickupPosition?.latitude ?? 0.0,
+              fromLongitude: _pickupPosition?.longitude ?? 0.0,
+              toLatitude: _destinationPosition?.latitude ?? 0.0,
+              toLongitude: _destinationPosition?.longitude ?? 0.0,
+              customerId: '', // <-- Replace with actual ID
+              context: context,
+            );
 
-                      print("Booking: $_selectedCarType");
+            print("Booking: $_selectedCarType");
 
-                      if (result != null)
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => ConfirmBooking(
-                                  selectedCarType: _selectedCarType!,
-                                  pickupData: widget.pickupData,
-                                  destinationData: widget.destinationData,
-                                  pickupAddress: widget.pickupAddress,
-                                  destinationAddress: widget.destinationAddress,
-                                ),
-                          ),
-                        );
-                    },
-                    text:
-                        _selectedCarType == null
-                            ? 'Book'
-                            : 'Book $_selectedCarType',
-                  ),
+            if (result != null)
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => ConfirmBooking(
+                        selectedCarType: _selectedCarType!,
+                        pickupData: widget.pickupData,
+                        destinationData: widget.destinationData,
+                        pickupAddress: widget.pickupAddress,
+                        destinationAddress: widget.destinationAddress,
+                      ),
+                ),
+              );
+          },
+          text: _selectedCarType == null ? 'Book' : 'Book $_selectedCarType',
         ),
       ),
     );

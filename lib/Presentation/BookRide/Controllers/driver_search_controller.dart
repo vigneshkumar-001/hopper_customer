@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Presentation/BookRide/Models/create_booking_model.dart';
 import 'package:hopper/Presentation/BookRide/Models/driver_search_models.dart';
-import 'package:hopper/Presentation/BookRide/Screens/confirm_booking.dart';
+import 'package:hopper/Presentation/BookRide/Models/send_driver_request_models.dart';
 
 import '../../../api/dataSource/apiDataSource.dart';
 
@@ -12,6 +12,7 @@ class DriverSearchController extends GetxController {
   Rxn<DriverSearchModels> userProfile = Rxn<DriverSearchModels>();
   RxList<DriverData> serviceType = <DriverData>[].obs;
   Rxn<BookingData> carBooking = Rxn<BookingData>();
+  Rxn<BookingDriverData> sendDriverRequestData = Rxn<BookingDriverData>();
 
   RxBool isLoading = false.obs;
   RxBool isGetLoading = false.obs;
@@ -80,6 +81,45 @@ class DriverSearchController extends GetxController {
         (response) {
           isLoading.value = false;
           carBooking.value = response.data;
+          AppLogger.log.i(response.data);
+
+          return '';
+        },
+      );
+    } catch (e) {
+      isLoading.value = false;
+      return 'An error occurred';
+    }
+  }
+
+  Future<String?> sendDriverRequest({
+    required double pickupLatitude,
+    required double pickupLongitude,
+    required double dropLatitude,
+    required double dropLongitude,
+
+    required String bookingId,
+    required BuildContext context,
+  }) async {
+    isLoading.value = true;
+
+    try {
+      final results = await apiDataSource.sendDriverRequest(
+        pickupLatitude: pickupLatitude,
+        pickupLongitude: pickupLongitude,
+        dropLatitude: dropLatitude,
+        dropLongitude: dropLongitude,
+        bookingId: bookingId,
+      );
+
+      return results.fold(
+        (failure) {
+          isLoading.value = false;
+          return failure.message;
+        },
+        (response) {
+          isLoading.value = false;
+          sendDriverRequestData.value = response.data;
           AppLogger.log.i(response.data);
 
           return '';
