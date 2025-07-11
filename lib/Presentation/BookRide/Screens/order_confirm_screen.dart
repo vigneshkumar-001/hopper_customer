@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -38,6 +39,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   final double _zoomThreshold = 0.01;
   Marker? _driverMarker;
   Set<Marker> _markers = {};
+  BitmapDescriptor? _carIcon;
 
   LatLng? _customerLatLng; // ✅ Persist customer location
   LatLng? _currentDriverLatLng; // ✅ Persist driver location
@@ -48,6 +50,14 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   double driverRating = 0.0;
   String carDetails = '';
   Set<Polyline> _polylines = {};
+
+  Future<void> _loadCustomMarker() async {
+    _carIcon = await BitmapDescriptor.asset(
+      const ImageConfiguration(size: Size(48, 48)),
+      AppImages.movingCar,
+    );
+  }
+
   Future<void> _initLocation() async {
     Position position = await Geolocator.getCurrentPosition();
     setState(() {
@@ -97,111 +107,6 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   }
 
   /*  @override
-  void initState() {
-    super.initState();
-
-    socketService.onConnect(() {
-      AppLogger.log.i("✅ Socket connected on booking screen");
-    });
-
-    /// 🔄 DRIVER ACCEPTED EVENT
-    socketService.on('driver-accepted', (data) {
-      if (!mounted) return;
-
-      final String bookingId = data['bookingId'] ?? '';
-      final String status = data['status'] ?? '';
-      final String driverId = data['driverId'] ?? '';
-      final String userId = data['userId'] ?? '';
-
-      AppLogger.log.i(
-        "✅ Driver accepted: bookingId=$bookingId, driverId=$driverId, status=$status",
-      );
-
-      if (status == "SUCCESS") {
-        AppLogger.log.i("🎉 Driver accepted the ride!");
-
-        // Join booking
-        socketService.emit('join-booking', {
-          'bookingId': bookingId,
-          'userId': driverId,
-        });
-      }
-    });
-
-    /// ✅ JOINED BOOKING EVENT
-    socketService.on('joined-booking', (data) {
-      if (!mounted) return;
-
-      final vehicle = data['vehicle'] ?? {};
-      final String driverId = data['driverId'] ?? '';
-      final String driverFullName = data['driverName'] ?? '';
-      final double rating =
-          double.tryParse(data['driverRating'].toString()) ?? 0.0;
-      final String color = vehicle['color'] ?? '';
-      final String model = vehicle['model'] ?? '';
-      final bool driverAccepted = data['driver_accept_status'] == true;
-      final String type = vehicle['type'] ?? '';
-      final String plate = vehicle['plateNumber'] ?? '';
-      final driverLoc = data['driverLocation'];
-      final customerLoc = data['customerLocation'];
-
-      _currentDriverLatLng = LatLng(
-        driverLoc['latitude'],
-        driverLoc['longitude'],
-      );
-      _customerLatLng = LatLng(
-        customerLoc['fromLatitude'],
-        customerLoc['fromLongitude'],
-      );
-
-      _drawPolylineFromDriverToCustomer(
-        driverLatLng: _currentDriverLatLng!,
-        customerLatLng: _customerLatLng!,
-      );
-
-      setState(() {
-        plateNumber = plate;
-        driverName = '$driverFullName ⭐ $rating';
-        carDetails = '$color - $type $model';
-        isDriverConfirmed = driverAccepted;
-      });
-
-      AppLogger.log.i("🚕 Joined booking data: $data");
-
-      // Start tracking
-      if (driverId.trim().isNotEmpty) {
-        AppLogger.log.i("📍 Tracking driver: $driverId");
-        socketService.emit('track-driver', {'driverId': driverId.trim()});
-      }
-    });
-
-    /// 📍 LIVE DRIVER LOCATION UPDATES
-    socketService.on('nearby-driver-update', (data) {
-      if (!mounted) return;
-
-      final updatedDriverLatLng = LatLng(data['latitude'], data['longitude']);
-
-      // Avoid unnecessary redraws
-      if (_currentDriverLatLng != null &&
-          _currentDriverLatLng == updatedDriverLatLng) {
-        return;
-      }
-
-      _currentDriverLatLng = updatedDriverLatLng;
-
-      if (_customerLatLng != null) {
-        _drawPolylineFromDriverToCustomer(
-          driverLatLng: updatedDriverLatLng,
-          customerLatLng: _customerLatLng!,
-        );
-      }
-    });
-
-    _initLocation();
-    _goToCurrentLocation();
-  }*/
-
-  @override
   void initState() {
     super.initState();
     socketService.onConnect(() {
@@ -318,9 +223,224 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         customerLatLng: _customerLatLng!,
       );
     });
-
+    socketService.on('driver-location', (data) {
+      AppLogger.log.i('📦 driver-location-updated: $data');
+    });
     _initLocation();
     _goToCurrentLocation();
+  }*/
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomMarker();
+    socketService.onConnect(() {
+      AppLogger.log.i("✅ Socket connected on booking screen");
+    });
+
+    // 🔶 Step 1: Driver Accepted
+    socketService.on('driver-accepted', (data) {
+      if (!mounted) return;
+
+      final String bookingId = data['bookingId'] ?? '';
+      final String status = data['status'] ?? '';
+      final String driverId = data['driverId'] ?? '';
+
+      AppLogger.log.i(
+        "✅ Driver accepted: bookingId=$bookingId, driverId=$driverId, status=$status",
+      );
+
+      if (status == "SUCCESS" && driverId.trim().isNotEmpty) {
+        socketService.emit('join-booking', {
+          'bookingId': bookingId,
+          'userId': driverId,
+        });
+      }
+    });
+
+    socketService.on('joined-booking', (data) {
+      if (!mounted) return;
+
+      final vehicle = data['vehicle'] ?? {};
+      final String driverId = data['driverId'] ?? '';
+      final String driverFullName = data['driverName'] ?? '';
+      final double rating =
+          double.tryParse(data['driverRating'].toString()) ?? 0.0;
+      final String color = vehicle['color'] ?? '';
+      final String model = vehicle['model'] ?? '';
+      final bool driverAccepted = data['driver_accept_status'] == true;
+      final String type = vehicle['type'] ?? '';
+      final String plate = vehicle['plateNumber'] ?? '';
+      final customerLoc = data['customerLocation'];
+
+      _customerLatLng = LatLng(
+        customerLoc['fromLatitude'],
+        customerLoc['fromLongitude'],
+      );
+
+      setState(() {
+        plateNumber = plate;
+        driverName = '$driverFullName ⭐ $rating';
+        carDetails = '$color - $type $model';
+        isDriverConfirmed = driverAccepted;
+      });
+
+      AppLogger.log.i("🚕 Joined booking data: $data");
+      AppLogger.log.i("🚕 driverAccepted ==  $driverAccepted");
+
+      // Start real-time tracking
+      if (driverId.trim().isNotEmpty) {
+        AppLogger.log.i("📍 Tracking driver: $driverId");
+        socketService.emit('track-driver', {'driverId': driverId.trim()});
+      }
+    });
+
+    // socketService.on('joined-booking', (data) {
+    //   if (!mounted) return;
+    //
+    //   final vehicle = data['vehicle'] ?? {};
+    //   final String driverId = data['driverId'] ?? '';
+    //   final String driverNameStr = data['driverName'] ?? '';
+    //   final double rating = double.tryParse(data['driverRating'].toString()) ?? 0.0;
+    //   final String color = vehicle['color'] ?? '';
+    //   final String model = vehicle['model'] ?? '';
+    //   final String type = vehicle['type'] ?? '';
+    //   final String plate = vehicle['plateNumber'] ?? '';
+    //   final bool driverAccepted = data['driver_accept_status'] == true;
+    //   final driverLoc = data['driverLocation'];
+    //   final customerLoc = data['customerLocation'];
+    //
+    //   final LatLng driverLatLng = LatLng(
+    //     driverLoc['latitude'],
+    //     driverLoc['longitude'],
+    //   );
+    //
+    //   final LatLng customerLatLng = LatLng(
+    //     customerLoc['fromLatitude'],
+    //     customerLoc['fromLongitude'],
+    //   );
+    //
+    //   _customerLatLng = customerLatLng;
+    //   _currentDriverLatLng = driverLatLng;
+    //
+    //   _driverMarker = Marker(
+    //     markerId: const MarkerId("driver_marker"),
+    //     position: driverLatLng,
+    //     icon: _carIcon ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+    //
+    //   );
+    //
+    //   setState(() {
+    //     plateNumber = plate;
+    //     driverName = '$driverNameStr ⭐ $rating';
+    //     carDetails = '$color - $type $model';
+    //     isDriverConfirmed = driverAccepted;
+    //     _markers.add(_driverMarker!);
+    //   });
+    //
+    //   _drawPolylineFromDriverToCustomer(
+    //     driverLatLng: driverLatLng,
+    //     customerLatLng: customerLatLng,
+    //   );
+    //
+    //   if (driverId.trim().isNotEmpty) {
+    //     AppLogger.log.i("📍 Start tracking driver: $driverId");
+    //     socketService.emit('track-driver', {'driverId': driverId.trim()});
+    //   }
+    // });
+
+    // 🔶 Step 3: Real-Time Driver Location Update
+    // 🔶 Step 3: Real-Time Driver Location Update
+    socketService.on('driver-location', (data) {
+      AppLogger.log.i('📦 driver-location-updated: $data');
+
+      final newDriverLatLng = LatLng(data['latitude'], data['longitude']);
+
+      if (_currentDriverLatLng == null) {
+        // First time assigning driver's current location
+        _currentDriverLatLng = newDriverLatLng;
+
+        _updateDriverMarker(newDriverLatLng, 0);
+        return;
+      }
+
+      // Animate movement and rotation
+      _animateCarTo(_currentDriverLatLng!, newDriverLatLng);
+    });
+
+    // 🔶 Optional fallback (if using 'tracked-driver-location' too)
+    socketService.on('tracked-driver-location', (data) {
+      AppLogger.log.i("📡 tracked-driver-location received: $data");
+    });
+
+    _initLocation(); // Get initial location for centering
+    _goToCurrentLocation(); // Optional: Move map to user's location
+  }
+
+  void _updateDriverMarker(LatLng position, double bearing) {
+    _driverMarker = Marker(
+      markerId: const MarkerId("driver_marker"),
+      position: position,
+      rotation: bearing,
+      icon:
+          _carIcon ??
+          BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+      anchor: const Offset(0.5, 0.5),
+      flat: true,
+    );
+
+    setState(() {
+      _markers
+        ..removeWhere((m) => m.markerId == const MarkerId("driver_marker"))
+        ..add(_driverMarker!);
+    });
+  }
+
+  Future<void> _animateCarTo(LatLng from, LatLng to) async {
+    const steps = 20;
+    const duration = Duration(milliseconds: 800);
+    final interval = duration.inMilliseconds ~/ steps;
+
+    for (int i = 1; i <= steps; i++) {
+      await Future.delayed(Duration(milliseconds: interval));
+
+      final lat = _lerp(from.latitude, to.latitude, i / steps);
+      final lng = _lerp(from.longitude, to.longitude, i / steps);
+      final intermediate = LatLng(lat, lng);
+
+      double bearing = _getBearing(from, intermediate);
+
+      _updateDriverMarker(intermediate, bearing);
+    }
+
+    _currentDriverLatLng = to;
+
+    if (_customerLatLng != null) {
+      _drawPolylineFromDriverToCustomer(
+        driverLatLng: _currentDriverLatLng!,
+        customerLatLng: _customerLatLng!,
+      );
+    }
+  }
+
+  double _getBearing(LatLng from, LatLng to) {
+    double lat1 = from.latitude * (pi / 180);
+    double lon1 = from.longitude * (pi / 180);
+    double lat2 = to.latitude * (pi / 180);
+    double lon2 = to.longitude * (pi / 180);
+
+    double dLon = lon2 - lon1;
+
+    double y = sin(dLon) * cos(lat2);
+    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
+
+    double bearing = atan2(y, x);
+
+    // Convert to degrees and normalize to 0-360
+    return (bearing * (180 / pi) + 360) % 360;
+  }
+
+  double _lerp(double start, double end, double t) {
+    return start + (end - start) * t;
   }
 
   Future<void> _drawPolylineFromDriverToCustomer({

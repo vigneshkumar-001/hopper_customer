@@ -84,12 +84,95 @@ class _HomeScreensState extends State<HomeScreens>
     }
   }
 
-  Future<void> _initLocation() async {
-    Position position = await Geolocator.getCurrentPosition();
+  // Future<void> _initLocation() async {
+  //   Position position = await Geolocator.getCurrentPosition();
+  //   setState(() {
+  //     _currentPosition = LatLng(position.latitude, position.longitude);
+  //   });
+  //   AppLogger.log.i(_currentPosition);
+  // }
+  Future<void> _initLocation(BuildContext context) async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      Get.snackbar(
+        "Location Disabled",
+        "Please enable location services to use the app.",
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        _showPermissionDialog(context);
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      _showPermissionDialog(context, openSettings: true);
+      return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    final userLatLng = LatLng(position.latitude, position.longitude);
+
     setState(() {
-      _currentPosition = LatLng(position.latitude, position.longitude);
+      _currentPosition = userLatLng;
     });
-    AppLogger.log.i(_currentPosition);
+
+    print("📍 Driver Location: ${position.latitude}, ${position.longitude}");
+
+    if (_mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: userLatLng, zoom: 16),
+        ),
+      );
+    }
+  }
+
+  void _showPermissionDialog(
+    BuildContext context, {
+    bool openSettings = false,
+  }) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: Text("Permission Required"),
+            content: Text(
+              openSettings
+                  ? "Location permission is permanently denied. Please enable it in settings."
+                  : "Location permission is required to continue.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  if (openSettings) {
+                    Geolocator.openAppSettings();
+                  } else {
+                    Geolocator.requestPermission();
+                  }
+                },
+                child: Text("Allow"),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -101,20 +184,22 @@ class _HomeScreensState extends State<HomeScreens>
     final userId = "68593b9efda38c44796aca61";
 
     socketService.initSocket(
-      'https://hoppr-face-two-dbe557472d7f.herokuapp.com/',
+      'https://hoppr-face-two-dbe557472d7f.herokuapp.com',
     );
 
     socketService.onConnect(() {
       socketService.registerUser(userId);
     });
-    socketService.off(
-      'nearby-driver-update',
-    ); // 👈 Important to remove existing listener
+    // socketService.off(
+    //   'nearby-driver-update',
+    // ); // 👈 Important to remove existing listener
     socketService.on('registered', (data) {
       AppLogger.log.i("✅ Registered → $data");
     });
 
     socketService.on('nearby-driver-update', (data) {
+      AppLogger.log.i("📍 Nearby driver update: $data");
+
       if (!mounted) return;
 
       final String driverId = data['driverId'];
@@ -133,8 +218,13 @@ class _HomeScreensState extends State<HomeScreens>
       });
     });
 
+    socketService.on('tracked-driver-location', (data) {
+      AppLogger.log.i('tracked-driver-location: $data');
+    });
+
+
     _loadCustomMarker();
-    _initLocation();
+    _initLocation(context);
   }
 
   @override
@@ -199,12 +289,12 @@ class _HomeScreensState extends State<HomeScreens>
   Widget build(BuildContext context) {
     super.build(context);
     Set<Marker> _markers = {};
-    if (_currentPosition != null && _customIcon != null) {
+    if (_currentPosition != null) {
       _markers.add(
         Marker(
           markerId: const MarkerId('current'),
           position: _currentPosition!,
-          icon: _customIcon!,
+          icon: _carIcon,
         ),
       );
     }
@@ -223,165 +313,152 @@ class _HomeScreensState extends State<HomeScreens>
               pinned: true,
               elevation: 0,
               flexibleSpace: FlexibleSpaceBar(
-                background:
-                    _currentPosition == null
-                        ? Center(child: AppLoader.appLoader())
-                        : Stack(
-                          children: [
-                            GoogleMap(
-                              initialCameraPosition: CameraPosition(
-                                target: _currentPosition!,
-                                zoom: 16,
-                              ),
-                              markers: {
-                                ..._driverMarkers.values.toSet(),
-                                // Optional: add current location marker
-                              },
-                              // markers: {
-                              //   Marker(
-                              //     markerId: const MarkerId('current'),
-                              //     position: _currentPosition!,
-                              //     icon:
-                              //         _customIcon ??
-                              //         BitmapDescriptor.defaultMarker,
-                              //   ),
-                              // },
-                              onMapCreated: (controller) async {
-                                _mapController = controller;
-                                String style = await DefaultAssetBundle.of(
-                                  context,
-                                ).loadString(
-                                  'assets/map_style/map_style1.json',
-                                );
-                                _mapController!.setMapStyle(style);
-                              },
-                              onCameraMove: (CameraPosition position) {
-                                // Save camera target every frame
-                                _pickedPosition = position.target;
+                background: Stack(
+                  children: [
+                    GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(0, 0),
+                        zoom: 16,
+                      ),
+                      markers: {
+                        ..._driverMarkers.values.toSet(),
+                        // Optional: add current location marker
+                      },
+                      // markers: {
+                      //   Marker(
+                      //     markerId: const MarkerId('current'),
+                      //     position: _currentPosition!,
+                      //     icon:
+                      //         _customIcon ??
+                      //         BitmapDescriptor.defaultMarker,
+                      //   ),
+                      // },
+                      onMapCreated: (controller) async {
+                        _mapController = controller;
+                        _initLocation(context);
+                        String style = await DefaultAssetBundle.of(
+                          context,
+                        ).loadString('assets/map_style/map_style1.json');
+                        _mapController!.setMapStyle(style);
+                      },
+                      onCameraMove: (CameraPosition position) {
+                        // Save camera target every frame
+                        _pickedPosition = position.target;
 
-                                // Check if this is a zoom action
-                                if (_lastZoom != null &&
-                                    (position.zoom - _lastZoom!).abs() >
-                                        _zoomThreshold) {
-                                  // It's zooming — ignore
-                                  _lastZoom = position.zoom;
-                                  return;
-                                }
+                        // Check if this is a zoom action
+                        if (_lastZoom != null &&
+                            (position.zoom - _lastZoom!).abs() >
+                                _zoomThreshold) {
+                          // It's zooming — ignore
+                          _lastZoom = position.zoom;
+                          return;
+                        }
 
-                                _lastZoom = position.zoom;
-                              },
+                        _lastZoom = position.zoom;
+                      },
 
-                              onCameraIdle: () async {
-                                LatLngBounds? bounds =
-                                    await _mapController?.getVisibleRegion();
-                                if (bounds != null) {
-                                  final centerLat =
-                                      (bounds.northeast.latitude +
-                                          bounds.southwest.latitude) /
-                                      2;
-                                  final centerLng =
-                                      (bounds.northeast.longitude +
-                                          bounds.southwest.longitude) /
-                                      2;
+                      onCameraIdle: () async {
+                        LatLngBounds? bounds =
+                            await _mapController?.getVisibleRegion();
+                        if (bounds != null) {
+                          final centerLat =
+                              (bounds.northeast.latitude +
+                                  bounds.southwest.latitude) /
+                              2;
+                          final centerLng =
+                              (bounds.northeast.longitude +
+                                  bounds.southwest.longitude) /
+                              2;
 
-                                  _currentPosition = LatLng(
-                                    centerLat,
-                                    centerLng,
-                                  );
-                                  await _getAddressFromLatLng(
-                                    _currentPosition!,
-                                  );
-                                  setState(() {});
-                                }
-                              },
+                          _currentPosition = LatLng(centerLat, centerLng);
+                          await _getAddressFromLatLng(_currentPosition!);
+                          setState(() {});
+                        }
+                      },
 
-                              //
-                              // onCameraIdle: () {
-                              //   if (_isCameraMoving &&
-                              //       _currentPosition != null) {
-                              //     _isCameraMoving = false;
-                              //     _getAddressFromLatLng(_currentPosition!);
-                              //     setState(() {
-                              //       // Only update on confirm, or if you want to auto update:
-                              //       // _currentPosition = _pickedPosition;
-                              //     });
-                              //   }
-                              // },
-                              myLocationEnabled: true,
-                              myLocationButtonEnabled: false,
+                      //
+                      // onCameraIdle: () {
+                      //   if (_isCameraMoving &&
+                      //       _currentPosition != null) {
+                      //     _isCameraMoving = false;
+                      //     _getAddressFromLatLng(_currentPosition!);
+                      //     setState(() {
+                      //       // Only update on confirm, or if you want to auto update:
+                      //       // _currentPosition = _pickedPosition;
+                      //     });
+                      //   }
+                      // },
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: false,
 
-                              mapToolbarEnabled: false,
-                              zoomControlsEnabled: false,
+                      mapToolbarEnabled: false,
+                      zoomControlsEnabled: false,
 
-                              gestureRecognizers: {
-                                Factory<OneSequenceGestureRecognizer>(
-                                  () => EagerGestureRecognizer(),
-                                ),
-                              },
-                            ),
-                            Center(
-                              child: Padding(
-                                padding: EdgeInsets.only(bottom: 40),
-                                child: Image.asset(
-                                  AppImages.pinLocation,
-                                  height: 40,
-                                  width: 25,
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              top: 50,
-                              left: 16,
-                              right: 16,
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) => CommonBottomNavigation(
-                                            initialIndex: 3,
-                                          ),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 10,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black12,
-                                        blurRadius: 4,
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.menu, size: 20),
-                                      SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          _address,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Icon(Icons.favorite_border, size: 20),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                      gestureRecognizers: {
+                        Factory<OneSequenceGestureRecognizer>(
+                          () => EagerGestureRecognizer(),
                         ),
+                      },
+                    ),
+                    Center(
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 40),
+                        child: Image.asset(
+                          AppImages.pinLocation,
+                          height: 40,
+                          width: 25,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 50,
+                      left: 16,
+                      right: 16,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) =>
+                                      CommonBottomNavigation(initialIndex: 3),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black12, blurRadius: 4),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.menu, size: 20),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _address,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Icon(Icons.favorite_border, size: 20),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             SliverToBoxAdapter(
