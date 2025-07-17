@@ -31,5 +31,8 @@ class AppColors {
   static final linearIndicatorColor = Color(0xff3AC267);
   static final cancelRideColor = Color(0xffFF1744);
   static final carTypeColor = Color(0xff8C8C8C);
+  static final rideShareContainerColor = Color(0xffDADADA);
+  static final rideShareContainerColor2 = Color(0xff5C5C5C);
+  static final rideShareContainerColor3 = Color(0xffC9FFD5);
 
 }

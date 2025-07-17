@@ -3,7 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LocationHelper {
-  static const String _apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic'; // Replace this
+  static const String _apiKey =
+      'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic'; // Replace this
 
   static Future<List<Map<String, dynamic>>> searchPlaces(String query) async {
     final position = await Geolocator.getCurrentPosition(
@@ -23,41 +24,42 @@ class LocationHelper {
       final List predictions = data['predictions'];
 
       // ✅ Create explicit list of Future<Map<String, dynamic>?>
-      final List<Future<Map<String, dynamic>?>> futures = predictions.map((prediction) async {
-        final placeId = prediction['place_id'];
-        final detailUrl =
-            'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$_apiKey';
+      final List<Future<Map<String, dynamic>?>> futures =
+          predictions.map((prediction) async {
+            final placeId = prediction['place_id'];
+            final detailUrl =
+                'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$_apiKey';
 
-        final detailRes = await http.get(Uri.parse(detailUrl));
-        final detailData = json.decode(detailRes.body);
+            final detailRes = await http.get(Uri.parse(detailUrl));
+            final detailData = json.decode(detailRes.body);
 
-        if (detailRes.statusCode == 200 && detailData['status'] == 'OK') {
-          final location = detailData['result']['geometry']['location'];
-          final lat = location['lat'];
-          final lng = location['lng'];
+            if (detailRes.statusCode == 200 && detailData['status'] == 'OK') {
+              final location = detailData['result']['geometry']['location'];
+              final lat = location['lat'];
+              final lng = location['lng'];
 
-          final distance = Geolocator.distanceBetween(
-            position.latitude,
-            position.longitude,
-            lat,
-            lng,
-          );
+              final distance = Geolocator.distanceBetween(
+                position.latitude,
+                position.longitude,
+                lat,
+                lng,
+              );
 
-          return {
-            'placeId': placeId,
-            'description': prediction['description'],
-            'lat': lat,
-            'lng': lng,
-            'distance': '${(distance / 1000).round()} km',
-
-
-          };
-        }
-        return null;
-      }).toList(); // ✅ Now this is List<Future<Map<String, dynamic>?>>
+              return {
+                'placeId': placeId,
+                'description': prediction['description'],
+                'lat': lat,
+                'lng': lng,
+                'distance': '${(distance / 1000).round()} km',
+              };
+            }
+            return null;
+          }).toList(); // ✅ Now this is List<Future<Map<String, dynamic>?>>
 
       final detailedResults = await Future.wait(futures);
-      return detailedResults.whereType<Map<String, dynamic>>().toList(); // ✅ filter nulls
+      return detailedResults
+          .whereType<Map<String, dynamic>>()
+          .toList(); // ✅ filter nulls
     }
 
     return [];

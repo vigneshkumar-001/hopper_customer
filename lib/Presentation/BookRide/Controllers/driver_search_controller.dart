@@ -13,22 +13,24 @@ class DriverSearchController extends GetxController {
   RxList<DriverData> serviceType = <DriverData>[].obs;
   Rxn<BookingData> carBooking = Rxn<BookingData>();
   Rxn<BookingDriverData> sendDriverRequestData = Rxn<BookingDriverData>();
-
+  RxString estimatedTime = ''.obs;
+  RxBool markerAdded = false.obs;
   RxBool isLoading = false.obs;
   RxBool isGetLoading = false.obs;
+  RxString selectedCarType = ''.obs; // default to Luxury
 
   @override
   void onInit() {
     super.onInit();
   }
 
-  Future<String?> getDriverSearch({
+  Future<DriverSearchModels?> getDriverSearch({
     required double pickupLat,
     required double pickupLng,
     required double dropLat,
     required double dropLng,
   }) async {
-    isLoading.value = true;
+    isGetLoading.value = true;
 
     try {
       final results = await apiDataSource.getDriverSearch(
@@ -40,18 +42,23 @@ class DriverSearchController extends GetxController {
 
       return results.fold(
         (failure) {
-          isLoading.value = false;
-          return failure.message;
+
+          isGetLoading.value = false;
+          return null;
         },
         (response) {
-          isLoading.value = false;
+          isGetLoading.value = false;
           serviceType.value = response.data;
-          return '';
+          markerAdded.value = false;
+          update();
+          AppLogger.log.i(serviceType.length);
+          AppLogger.log.i(response.data);
+          return response;
         },
       );
     } catch (e) {
-      isLoading.value = false;
-      return 'An error occurred';
+      isGetLoading.value = false;
+      return null;
     }
   }
 

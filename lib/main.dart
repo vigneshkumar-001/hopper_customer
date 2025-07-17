@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:hopper/uber_screen.dart';
 
 Future<void> main() async {
-  await initController;
+  await initController();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.white,

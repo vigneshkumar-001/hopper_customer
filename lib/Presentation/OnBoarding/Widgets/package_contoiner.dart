@@ -127,7 +127,10 @@ class PackageContainer {
                             : null,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     child: Row(
                       children: [
                         Image.asset(AppImages.alone, height: 20),
@@ -163,10 +166,13 @@ class PackageContainer {
                             : null,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     child: Row(
                       children: [
-                        Image.asset(AppImages.alone, height: 20),
+                        Image.asset(AppImages.rideShare, height: 20),
                         SizedBox(width: 15),
                         Text(
                           'Ride Share',
@@ -469,6 +475,39 @@ class PackageContainer {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  static Widget rideShareContainer({
+    String? leftImage,
+    String? rightImage,
+    double height = 45,
+    double weight = 45,
+    bool isSelected = false,
+    bool isDisabled = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color:
+            isDisabled
+                ? AppColors.rideShareContainerColor
+                : isSelected
+                ? AppColors.changeButtonColor
+                : AppColors.rideShareContainerColor3,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 27),
+      child: Image.asset(
+        leftImage ?? '',
+        height: height,
+        width: weight,
+        color:
+            isDisabled
+                ? null
+                : isSelected
+                ? AppColors.commonWhite
+                : AppColors.walletCurrencyColor,
       ),
     );
   }

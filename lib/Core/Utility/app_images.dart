@@ -47,5 +47,10 @@ class AppImages {
   static String cancel = "assets/images/cancel.png";
   static String share = "assets/images/share.png";
   static String support = "assets/images/support.png";
+  static String circleStart = "assets/images/circle_start.png";
+  static String rectangleDest  = "assets/images/rectangle_dest.png";
+  static String no_internet  = "assets/images/no_internet.png";
+  static String rideShare  = "assets/images/rideShare.png";
+  static String stearing  = "assets/images/stearing.png";
 
 }

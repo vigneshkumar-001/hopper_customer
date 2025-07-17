@@ -282,33 +282,46 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
           );
         }),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: AppButtons.button(
-            onTap: () async {
-              final allData = driverController.carBooking.value;
-              String? result = await driverController.sendDriverRequest(
-                pickupLatitude: allData?.fromLatitude ?? 0.0,
-                pickupLongitude: allData?.fromLongitude ?? 0.0,
-                dropLatitude: allData?.toLatitude ?? 0.0,
-                dropLongitude: allData?.toLongitude ?? 0.0,
-                bookingId: allData?.bookingId.toString() ?? '',
-                context: context,
-              );
-              if (result != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => OrderConfirmScreen()),
-                );
-              }
-            },
-            text: 'Confrim',
-            rightImagePath: AppImages.nBlackCurrency,
-            rightImagePathText: ' 73',
-          ),
-        ),
-      ),
+      bottomNavigationBar: Obx(() {
+        return driverController.isLoading.value
+            ? const SizedBox.shrink() // Hides it
+            : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
+                child: AppButtons.button(
+                  onTap: () async {
+                    final allData = driverController.carBooking.value;
+                    String? result = await driverController.sendDriverRequest(
+                      pickupLatitude: allData?.fromLatitude ?? 0.0,
+                      pickupLongitude: allData?.fromLongitude ?? 0.0,
+                      dropLatitude: allData?.toLatitude ?? 0.0,
+                      dropLongitude: allData?.toLongitude ?? 0.0,
+                      bookingId: allData?.bookingId.toString() ?? '',
+                      context: context,
+                    );
+                    if (result != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OrderConfirmScreen(),
+                        ),
+                      );
+                    }
+                  },
+                  text: 'Confirm',
+                  rightImagePath: AppImages.nBlackCurrency,
+                  rightImagePathText:
+                      ((driverController.carBooking.value?.baseFare ?? 0) +
+                              (driverController.carBooking.value?.serviceFare ??
+                                  0))
+                          .toString(),
+                ),
+              ),
+            );
+      }),
     );
   }
 }

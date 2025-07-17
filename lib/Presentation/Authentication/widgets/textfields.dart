@@ -77,11 +77,12 @@ class CustomTextFields {
     VoidCallback? onTap,
     Widget? suffixIcon,
     String? initialValue,
+    FocusNode? focusNode,
     bool readOnly = true,
     bool autofocus = true,
     String? leadingImage,
     double imgHeight = 10,
-    double imgWidth = 10,
+
     Widget? prefixIcon,
     TextStyle? Style,
 
@@ -97,6 +98,7 @@ class CustomTextFields {
         color: containerColor,
       ),
       child: TextFormField(
+        focusNode: focusNode,
         style: Style,
         cursorHeight: 16,
         autofocus: autofocus,
@@ -281,7 +283,9 @@ class CustomTextFields {
     String? imagePath,
     String? rightImagePath,
     double imageSize = 16,
+    double sizedBox = 5,
     double fontSize = 13,
+    double rightTextFontSize = 15,
     TextAlign textAlign = TextAlign.start,
     FontWeight? fontWeight,
     Color? textColor = Colors. black,
@@ -301,7 +305,7 @@ class CustomTextFields {
               width: imageSize,
               color: imageColors,
             ),
-          const SizedBox(width: 5),
+            SizedBox(width: sizedBox),
           Flexible(
             child: Text(
               text,
@@ -320,7 +324,7 @@ class CustomTextFields {
             rightImagePathText ?? '',
             style: TextStyle(
               fontFamily: "Roboto-normal",
-              fontSize: 15,
+              fontSize: rightTextFontSize,
               fontWeight: FontWeight.w600,
               color: textColor,
             ),
