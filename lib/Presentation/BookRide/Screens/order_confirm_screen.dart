@@ -30,7 +30,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   bool get wantKeepAlive => true;
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _destController = TextEditingController();
-  LatLng? _currentPosition;
+
   bool isDriverConfirmed = false;
   final socketService = SocketService();
   GoogleMapController? _mapController;
@@ -40,9 +40,9 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   Marker? _driverMarker;
   Set<Marker> _markers = {};
   BitmapDescriptor? _carIcon;
-
-  LatLng? _customerLatLng; // ✅ Persist customer location
-  LatLng? _currentDriverLatLng; // ✅ Persist driver location
+  LatLng? _currentPosition;
+  LatLng? _customerLatLng;
+  LatLng? _currentDriverLatLng;
 
   String _address = 'Search...';
   String plateNumber = '';
@@ -372,8 +372,8 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       AppLogger.log.i("📡 tracked-driver-location received: $data");
     });
 
-    _initLocation(); // Get initial location for centering
-    _goToCurrentLocation(); // Optional: Move map to user's location
+    _initLocation();
+    _goToCurrentLocation();
   }
 
   void _updateDriverMarker(LatLng position, double bearing) {
@@ -513,9 +513,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         children: [
           SizedBox(
             height: 550,
+            width: double.infinity,
             child: GoogleMap(
               initialCameraPosition: CameraPosition(
-                target: _currentPosition ?? LatLng(0, 0),
+                target: _currentPosition ?? LatLng(9.9144908, 78.0970899),
                 zoom: 16,
               ),
               markers: _markers,

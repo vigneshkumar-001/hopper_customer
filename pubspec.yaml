@@ -57,7 +57,7 @@ dev_dependencies:
   geocoding: any
   dotted_line: any
   socket_io_client: ^3.1.2
-  connectivity_plus: ^6.1.4
+  connectivity_plus: any
 
 
 

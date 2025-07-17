@@ -554,7 +554,7 @@ class _RideShareScreenState extends State<RideShareScreen> {
           padding: EdgeInsets.symmetric(horizontal: 5),
           child: Column(
             children: [
-              SizedBox(height: 5),
+              SizedBox(height: 4),
               AppButtons.button(
                 onTap: () {
                   Navigator.push(

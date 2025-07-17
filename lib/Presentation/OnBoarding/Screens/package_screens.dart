@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:hopper/Core/Utility/app_toasts.dart ';
+import 'package:hopper/Core/Utility/app_toasts.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 

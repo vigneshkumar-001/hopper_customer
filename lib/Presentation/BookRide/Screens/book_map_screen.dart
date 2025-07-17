@@ -12,7 +12,7 @@ import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Core/Utility/app_loader.dart';
-import 'package:hopper/Core/Utility/app_toasts.dart%20';
+import 'package:hopper/Core/Utility/app_toasts.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
 import 'package:hopper/Presentation/BookRide/Screens/confirm_booking.dart';

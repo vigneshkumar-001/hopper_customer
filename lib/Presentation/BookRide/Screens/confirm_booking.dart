@@ -66,218 +66,225 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
           }
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Image.asset(
-                        AppImages.backImage,
-                        height: 19,
-                        width: 19,
-                      ),
-                    ),
-                    Spacer(),
-
-                    CustomTextFields.textWithStyles700(
-                      'Confirm Booking',
-                      fontSize: 20,
-                    ),
-                    Spacer(),
-                  ],
-                ),
-                SizedBox(height: 20),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      CustomTextFields.plainTextField(
-                        Style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.commonBlack.withOpacity(0.6),
-                          overflow: TextOverflow.ellipsis,
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Image.asset(
+                          AppImages.backImage,
+                          height: 19,
+                          width: 19,
                         ),
-                        readOnly: true,
-
-                        hintStyle: TextStyle(fontSize: 11),
-                        imgHeight: 20,
-                        controller: _startController,
-
-                        containerColor: AppColors.commonWhite,
-                        leadingImage: AppImages.dart,
-                        title: 'Search for an address or landmark',
                       ),
-                      const Divider(height: 0, color: AppColors.containerColor),
-                      CustomTextFields.plainTextField(
-                        Style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.commonBlack.withOpacity(0.6),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      Spacer(),
 
-                        controller: _destController,
-
-                        hintStyle: TextStyle(fontSize: 11),
-                        imgHeight: 20,
-                        containerColor: AppColors.commonWhite,
-                        leadingImage: AppImages.dart,
-                        title: 'Enter destination',
-                        readOnly: true,
+                      CustomTextFields.textWithStyles700(
+                        'Confirm Booking',
+                        fontSize: 20,
                       ),
+                      Spacer(),
                     ],
                   ),
-                ),
-                SizedBox(height: 30),
-                Container(
-                  decoration: BoxDecoration(color: AppColors.containerColor),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      spacing: 7,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            CustomTextFields.textWithStylesSmall('Your Ride'),
-                          ],
+                  SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
                         ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        CustomTextFields.plainTextField(
+                          autofocus: false,
+                          Style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.commonBlack.withOpacity(0.6),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          readOnly: true,
 
-                        Row(
-                          children: [
-                            CustomTextFields.textWithStyles600(
-                              '${widget.selectedCarType ?? ''}  ',
-                              fontSize: 18,
-                            ),
-                            Icon(Icons.circle, size: 7),
-                            CustomTextFields.textWithStyles600(
-                              '  Ride Alone',
-                              fontSize: 18,
-                            ),
-                          ],
+                          hintStyle: TextStyle(fontSize: 11),
+                          imgHeight: 20,
+                          controller: _startController,
+
+                          containerColor: AppColors.commonWhite,
+                          leadingImage: AppImages.dart,
+                          title: 'Search for an address or landmark',
+                        ),
+                        const Divider(
+                          height: 0,
+                          color: AppColors.containerColor,
+                        ),
+                        CustomTextFields.plainTextField(
+                          autofocus: false,
+                          Style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.commonBlack.withOpacity(0.6),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+
+                          controller: _destController,
+
+                          hintStyle: TextStyle(fontSize: 11),
+                          imgHeight: 20,
+                          containerColor: AppColors.commonWhite,
+                          leadingImage: AppImages.dart,
+                          title: 'Enter destination',
+                          readOnly: true,
                         ),
                       ],
                     ),
                   ),
-                ),
-                SizedBox(height: 30),
-                CustomTextFields.textWithStyles700(
-                  'Price Details',
-                  fontSize: 20,
-                ),
-                SizedBox(height: 15),
-                Obx(() {
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: AppColors.commonBlack.withOpacity(0.1),
-                        width: 1.5,
+                  SizedBox(height: 30),
+                  Container(
+                    decoration: BoxDecoration(color: AppColors.containerColor),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        spacing: 7,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CustomTextFields.textWithStylesSmall('Your Ride'),
+                            ],
+                          ),
+
+                          Row(
+                            children: [
+                              CustomTextFields.textWithStyles600(
+                                '${widget.selectedCarType ?? ''}  ',
+                                fontSize: 18,
+                              ),
+                              Icon(Icons.circle, size: 7),
+                              CustomTextFields.textWithStyles600(
+                                '  Ride Alone',
+                                fontSize: 18,
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    child: ListTile(
-                      subtitle: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5.0),
-                        child: Column(
-                          spacing: 5,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(child: Text(AppTexts.baseFare)),
-                                CustomTextFields.textWithImage(
-                                  text:
-                                      driverController
-                                          .carBooking
-                                          .value
-                                          ?.baseFare
-                                          .toString() ??
-                                      '',
-                                  imagePath: AppImages.nCurrency,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Expanded(child: Text(AppTexts.serviceFare)),
-                                CustomTextFields.textWithImage(
-                                  text:
-                                      driverController
-                                          .carBooking
-                                          .value
-                                          ?.serviceFare
-                                          .toString() ??
-                                      "",
-                                  imagePath: AppImages.nCurrency,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 3),
-                            SizedBox(
-                              height: 2,
-                              child: DottedLine(
-                                direction: Axis.horizontal,
-                                lineLength: double.infinity,
-                                lineThickness: 1.4,
-                                dashLength: 4.0,
-                                dashColor: Colors.grey.shade400,
-                              ),
-                            ),
-                            SizedBox(height: 3),
-
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: CustomTextFields.textWithStyles600(
-                                    AppTexts.total,
-                                    fontSize: 14,
-                                  ),
-                                ),
-
-                                CustomTextFields.textWithImage(
-                                  text:
-                                      ((driverController
-                                                      .carBooking
-                                                      .value
-                                                      ?.baseFare ??
-                                                  0) +
-                                              (driverController
-                                                      .carBooking
-                                                      .value
-                                                      ?.serviceFare ??
-                                                  0))
-                                          .toString(),
-
-                                  imagePath: AppImages.nBlackCurrency,
-                                  fontWeight: FontWeight.w900,
-                                  colors: AppColors.commonBlack,
-                                ),
-                              ],
-                            ),
-                          ],
+                  ),
+                  SizedBox(height: 30),
+                  CustomTextFields.textWithStyles700(
+                    'Price Details',
+                    fontSize: 20,
+                  ),
+                  SizedBox(height: 15),
+                  Obx(() {
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: AppColors.commonBlack.withOpacity(0.1),
+                          width: 1.5,
                         ),
                       ),
-                    ),
-                  );
-                }),
+                      child: ListTile(
+                        subtitle: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5.0),
+                          child: Column(
+                            spacing: 5,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(child: Text(AppTexts.baseFare)),
+                                  CustomTextFields.textWithImage(
+                                    text:
+                                        driverController
+                                            .carBooking
+                                            .value
+                                            ?.baseFare
+                                            .toString() ??
+                                        '',
+                                    imagePath: AppImages.nCurrency,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(child: Text(AppTexts.serviceFare)),
+                                  CustomTextFields.textWithImage(
+                                    text:
+                                        driverController
+                                            .carBooking
+                                            .value
+                                            ?.serviceFare
+                                            .toString() ??
+                                        "",
+                                    imagePath: AppImages.nCurrency,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 3),
+                              SizedBox(
+                                height: 2,
+                                child: DottedLine(
+                                  direction: Axis.horizontal,
+                                  lineLength: double.infinity,
+                                  lineThickness: 1.4,
+                                  dashLength: 4.0,
+                                  dashColor: Colors.grey.shade400,
+                                ),
+                              ),
+                              SizedBox(height: 3),
 
-                SizedBox(height: 10),
-                CustomTextFields.textWithStylesSmall(
-                  'By confirming, you agree to our Terms of Service and Cancellation Policy',
-                ),
-              ],
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: CustomTextFields.textWithStyles600(
+                                      AppTexts.total,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+
+                                  CustomTextFields.textWithImage(
+                                    text:
+                                        ((driverController
+                                                        .carBooking
+                                                        .value
+                                                        ?.baseFare ??
+                                                    0) +
+                                                (driverController
+                                                        .carBooking
+                                                        .value
+                                                        ?.serviceFare ??
+                                                    0))
+                                            .toString(),
+
+                                    imagePath: AppImages.nBlackCurrency,
+                                    fontWeight: FontWeight.w900,
+                                    colors: AppColors.commonBlack,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+
+                  SizedBox(height: 10),
+                  CustomTextFields.textWithStylesSmall(
+                    'By confirming, you agree to our Terms of Service and Cancellation Policy',
+                  ),
+                ],
+              ),
             ),
           );
         }),
