@@ -79,7 +79,7 @@ class CustomTextFields {
     String? initialValue,
     FocusNode? focusNode,
     bool readOnly = true,
-    bool autofocus = true,
+    bool autofocus = false,
     String? leadingImage,
     double imgHeight = 10,
 

@@ -541,6 +541,7 @@ class _HomeScreensState extends State<HomeScreens>
                             child: Column(
                               children: [
                                 CustomTextFields.plainTextField(
+                                  autofocus: false,
                                   onTap: () {
                                     Get.to(BookRideSearchScreen());
                                   },

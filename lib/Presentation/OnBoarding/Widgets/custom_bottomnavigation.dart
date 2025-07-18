@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
+import 'package:hopper/Presentation/BookRide/Screens/book_map_screen.dart';
+import 'package:hopper/Presentation/BookRide/Screens/search_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
 import 'package:hopper/uber_screen.dart';
@@ -18,11 +20,33 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
 
   final List<Widget> _screens = <Widget>[
     HomeScreens(),
-    PackageScreens(),
+    BookRideSearchScreen(),
     PackageScreens(),
     PackageScreens(),
     PackageScreens(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
+  Widget _getScreen(int index) {
+    switch (index) {
+      case 0:
+        return HomeScreens();
+      case 1:
+        return BookRideSearchScreen( );
+      case 2:
+        return PackageScreens();
+      case 3:
+        return PackageScreens();
+      case 4:
+        return PackageScreens();
+      default:
+        return HomeScreens();
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -30,11 +54,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _selectedIndex = widget.initialIndex;
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +64,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: IndexedStack(index: _selectedIndex, children: _screens),
+        body: _getScreen(_selectedIndex),
         bottomNavigationBar: BottomNavigationBar(
           backgroundColor: AppColors.commonWhite,
           type: BottomNavigationBarType.fixed,

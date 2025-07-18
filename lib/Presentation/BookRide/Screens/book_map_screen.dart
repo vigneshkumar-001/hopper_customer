@@ -256,7 +256,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
       _destinationPosition!.longitude,
     );
 
-    const minDelta = 0.009; // Lowered to make closer points more dynamic
+    const minDelta = 0.009;
     if ((maxLat - minLat) < minDelta) {
       minLat -= minDelta;
       maxLat += minDelta;
@@ -704,6 +704,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
                         child: Column(
                           children: [
                             CustomTextFields.plainTextField(
+                              autofocus: false,
                               Style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.commonBlack.withOpacity(0.6),
@@ -751,11 +752,11 @@ class _BookMapScreenState extends State<BookMapScreen> {
                               },
 
                               hintStyle: TextStyle(fontSize: 11),
-                              imgHeight: 20,
+                              imgHeight: 17,
                               controller: _startController,
 
                               containerColor: AppColors.commonWhite,
-                              leadingImage: AppImages.dart,
+                              leadingImage: AppImages.circleStart,
 
                               title: 'Search for an address or landmark',
                             ),
@@ -764,6 +765,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
                               color: AppColors.containerColor,
                             ),
                             CustomTextFields.plainTextField(
+                              autofocus: false,
                               Style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.commonBlack.withOpacity(0.6),
@@ -811,9 +813,9 @@ class _BookMapScreenState extends State<BookMapScreen> {
                               controller: _destController,
 
                               hintStyle: TextStyle(fontSize: 11),
-                              imgHeight: 20,
+                              imgHeight: 17,
                               containerColor: AppColors.commonWhite,
-                              leadingImage: AppImages.dart,
+                              leadingImage: AppImages.rectangleDest,
                               title: 'Enter destination',
                               readOnly: true,
                             ),
