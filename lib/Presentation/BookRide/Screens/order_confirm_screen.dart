@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/payment_screen.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/gestures.dart';
@@ -16,9 +17,20 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
 
 class OrderConfirmScreen extends StatefulWidget {
-  const OrderConfirmScreen({super.key});
+  final Map<String, dynamic> pickupData;
+  final Map<String, dynamic> destinationData;
+  final String pickupAddress;
+  final String destinationAddress;
+  const OrderConfirmScreen({
+    super.key,
+    required this.pickupData,
+    required this.destinationData,
+    required this.pickupAddress,
+    required this.destinationAddress,
+  });
 
   @override
   State<OrderConfirmScreen> createState() => _OrderConfirmScreenState();
@@ -106,129 +118,6 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 17));
   }
 
-  /*  @override
-  void initState() {
-    super.initState();
-    socketService.onConnect(() {
-      AppLogger.log.i("✅ Socket connected on booking screen");
-    });
-
-    // Listen for driver accepted
-    socketService.on('driver-accepted', (data) {
-      if (!mounted) return;
-
-      final String bookingId = data['bookingId'] ?? '';
-      final String status = data['status'] ?? '';
-      final String driverId = data['driverId'] ?? '';
-      final String userId = data['userId'] ?? '';
-
-      AppLogger.log.i("👉 status: $status");
-      AppLogger.log.i(
-        "✅ Driver accepted: bookingId=$bookingId, driverId=$driverId, userId=$userId,status=$status",
-      );
-      if (status == "SUCCESS") {
-        AppLogger.log.i("🎉 Driver accepted the ride!");
-      }
-
-      // Emit join-booking after driver accepts
-      socketService.emit('join-booking', {
-        'bookingId': bookingId,
-        'userId': driverId,
-      });
-    });
-
-    // ✅ Correct Flutter way to handle joined-booking event
-    socketService.on('joined-booking', (data) {
-      if (!mounted) return;
-
-      final vehicle = data['vehicle'] ?? {};
-      final String driverId = data['driverId'] ?? '';
-      final String driverFullName = data['driverName'] ?? '';
-      final double rating =
-          double.tryParse(data['driverRating'].toString()) ?? 0.0;
-      final String color = vehicle['color'] ?? '';
-      final String model = vehicle['model'] ?? '';
-      final bool driverAccepted = data['driver_accept_status'] == true;
-      final String type = vehicle['type'] ?? '';
-      final String plate = vehicle['plateNumber'] ?? '';
-      final driverLoc = data['driverLocation'];
-      final customerLoc = data['customerLocation'];
-
-      final driverLatLng = LatLng(
-        driverLoc['latitude'],
-        driverLoc['longitude'],
-      );
-
-      final customerLatLng = LatLng(
-        customerLoc['fromLatitude'],
-        customerLoc['fromLongitude'],
-      );
-
-      // _drawPolylineFromDriverToCustomer(
-      //   driverLatLng: driverLatLng,
-      //   customerLatLng: customerLatLng,
-      // );
-      _driverMarker = Marker(
-        markerId: const MarkerId("driver_marker"),
-        position: driverLatLng,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-      );
-
-      setState(() {
-        plateNumber = plate;
-        driverName = '$driverFullName ⭐ $rating';
-        carDetails = '$color - $type $model';
-        isDriverConfirmed = driverAccepted;
-        _markers.add(_driverMarker!);
-      });
-      AppLogger.log.i("🚕 Joined booking data: $data");
-      AppLogger.log.i("🚕 driverAccepted ==  $driverAccepted");
-
-      // You can store joined bookings in your local state if needed
-      // Example: _joinedBookingIds.add(bookingId);
-
-      if (driverId != null && driverId.trim().isNotEmpty) {
-        AppLogger.log.i("📍 Tracking driver: $driverId");
-        socketService.emit('track-driver', {'driverId': driverId.trim()});
-      }
-    });
-    socketService.on('tracked-driver-location', (data) {
-      if (!mounted) return;
-
-      final updatedDriverLatLng = LatLng(data['latitude'], data['longitude']);
-      _drawPolylineFromDriverToCustomer(
-        driverLatLng: updatedDriverLatLng,
-        customerLatLng: _customerLatLng!,
-      );
-
-      _driverMarker = _driverMarker!.copyWith(
-        positionParam: updatedDriverLatLng,
-      );
-      setState(() {
-        _markers
-          ..removeWhere((m) => m.markerId == const MarkerId("driver_marker"))
-          ..add(_driverMarker!);
-      });
-      // Optional: check if the location has changed meaningfully
-      if (_currentDriverLatLng != null &&
-          _currentDriverLatLng == updatedDriverLatLng) {
-        return;
-      }
-
-      _currentDriverLatLng = updatedDriverLatLng;
-
-      // Redraw polyline from updated driver location to customer
-      _drawPolylineFromDriverToCustomer(
-        driverLatLng: updatedDriverLatLng,
-        customerLatLng: _customerLatLng!,
-      );
-    });
-    socketService.on('driver-location', (data) {
-      AppLogger.log.i('📦 driver-location-updated: $data');
-    });
-    _initLocation();
-    _goToCurrentLocation();
-  }*/
   @override
   void initState() {
     super.initState();
@@ -294,62 +183,6 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       }
     });
 
-    // socketService.on('joined-booking', (data) {
-    //   if (!mounted) return;
-    //
-    //   final vehicle = data['vehicle'] ?? {};
-    //   final String driverId = data['driverId'] ?? '';
-    //   final String driverNameStr = data['driverName'] ?? '';
-    //   final double rating = double.tryParse(data['driverRating'].toString()) ?? 0.0;
-    //   final String color = vehicle['color'] ?? '';
-    //   final String model = vehicle['model'] ?? '';
-    //   final String type = vehicle['type'] ?? '';
-    //   final String plate = vehicle['plateNumber'] ?? '';
-    //   final bool driverAccepted = data['driver_accept_status'] == true;
-    //   final driverLoc = data['driverLocation'];
-    //   final customerLoc = data['customerLocation'];
-    //
-    //   final LatLng driverLatLng = LatLng(
-    //     driverLoc['latitude'],
-    //     driverLoc['longitude'],
-    //   );
-    //
-    //   final LatLng customerLatLng = LatLng(
-    //     customerLoc['fromLatitude'],
-    //     customerLoc['fromLongitude'],
-    //   );
-    //
-    //   _customerLatLng = customerLatLng;
-    //   _currentDriverLatLng = driverLatLng;
-    //
-    //   _driverMarker = Marker(
-    //     markerId: const MarkerId("driver_marker"),
-    //     position: driverLatLng,
-    //     icon: _carIcon ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-    //
-    //   );
-    //
-    //   setState(() {
-    //     plateNumber = plate;
-    //     driverName = '$driverNameStr ⭐ $rating';
-    //     carDetails = '$color - $type $model';
-    //     isDriverConfirmed = driverAccepted;
-    //     _markers.add(_driverMarker!);
-    //   });
-    //
-    //   _drawPolylineFromDriverToCustomer(
-    //     driverLatLng: driverLatLng,
-    //     customerLatLng: customerLatLng,
-    //   );
-    //
-    //   if (driverId.trim().isNotEmpty) {
-    //     AppLogger.log.i("📍 Start tracking driver: $driverId");
-    //     socketService.emit('track-driver', {'driverId': driverId.trim()});
-    //   }
-    // });
-
-    // 🔶 Step 3: Real-Time Driver Location Update
-    // 🔶 Step 3: Real-Time Driver Location Update
     socketService.on('driver-location', (data) {
       AppLogger.log.i('📦 driver-location-updated: $data');
 
@@ -507,6 +340,8 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
 
   @override
   Widget build(BuildContext context) {
+    _startController.text = widget.pickupAddress;
+    _destController.text = widget.destinationAddress;
     super.build(context);
     return Scaffold(
       body: Stack(
@@ -624,10 +459,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                               ),
                               controller: _startController,
                               containerColor: AppColors.commonWhite,
-                              leadingImage: AppImages.dart,
+                              leadingImage: AppImages.circleStart,
                               title: 'Search for an address or landmark',
                               hintStyle: TextStyle(fontSize: 11),
-                              imgHeight: 20,
+                              imgHeight: 17,
                             ),
                             const Divider(
                               height: 0,
@@ -642,10 +477,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                               ),
                               controller: _destController,
                               containerColor: AppColors.commonWhite,
-                              leadingImage: AppImages.dart,
+                              leadingImage: AppImages.rectangleDest,
                               title: 'Enter destination',
                               hintStyle: TextStyle(fontSize: 11),
-                              imgHeight: 20,
+                              imgHeight: 17,
                             ),
                           ],
                         ),
@@ -792,7 +627,9 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                           color: AppColors.commonBlack,
                           width: 20,
                         ),
-                        onTap: () {},
+                        onTap: () {
+                          Get.to(() => PaymentScreen());
+                        },
                       ),
                       Container(
                         decoration: BoxDecoration(
@@ -847,10 +684,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                               ),
                               controller: _startController,
                               containerColor: AppColors.commonWhite,
-                              leadingImage: AppImages.dart,
+                              leadingImage: AppImages.circleStart,
                               title: 'Search for an address or landmark',
                               hintStyle: TextStyle(fontSize: 11),
-                              imgHeight: 20,
+                              imgHeight: 17,
                             ),
                             const Divider(
                               height: 0,
@@ -865,10 +702,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                               ),
                               controller: _destController,
                               containerColor: AppColors.commonWhite,
-                              leadingImage: AppImages.dart,
+                              leadingImage: AppImages.rectangleDest,
                               title: 'Enter destination',
                               hintStyle: TextStyle(fontSize: 11),
-                              imgHeight: 20,
+                              imgHeight: 17,
                             ),
                             const Divider(
                               height: 0,
@@ -883,9 +720,12 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                 children: [
                                   CustomTextFields.textWithImage(
                                     onTap: () {
-                                      setState(() {
-                                        isDriverConfirmed = !isDriverConfirmed;
-                                      });
+                                      // setState(() {
+                                      //   isDriverConfirmed = !isDriverConfirmed;
+                                      // });
+                                      AppButtons.showCancelRideBottomSheet(
+                                        context,
+                                      );
                                     },
                                     text: ' Cancel Ride',
                                     fontWeight: FontWeight.w500,

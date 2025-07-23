@@ -6,6 +6,7 @@ import 'package:hopper/Presentation/BookRide/Screens/search_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
 import 'package:hopper/uber_screen.dart';
+import 'package:hopper/uitls/netWorkHandling/network_handling_screen.dart';
 
 class CommonBottomNavigation extends StatefulWidget {
   final int initialIndex;
@@ -62,82 +63,84 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
       onWillPop: () async {
         return false;
       },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: _getScreen(_selectedIndex),
-        bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: AppColors.commonWhite,
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-
-          selectedItemColor: AppColors.commonBlack,
-          unselectedItemColor: Color(0xFF93959F),
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-
-          items: [
-            BottomNavigationBarItem(
-              icon: Image.asset(
-                AppImages.bHome,
-                height: 30,
-                width: 30,
-                color:
-                    _selectedIndex == 0
-                        ? AppColors.commonBlack
-                        : Color(0xFF93959F),
+      child: NoInternetOverlay(
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          body: _getScreen(_selectedIndex),
+          bottomNavigationBar: BottomNavigationBar(
+            backgroundColor: AppColors.commonWhite,
+            type: BottomNavigationBarType.fixed,
+            currentIndex: _selectedIndex,
+            onTap: _onItemTapped,
+        
+            selectedItemColor: AppColors.commonBlack,
+            unselectedItemColor: Color(0xFF93959F),
+            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+        
+            items: [
+              BottomNavigationBarItem(
+                icon: Image.asset(
+                  AppImages.bHome,
+                  height: 30,
+                  width: 30,
+                  color:
+                      _selectedIndex == 0
+                          ? AppColors.commonBlack
+                          : Color(0xFF93959F),
+                ),
+                label: 'Home',
               ),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Image.asset(
-                AppImages.bCar,
-                height: 30,
-                width: 30,
-                color:
-                    _selectedIndex == 1
-                        ? AppColors.commonBlack
-                        : Color(0xFF93959F),
+              BottomNavigationBarItem(
+                icon: Image.asset(
+                  AppImages.bCar,
+                  height: 30,
+                  width: 30,
+                  color:
+                      _selectedIndex == 1
+                          ? AppColors.commonBlack
+                          : Color(0xFF93959F),
+                ),
+                label: 'Ride',
               ),
-              label: 'Ride',
-            ),
-            BottomNavigationBarItem(
-              icon: Image.asset(
-                AppImages.bWallet,
-                height: 30,
-                width: 30,
-                color:
-                    _selectedIndex == 2
-                        ? AppColors.commonBlack
-                        : Color(0xFF93959F),
+              BottomNavigationBarItem(
+                icon: Image.asset(
+                  AppImages.bWallet,
+                  height: 30,
+                  width: 30,
+                  color:
+                      _selectedIndex == 2
+                          ? AppColors.commonBlack
+                          : Color(0xFF93959F),
+                ),
+                label: 'Wallet',
               ),
-              label: 'Wallet',
-            ),
-            BottomNavigationBarItem(
-              icon: Image.asset(
-                AppImages.bPackage,
-                height: 30,
-                width: 30,
-                color:
-                    _selectedIndex == 3
-                        ? AppColors.commonBlack
-                        : Color(0xFF93959F),
+              BottomNavigationBarItem(
+                icon: Image.asset(
+                  AppImages.bPackage,
+                  height: 30,
+                  width: 30,
+                  color:
+                      _selectedIndex == 3
+                          ? AppColors.commonBlack
+                          : Color(0xFF93959F),
+                ),
+                label: 'Package',
               ),
-              label: 'Package',
-            ),
-            BottomNavigationBarItem(
-              icon: Image.asset(
-                AppImages.bProfile,
-                height: 30,
-                width: 30,
-                color:
-                    _selectedIndex == 4
-                        ? AppColors.commonBlack
-                        : Color(0xFF93959F),
+              BottomNavigationBarItem(
+                icon: Image.asset(
+                  AppImages.bProfile,
+                  height: 30,
+                  width: 30,
+                  color:
+                      _selectedIndex == 4
+                          ? AppColors.commonBlack
+                          : Color(0xFF93959F),
+                ),
+                label: 'Profile',
               ),
-              label: 'Profile',
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

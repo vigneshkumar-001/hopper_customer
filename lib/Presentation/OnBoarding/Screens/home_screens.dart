@@ -1,3 +1,8 @@
+import 'dart:convert';
+import 'package:hopper/Presentation/BookRide/Screens/book_map_screen.dart';
+import 'package:hopper/Presentation/OnBoarding/models/recent_location_model.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter/gestures.dart';
@@ -13,6 +18,7 @@ import 'package:hopper/Presentation/BookRide/Screens/search_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
+import 'package:hopper/Presentation/OnBoarding/models/popular_address_model.dart';
 import 'package:hopper/uber_screen.dart';
 import 'package:hopper/uitls/netWorkHandling/network_handling_screen.dart';
 
@@ -40,10 +46,14 @@ class _HomeScreensState extends State<HomeScreens>
   String _address = 'Search...';
   BitmapDescriptor? _customIcon;
   LatLng? _pickedPosition;
-  List<String> _recentLocations = [];
+
   double? _lastZoom;
+  List<PopularPlace> _popularPlaces = [];
+  List<RecentLocation> _recentLocations = [];
+
   bool _isZooming = false;
   late BitmapDescriptor _carIcon;
+
   final Map<String, Marker> _driverMarkers = {};
 
   final double _zoomThreshold = 0.01;
@@ -71,30 +81,28 @@ class _HomeScreensState extends State<HomeScreens>
     }
   }
 
-  Future<void> _getAddressFromLatLng(LatLng position) async {
+  Future<String> _getAddressFromLatLng(LatLng position) async {
     try {
       final placemarks = await placemarkFromCoordinates(
         position.latitude,
         position.longitude,
       );
+
       if (placemarks.isNotEmpty) {
         final placemark = placemarks.first;
         setState(() {
-          _address = "${placemark.street}, ${placemark.locality}";
+          _address = "${placemark.name},${placemark.subLocality ?? ''}";
         });
+        return "${placemark.name ?? ''}, ${placemark.subLocality ?? ''},";
+      } else {
+        return "Unknown Location";
       }
     } catch (e) {
       print("Error getting address: $e");
+      return "Unknown Location";
     }
   }
 
-  // Future<void> _initLocation() async {
-  //   Position position = await Geolocator.getCurrentPosition();
-  //   setState(() {
-  //     _currentPosition = LatLng(position.latitude, position.longitude);
-  //   });
-  //   AppLogger.log.i(_currentPosition);
-  // }
   Future<void> _initLocation(BuildContext context) async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -142,6 +150,60 @@ class _HomeScreensState extends State<HomeScreens>
         ),
       );
     }
+    await _fetchPopularPlaces(userLatLng);
+  }
+
+  Future<void> _loadRecentLocations() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> recentList = prefs.getStringList('recent_locations') ?? [];
+
+    List<RecentLocation> decodedList =
+        recentList.map((jsonStr) {
+          final json = jsonDecode(jsonStr);
+          return RecentLocation.fromJson(json);
+        }).toList();
+
+    setState(() {
+      _recentLocations = decodedList;
+    });
+  }
+
+  Future<void> _fetchPopularPlaces(LatLng location) async {
+    // bus_station
+    // train_station
+    // subway_station
+    // transit_station
+    const String apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+
+    final types = ['bus_station', 'train_station']; // Add more if needed
+    final url =
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${location.latitude},${location.longitude}&rankby=distance&type=bus_station&key=$apiKey';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      final data = json.decode(response.body);
+
+      if (data['status'] == 'OK') {
+        final results = data['results'] as List;
+        setState(() {
+          _popularPlaces =
+              results.take(2).map((place) {
+                String displayName = "${place['name']}, ${place['vicinity']}";
+
+                return PopularPlace(
+                  name: displayName,
+                  address: place['vicinity'],
+                  lat: place['geometry']['location']['lat'],
+                  lng: place['geometry']['location']['lng'],
+                );
+              }).toList();
+        });
+      } else {
+        print('Google Places API error: ${data['status']}');
+      }
+    } catch (e) {
+      print('Error fetching popular places: $e');
+    }
   }
 
   void _showPermissionDialog(
@@ -177,15 +239,6 @@ class _HomeScreensState extends State<HomeScreens>
             ],
           ),
     );
-  }
-
-  Future<void> _loadRecentLocations() async {
-    final prefs = await SharedPreferences.getInstance();
-    final recentStrings = prefs.getStringList('recent_locations') ?? [];
-
-    setState(() {
-      _recentLocations = recentStrings;
-    });
   }
 
   @override
@@ -522,7 +575,7 @@ class _HomeScreensState extends State<HomeScreens>
                         ],
                       ),
                       SizedBox(height: 20),
-                      Card(
+                      /*Card(
                         elevation: 2,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
@@ -594,13 +647,16 @@ class _HomeScreensState extends State<HomeScreens>
                                         width: 20,
                                       ),
                                       SizedBox(width: 10),
-                                      CustomTextFields.textWithStylesSmall(
-                                        textAlign: TextAlign.center,
-                                        colors: AppColors.commonBlack,
+                                      Expanded(
+                                        child:
+                                            CustomTextFields.textWithStylesSmall(
+                                              textAlign: TextAlign.center,
+                                              colors: AppColors.commonBlack,
 
-                                        fontWeight: FontWeight.w500,
+                                              fontWeight: FontWeight.w500,
 
-                                        'Castleton Ave, Staten Island',
+                                              'Castleton Ave, Staten Island',
+                                            ),
                                       ),
 
                                       Spacer(),
@@ -617,7 +673,227 @@ class _HomeScreensState extends State<HomeScreens>
                             ),
                           ),
                         ),
+                      ),*/
+                      Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppColors.containerColor),
+                            borderRadius: BorderRadius.circular(15),
+                            color: AppColors.commonWhite,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 12,
+                            ),
+                            child: Column(
+                              children: [
+                                CustomTextFields.plainTextField(
+                                  autofocus: false,
+                                  onTap: () async {
+                                    // 1. Get address from coordinates
+                                    String pickupAddress =
+                                        await _getAddressFromLatLng(
+                                          _currentPosition!,
+                                        );
+
+                                    Map<String, dynamic> pickupData = {
+                                      'description': pickupAddress,
+                                      'lat': _currentPosition!.latitude,
+                                      'lng': _currentPosition!.longitude,
+                                    };
+
+
+                                    Get.to(
+                                      BookRideSearchScreen(
+                                        isPickup: false,
+                                        pickupData: pickupData,
+                                      ),
+                                    );
+                                  },
+                                  title: 'Search Destination',
+                                ),
+
+                                const SizedBox(height: 5),
+
+                                // ✅ Show recent if >= 2, else show popular
+                                ...((_recentLocations.length >= 2)
+                                    ? List.generate(
+                                      _recentLocations.take(2).length,
+                                      (index) {
+                                        final recentLocation =
+                                            _recentLocations[index];
+                                        return Column(
+                                          children: [
+                                            InkWell(
+                                              onTap: () async {
+                                                String pickupAddress =
+                                                    await _getAddressFromLatLng(
+                                                      _currentPosition!,
+                                                    );
+                                                Get.to(
+                                                  () => BookMapScreen(
+                                                    pickupData: {
+                                                      'name': pickupAddress,
+                                                      'lat':
+                                                          _currentPosition
+                                                              ?.latitude,
+                                                      'lng':
+                                                          _currentPosition
+                                                              ?.longitude,
+                                                    },
+                                                    destinationData: {
+                                                      'lat': recentLocation.lat,
+                                                      'lng': recentLocation.lng,
+                                                    },
+                                                    pickupAddress:
+                                                        pickupAddress,
+                                                    destinationAddress:
+                                                        recentLocation
+                                                            .description,
+                                                  ),
+                                                );
+                                              },
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 10,
+                                                    ),
+                                                child: Row(
+                                                  children: [
+                                                    Image.asset(
+                                                      AppImages.recentHistory,
+                                                      height: 20,
+                                                      width: 20,
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    Expanded(
+                                                      child:
+                                                          CustomTextFields.textWithStylesSmall(
+                                                            recentLocation
+                                                                .description,
+                                                            maxLines: 1,
+                                                            textAlign:
+                                                                TextAlign.left,
+                                                            colors:
+                                                                AppColors
+                                                                    .commonBlack,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                          ),
+                                                    ),
+                                                    const Icon(
+                                                      Icons
+                                                          .keyboard_arrow_right,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            if (index != 1)
+                                              Divider(
+                                                indent: 10,
+                                                endIndent: 15,
+                                                color: AppColors.commonBlack
+                                                    .withOpacity(0.1),
+                                              ),
+                                          ],
+                                        );
+                                      },
+                                    )
+                                    : List.generate(_popularPlaces.length, (
+                                      index,
+                                    ) {
+                                      final place = _popularPlaces[index];
+                                      return Column(
+                                        children: [
+                                          InkWell(
+                                            onTap: () async {
+                                              String pickupAddress =
+                                                  await _getAddressFromLatLng(
+                                                    _currentPosition!,
+                                                  );
+                                              Get.to(
+                                                () => BookMapScreen(
+                                                  pickupData: {
+                                                    'name': pickupAddress,
+                                                    'lat':
+                                                        _currentPosition
+                                                            ?.latitude,
+                                                    'lng':
+                                                        _currentPosition
+                                                            ?.longitude,
+                                                  },
+                                                  destinationData: {
+                                                    'name': place.name,
+                                                    'lat': place.lat,
+                                                    'lng': place.lng,
+                                                  },
+                                                  pickupAddress: pickupAddress,
+                                                  destinationAddress:
+                                                      place.name,
+                                                ),
+                                              );
+                                            },
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 10,
+                                                  ),
+                                              child: Row(
+                                                children: [
+                                                  const Icon(Icons.location_on),
+                                                  const SizedBox(width: 10),
+                                                  Expanded(
+                                                    child:
+                                                        CustomTextFields.textWithStylesSmall(
+                                                          place.name,
+                                                          maxLines: 1,
+                                                          textAlign:
+                                                              TextAlign.left,
+                                                          colors:
+                                                              AppColors
+                                                                  .commonBlack,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                  ),
+                                                  const Icon(
+                                                    Icons.keyboard_arrow_right,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          if (index !=
+                                              _popularPlaces.length - 1)
+                                            Divider(
+                                              indent: 10,
+                                              endIndent: 15,
+                                              color: AppColors.commonBlack
+                                                  .withOpacity(0.1),
+                                            ),
+                                        ],
+                                      );
+                                    })),
+
+                                const SizedBox(height: 5),
+                                CustomTextFields.textWithStylesSmall(
+                                  AppTexts.tellUsYourDestination,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
+
                       SizedBox(height: 20),
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),

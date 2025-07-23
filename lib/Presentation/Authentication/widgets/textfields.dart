@@ -177,6 +177,7 @@ class CustomTextFields {
 
   static textWithStylesSmall(
     String text, {
+    int? maxLines,
     String? text1,
     TextAlign textAlign = TextAlign.start,
     FontWeight? fontWeight,
@@ -184,6 +185,8 @@ class CustomTextFields {
     Color? colors = Colors.black45,
   }) {
     return Text(
+      overflow: TextOverflow.ellipsis,
+      maxLines: maxLines,
       textAlign: textAlign,
       text + (text1 ?? ''),
       style: TextStyle(
@@ -288,12 +291,12 @@ class CustomTextFields {
     double rightTextFontSize = 15,
     TextAlign textAlign = TextAlign.start,
     FontWeight? fontWeight,
-    Color? textColor = Colors. black,
+    Color? textColor = Colors.black,
     Color? colors = Colors.black45,
     Color? imageColors = Colors.black,
   }) {
     return GestureDetector(
-      onTap: onTap ,
+      onTap: onTap,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -305,7 +308,7 @@ class CustomTextFields {
               width: imageSize,
               color: imageColors,
             ),
-            SizedBox(width: sizedBox),
+          SizedBox(width: sizedBox),
           Flexible(
             child: Text(
               text,

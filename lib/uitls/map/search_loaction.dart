@@ -264,6 +264,7 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: CustomTextFields.plainTextField(
+                      autofocus: true,
                       suffixIcon: IconButton(
                         onPressed: () {
                           _searchResults.clear();

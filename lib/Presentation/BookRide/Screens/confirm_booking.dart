@@ -114,11 +114,11 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                           readOnly: true,
 
                           hintStyle: TextStyle(fontSize: 11),
-                          imgHeight: 20,
+                          imgHeight: 17,
                           controller: _startController,
 
                           containerColor: AppColors.commonWhite,
-                          leadingImage: AppImages.dart,
+                          leadingImage: AppImages.circleStart,
                           title: 'Search for an address or landmark',
                         ),
                         const Divider(
@@ -136,9 +136,9 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                           controller: _destController,
 
                           hintStyle: TextStyle(fontSize: 11),
-                          imgHeight: 20,
+                          imgHeight: 17,
                           containerColor: AppColors.commonWhite,
-                          leadingImage: AppImages.dart,
+                          leadingImage: AppImages.rectangleDest,
                           title: 'Enter destination',
                           readOnly: true,
                         ),
@@ -291,7 +291,7 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
       ),
       bottomNavigationBar: Obx(() {
         return driverController.isLoading.value
-            ? const SizedBox.shrink() // Hides it
+            ? const SizedBox.shrink()
             : SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -313,7 +313,21 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => OrderConfirmScreen(),
+                          builder:
+                              (context) => OrderConfirmScreen(
+                                pickupData: {
+                                  'description': widget.pickupAddress,
+                                  'lat': _pickupPosition?.latitude ?? 0.0,
+                                  'lng': _pickupPosition?.longitude ?? 0.0,
+                                },
+                                destinationData: {
+                                  'description': widget.destinationAddress,
+                                  'lat': _destinationPosition?.latitude ?? 0.0,
+                                  'lng': _destinationPosition?.longitude ?? 0.0,
+                                },
+                                pickupAddress: widget.pickupAddress,
+                                destinationAddress: widget.destinationAddress,
+                              ),
                         ),
                       );
                     }

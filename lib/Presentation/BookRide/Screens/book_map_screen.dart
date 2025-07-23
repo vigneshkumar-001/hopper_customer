@@ -65,32 +65,10 @@ class _BookMapScreenState extends State<BookMapScreen> {
   Set<Polyline> _polylines = {};
   GoogleMapController? _mapController;
   bool isSendSelected = true;
-  // String? _selectedCarType;
+
   String _address = 'Search...';
   LatLng? _currentPosition;
-  // @override
-  // void initState() {
-  //   super.initState();
-  //
-  //   _pickupPosition = LatLng(
-  //     widget.pickupData['lat'],
-  //     widget.pickupData['lng'],
-  //   );
-  //
-  //   _destinationPosition = LatLng(
-  //     widget.destinationData['lat'],
-  //     widget.destinationData['lng'],
-  //   );
-  //
-  //   driverController.getDriverSearch(
-  //     pickupLat: _pickupPosition!.latitude,
-  //     pickupLng: _pickupPosition!.longitude,
-  //     dropLat: _destinationPosition!.latitude,
-  //     dropLng: _destinationPosition!.longitude,
-  //   );
-  //
-  //   _drawPolyline();
-  // }
+
   String? _mapStyle;
   Future<void> _loadCustomMarkers() async {
     _startIcon = await BitmapDescriptor.fromAssetImage(
@@ -104,56 +82,6 @@ class _BookMapScreenState extends State<BookMapScreen> {
     setState(() {}); // Refresh map once icons are loaded
   }
 
-  /*  @override
-  void initState() {
-    super.initState();
-    _loadMapStyle();
-    _loadCustomMarkers();
-    LatLng? pickupLocation;
-    LatLng? destinationLocation;
-
-    if (widget.pickupData.containsKey('location')) {
-      pickupLocation = widget.pickupData['location'];
-    } else if (widget.pickupData.containsKey('lat') &&
-        widget.pickupData.containsKey('lng')) {
-      pickupLocation = LatLng(
-        widget.pickupData['lat'],
-        widget.pickupData['lng'],
-      );
-    }
-
-    if (widget.destinationData.containsKey('location')) {
-      destinationLocation = widget.destinationData['location'];
-    } else if (widget.destinationData.containsKey('lat') &&
-        widget.destinationData.containsKey('lng')) {
-      destinationLocation = LatLng(
-        widget.destinationData['lat'],
-        widget.destinationData['lng'],
-      );
-    }
-
-    if (pickupLocation == null || destinationLocation == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.back();
-        Get.snackbar("Error", "Location data is missing");
-      });
-      return;
-    }
-
-    _pickupPosition = pickupLocation;
-    _destinationPosition = destinationLocation;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      driverController.getDriverSearch(
-        pickupLat: _pickupPosition!.latitude,
-        pickupLng: _pickupPosition!.longitude,
-        dropLat: _destinationPosition!.latitude,
-        dropLng: _destinationPosition!.longitude,
-      );
-    });
-
-    _drawPolyline();
-  }*/
   @override
   void initState() {
     super.initState();
@@ -191,7 +119,6 @@ class _BookMapScreenState extends State<BookMapScreen> {
       return;
     }
 
-    // ✅ Check distance between pickup and destination
     double distance = Geolocator.distanceBetween(
       pickupLocation.latitude,
       pickupLocation.longitude,
@@ -272,16 +199,12 @@ class _BookMapScreenState extends State<BookMapScreen> {
     );
 
     await _mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        bounds,
-        140,
-      ), // Adjust padding here for fit-to-center
+      CameraUpdate.newLatLngBounds(bounds, 120),
     );
   }
 
   Future<void> _drawPolyline() async {
-    final String apiKey =
-        'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic'; // Replace with yours
+    final String apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
     final String url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${_pickupPosition!.latitude},${_pickupPosition!.longitude}&destination=${_destinationPosition!.latitude},${_destinationPosition!.longitude}&key=$apiKey';
 
@@ -534,633 +457,514 @@ class _BookMapScreenState extends State<BookMapScreen> {
     _destController.text = widget.destinationAddress;
 
     return NoInternetOverlay(
-      child: Scaffold(
-        body: NotificationListener<ScrollNotification>(
-          onNotification: (_) => true,
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverAppBar(
-                backgroundColor: Colors.white,
-                expandedHeight: 380,
-                automaticallyImplyLeading: false,
-                pinned: true,
-                elevation: 0,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Stack(
-                    children: [
-                      GoogleMap(
-                        compassEnabled: false,
+      child: WillPopScope(
+        onWillPop: () async {
+          return false;
+        },
+        child: Scaffold(
+          body: NotificationListener<ScrollNotification>(
+            onNotification: (_) => true,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverAppBar(
+                  backgroundColor: Colors.white,
+                  expandedHeight: 380,
+                  automaticallyImplyLeading: false,
+                  pinned: true,
+                  elevation: 0,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Stack(
+                      children: [
+                        GoogleMap(
+                          compassEnabled: false,
 
-                        myLocationEnabled: true,
-                        zoomControlsEnabled: false,
-                        myLocationButtonEnabled: false,
-                        initialCameraPosition: CameraPosition(
-                          target: _pickupPosition ?? LatLng(0, 0),
-                          zoom: 14,
-                        ),
-                        onMapCreated: (controller) async {
-                          _mapController = controller;
-
-                          if (!mounted) return;
-
-                          String style = await DefaultAssetBundle.of(
-                            context,
-                          ).loadString('assets/map_style/map_style.json');
-                          _mapController!.setMapStyle(style);
-
-                          _fitBounds();
-                        },
-                        onCameraIdle: () async {
-                          LatLngBounds? bounds =
-                              await _mapController?.getVisibleRegion();
-                          if (bounds != null) {
-                            final centerLat =
-                                (bounds.northeast.latitude +
-                                    bounds.southwest.latitude) /
-                                2;
-                            final centerLng =
-                                (bounds.northeast.longitude +
-                                    bounds.southwest.longitude) /
-                                2;
-
-                            _currentPosition = LatLng(centerLat, centerLng);
-                            await _getAddressFromLatLng(_currentPosition!);
-                            setState(() {});
-                          }
-                        },
-
-                        polylines: _polylines,
-                        markers: _markers,
-                      ),
-
-                      Positioned(
-                        top: 270,
-                        right: 10,
-                        child: FloatingActionButton(
-                          mini: true,
-                          backgroundColor: Colors.white,
-                          onPressed: _goToCurrentLocation,
-                          child: Icon(
-                            Icons.my_location,
-                            color: Colors.black,
-                            size: 20,
+                          myLocationEnabled: true,
+                          zoomControlsEnabled: false,
+                          myLocationButtonEnabled: false,
+                          initialCameraPosition: CameraPosition(
+                            target: _pickupPosition ?? LatLng(0, 0),
+                            zoom: 14,
                           ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 40,
-                        left: 16,
-                        right: 16,
-                        child: GestureDetector(
-                          onTap: () async {
-                            final selected = await Navigator.push(
+                          onMapCreated: (controller) async {
+                            _mapController = controller;
+
+                            if (!mounted) return;
+
+                            String style = await DefaultAssetBundle.of(
                               context,
-                              MaterialPageRoute(
-                                builder:
-                                    (_) => BookRideSearchScreen(
-                                      isPickup: true,
-                                      pickupData: {
-                                        'description': _startController.text,
-                                        'lat': _pickupPosition?.latitude,
-                                        'lng': _pickupPosition?.longitude,
-                                      },
-                                      destinationData: {
-                                        'description': _destController.text,
-                                        'lat': _destinationPosition?.latitude,
-                                        'lng': _destinationPosition?.longitude,
-                                      },
-                                    ),
-                              ),
-                            );
-                            if (selected != null) {
-                              setState(() {
-                                _startController.text = selected['description'];
-                                _pickupPosition = LatLng(
-                                  selected['lat'],
-                                  selected['lng'],
-                                );
-                                _drawPolyline();
-                                _fitBounds();
-                              });
+                            ).loadString('assets/map_style/map_style.json');
+                            _mapController!.setMapStyle(style);
+
+                            _fitBounds();
+                          },
+                          onCameraIdle: () async {
+                            LatLngBounds? bounds =
+                                await _mapController?.getVisibleRegion();
+                            if (bounds != null) {
+                              final centerLat =
+                                  (bounds.northeast.latitude +
+                                      bounds.southwest.latitude) /
+                                  2;
+                              final centerLng =
+                                  (bounds.northeast.longitude +
+                                      bounds.southwest.longitude) /
+                                  2;
+
+                              _currentPosition = LatLng(centerLat, centerLng);
+                              await _getAddressFromLatLng(_currentPosition!);
+                              setState(() {});
                             }
                           },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(color: Colors.black12, blurRadius: 4),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.menu, size: 20),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _address,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Icon(Icons.favorite_border),
-                              ],
+
+                          polylines: _polylines,
+                          markers: _markers,
+                        ),
+
+                        Positioned(
+                          top: 270,
+                          right: 10,
+                          child: FloatingActionButton(
+                            mini: true,
+                            backgroundColor: Colors.white,
+                            onPressed: _goToCurrentLocation,
+                            child: Icon(
+                              Icons.my_location,
+                              color: Colors.black,
+                              size: 20,
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                        Positioned(
+                          top: 50,
+                          left: 15,
+
+                          child: GestureDetector(
+                            onTap: () async {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => CommonBottomNavigation(
+                                        initialIndex: 0,
+                                      ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 4,
+                                  ),
+                                ],
+                              ),
+                              child: Image.asset(
+                                AppImages.backImage,
+                                height: 25,
+                                width: 25,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 15,
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            CustomTextFields.plainTextField(
-                              autofocus: false,
-                              Style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.commonBlack.withOpacity(0.6),
-                                overflow: TextOverflow.ellipsis,
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 15,
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
                               ),
-                              readOnly: true,
-                              onTap: () async {
-                                final selected = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => BookRideSearchScreen(
-                                          isPickup: true,
-                                          pickupData: {
-                                            'description':
-                                                _startController.text,
-                                            'lat': _pickupPosition?.latitude,
-                                            'lng': _pickupPosition?.longitude,
-                                          },
-                                          destinationData: {
-                                            'description': _destController.text,
-                                            'lat':
-                                                _destinationPosition?.latitude,
-                                            'lng':
-                                                _destinationPosition?.longitude,
-                                          },
-                                        ),
-                                  ),
-                                );
-
-                                if (selected != null &&
-                                    selected['pickup'] != null) {
-                                  final pickup = selected['pickup'];
-                                  final LatLng updatedPickupLoc =
-                                      pickup['location'];
-
-                                  setState(() {
-                                    _startController.text =
-                                        pickup['description'];
-                                    _pickupPosition = updatedPickupLoc;
-                                    _drawPolyline();
-                                    _fitBounds();
-                                  });
-                                }
-                              },
-
-                              hintStyle: TextStyle(fontSize: 11),
-                              imgHeight: 17,
-                              controller: _startController,
-
-                              containerColor: AppColors.commonWhite,
-                              leadingImage: AppImages.circleStart,
-
-                              title: 'Search for an address or landmark',
-                            ),
-                            const Divider(
-                              height: 0,
-                              color: AppColors.containerColor,
-                            ),
-                            CustomTextFields.plainTextField(
-                              autofocus: false,
-                              Style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.commonBlack.withOpacity(0.6),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              onTap: () async {
-                                final selected = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => BookRideSearchScreen(
-                                          isPickup: false,
-                                          pickupData: {
-                                            'description':
-                                                _startController.text,
-                                            'lat': _pickupPosition?.latitude,
-                                            'lng': _pickupPosition?.longitude,
-                                          },
-                                          destinationData: {
-                                            'description': _destController.text,
-                                            'lat':
-                                                _destinationPosition?.latitude,
-                                            'lng':
-                                                _destinationPosition?.longitude,
-                                          },
-                                        ),
-                                  ),
-                                );
-
-                                if (selected != null &&
-                                    selected['destination'] != null) {
-                                  final dest = selected['destination'];
-                                  final LatLng updatedDestLoc =
-                                      dest['location'];
-
-                                  setState(() {
-                                    _destController.text = dest['description'];
-                                    _destinationPosition = updatedDestLoc;
-                                    _drawPolyline();
-                                    _fitBounds();
-                                  });
-                                }
-                              },
-
-                              controller: _destController,
-
-                              hintStyle: TextStyle(fontSize: 11),
-                              imgHeight: 17,
-                              containerColor: AppColors.commonWhite,
-                              leadingImage: AppImages.rectangleDest,
-                              title: 'Enter destination',
-                              readOnly: true,
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      PackageContainer.bookContainers(
-                        isSendSelected: isSendSelected,
-                        onSelectionChanged: (selected) {
-                          setState(() {
-                            isSendSelected = selected;
-                          });
-                          AppLogger.log.i(isSendSelected);
-                        },
-                      ),
-                      SizedBox(height: 20),
-                      Obx(() {
-                        if (driverController.isGetLoading.value) {
-                          return AppLoader.circularLoader();
-                        }
-
-                        if (driverController.serviceType.isEmpty) {
-                          return Center(
-                            child: Text(
-                              'No drivers in your location',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          );
-                        }
-
-                        final luxuryDriver = driverController.serviceType
-                            .firstWhereOrNull(
-                              (e) =>
-                                  e.driverId.carType?.toLowerCase() == 'luxury',
-                            );
-
-                        final sedanDriver = driverController.serviceType
-                            .firstWhereOrNull(
-                              (e) =>
-                                  e.driverId.carType?.toLowerCase() == 'sedan',
-                            );
-
-                        if (!driverController.markerAdded.value &&
-                            (luxuryDriver != null || sedanDriver != null)) {
-                          final defaultDriver = luxuryDriver ?? sedanDriver;
-                          driverController.estimatedTime.value =
-                              defaultDriver?.estimatedTime?.toString() ?? '';
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            _addMarkers(driverController.estimatedTime.value);
-                            driverController.markerAdded.value = true;
-                          });
-                        }
-
-                        return Column(
-                          children: [
-                            if (luxuryDriver != null)
-                              PackageContainer.bookCarTypeContainer(
-                                borderColor:
-                                    driverController.selectedCarType.value ==
-                                            'Luxury'
-                                        ? AppColors.commonBlack
-                                        : AppColors.containerColor,
-
-                                carImg: AppImages.luxuryCar,
-                                onTap: () {
-                                  driverController.selectedCarType.value =
-                                      'Luxury';
-                                  driverController.estimatedTime.value =
-                                      luxuryDriver.estimatedTime?.toString() ??
-                                      '';
-                                  _addMarkers(
-                                    driverController.estimatedTime.value,
-                                  );
-                                },
-                                carTitle: 'Luxury',
-                                carMinRate:
-                                    luxuryDriver.estimatedPrice.toString(),
-                                carMaxRate:
-                                    (luxuryDriver.estimatedPrice + 30)
-                                        .toString(),
-                                carSubTitle: 'Comfy, Economical Cars',
-                                arrivingTime:
-                                    '${luxuryDriver.estimatedTime ?? 0} min',
-                              ),
-                            const SizedBox(height: 20),
-                            if (sedanDriver != null)
-                              PackageContainer.bookCarTypeContainer(
-                                borderColor:
-                                    driverController.selectedCarType.value ==
-                                            'Sedan'
-                                        ? AppColors.commonBlack
-                                        : AppColors.containerColor,
-
-                                carImg: AppImages.sedan,
-                                onTap: () {
-                                  driverController.selectedCarType.value =
-                                      'Sedan';
-                                  driverController.estimatedTime.value =
-                                      sedanDriver.estimatedTime?.toString() ??
-                                      '';
-                                  _addMarkers(
-                                    driverController.estimatedTime.value,
-                                  );
-                                },
-                                carTitle: 'Sedan',
-                                carMinRate:
-                                    sedanDriver.estimatedPrice.toString(),
-                                carMaxRate:
-                                    (sedanDriver.estimatedPrice + 32)
-                                        .toString(),
-                                carSubTitle: 'Comfy, Economical Cars',
-                                arrivingTime:
-                                    '${sedanDriver.estimatedTime ?? 0} min',
-                              ),
-                          ],
-                        );
-                      }),
-
-                      /*Obx(() {
-                        if (driverController.isGetLoading.value) {
-                          return AppLoader.circularLoader();
-                        }
-
-                        if (driverController.serviceType.isEmpty) {
-                          return Center(
-                            child: Text(
-                              'No drivers in your location',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          );
-                        }
-
-                        // Step 3: Filter car types
-                        final luxuryDriver = driverController.serviceType
-                            .firstWhereOrNull(
-                              (e) =>
-                                  e.driverId.carType?.toLowerCase() == 'luxury',
-                            );
-
-                        final sedanDriver = driverController.serviceType
-                            .firstWhereOrNull(
-                              (e) =>
-                                  e.driverId.carType?.toLowerCase() == 'sedan',
-                            );
-                        if (!_markerAdded && (luxuryDriver != null || sedanDriver != null)) {
-                          _markerAdded = true;
-
-                          final defaultDriver = _selectedCarType == 'Sedan'
-                              ? sedanDriver
-                              : luxuryDriver ?? sedanDriver;
-
-                          _estimatedTime = defaultDriver?.estimatedTime?.toString();
-                          _addMarkers(); // Now the data is ready!
-                        }
-
-                        // Step 4: No matching car types
-                        if (luxuryDriver == null && sedanDriver == null) {
-                          return Center(
-                            child: Text(
-                              'Car not found',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          );
-                        }
-
-                        // Step 5: Show available cars
-                        return Column(
-                          children: [
-                            if (luxuryDriver != null)
-                              PackageContainer.bookCarTypeContainer(
-                                borderColor:
-                                    _selectedCarType == 'Luxury'
-                                        ? AppColors.commonBlack
-                                        : AppColors.containerColor,
-                                carImg: AppImages.luxuryCar,
-                                onTap: () {
-                                  _addMarkers(); // 🔁 Trigger refresh
-                                  setState(() {
-                                    _selectedCarType = 'Luxury';
-                                    _estimatedTime =
-                                        luxuryDriver.estimatedTime?.toString();
-                                  });
-
-                                },
-                                carTitle: 'Luxury',
-                                carMinRate:
-                                    luxuryDriver.estimatedPrice.toString(),
-                                carMaxRate:
-                                    (luxuryDriver.estimatedPrice + 30)
-                                        .toString(),
-                                carSubTitle: 'Comfy, Economical Cars',
-                                arrivingTime:
-                                    '${luxuryDriver.estimatedTime ?? 0} min',
-                              ),
-                            const SizedBox(height: 20),
-                            if (sedanDriver != null)
-                              PackageContainer.bookCarTypeContainer(
-                                borderColor:
-                                    _selectedCarType == 'Sedan'
-                                        ? AppColors.commonBlack
-                                        : AppColors.containerColor,
-                                carImg: AppImages.sedan,
-                                onTap: () {
-                                  setState(() {
-                                    _selectedCarType = 'Sedan';
-                                    _estimatedTime =
-                                        sedanDriver.estimatedTime?.toString();
-                                  });
-                                  _addMarkers();
-                                },
-                                carTitle: 'Sedan',
-                                carMinRate:
-                                    sedanDriver.estimatedPrice.toString(),
-                                carMaxRate:
-                                    (sedanDriver.estimatedPrice + 32)
-                                        .toString(),
-                                carSubTitle: 'Comfy, Economical Cars',
-                                arrivingTime:
-                                    '${sedanDriver.estimatedTime ?? 0} min',
-                              ),
-                          ],
-                        );
-                      }),*/
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        bottomNavigationBar: Obx(
-          () => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child:
-                driverController.isLoading.value
-                    ? AppLoader.appLoader()
-                    : AppButtons.button(
-                      buttonColor:
-                          driverController.selectedCarType.value.isEmpty
-                              ? AppColors.containerColor
-                              : AppColors.commonBlack,
-                      textColor: Colors.white,
-                      onTap: () async {
-                        if (driverController.selectedCarType.value.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please select a car to proceed.'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                          return;
-                        }
-
-                        String? result = await driverController
-                            .createBookingCar(
-                              fromLatitude: _pickupPosition?.latitude ?? 0.0,
-                              fromLongitude: _pickupPosition?.longitude ?? 0.0,
-                              toLatitude: _destinationPosition?.latitude ?? 0.0,
-                              toLongitude:
-                                  _destinationPosition?.longitude ?? 0.0,
-                              customerId: '',
-                              context: context,
-                            );
-
-                        if (result != null) {
-                          final _selectedCarType =
-                              driverController.selectedCarType.value;
-                          if (isSendSelected) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => ConfirmBooking(
-                                      selectedCarType: _selectedCarType,
-                                      pickupData: {
-                                        'description': widget.pickupAddress,
-                                        'lat': _pickupPosition?.latitude ?? 0.0,
-                                        'lng':
-                                            _pickupPosition?.longitude ?? 0.0,
-                                      },
-                                      destinationData: {
-                                        'description':
-                                            widget.destinationAddress,
-                                        'lat':
-                                            _destinationPosition?.latitude ??
-                                            0.0,
-                                        'lng':
-                                            _destinationPosition?.longitude ??
-                                            0.0,
-                                      },
-                                      pickupAddress: widget.pickupAddress,
-                                      destinationAddress:
-                                          widget.destinationAddress,
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              CustomTextFields.plainTextField(
+                                autofocus: false,
+                                Style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.commonBlack.withOpacity(0.6),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                readOnly: true,
+                                onTap: () async {
+                                  final selected = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => BookRideSearchScreen(
+                                            isPickup: true,
+                                            pickupData: {
+                                              'description':
+                                                  _startController.text,
+                                              'lat': _pickupPosition?.latitude,
+                                              'lng': _pickupPosition?.longitude,
+                                            },
+                                            destinationData: {
+                                              'description':
+                                                  _destController.text,
+                                              'lat':
+                                                  _destinationPosition
+                                                      ?.latitude,
+                                              'lng':
+                                                  _destinationPosition
+                                                      ?.longitude,
+                                            },
+                                          ),
                                     ),
+                                  );
+
+                                  if (selected != null &&
+                                      selected['pickup'] != null) {
+                                    final pickup = selected['pickup'];
+                                    final LatLng updatedPickupLoc =
+                                        pickup['location'];
+
+                                    setState(() {
+                                      _startController.text =
+                                          pickup['description'];
+                                      _pickupPosition = updatedPickupLoc;
+                                      _drawPolyline();
+                                      _fitBounds();
+                                    });
+                                  }
+                                },
+
+                                hintStyle: TextStyle(fontSize: 11),
+                                imgHeight: 17,
+                                controller: _startController,
+
+                                containerColor: AppColors.commonWhite,
+                                leadingImage: AppImages.circleStart,
+
+                                title: 'Search for an address or landmark',
                               ),
-                            );
-                          } else {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => RideShareScreen(
-                                      selectedCarType: _selectedCarType,
-                                      pickupData: {
-                                        'description': widget.pickupAddress,
-                                        'lat': _pickupPosition?.latitude ?? 0.0,
-                                        'lng':
-                                            _pickupPosition?.longitude ?? 0.0,
-                                      },
-                                      destinationData: {
-                                        'description':
-                                            widget.destinationAddress,
-                                        'lat':
-                                            _destinationPosition?.latitude ??
-                                            0.0,
-                                        'lng':
-                                            _destinationPosition?.longitude ??
-                                            0.0,
-                                      },
-                                      pickupAddress: widget.pickupAddress,
-                                      destinationAddress:
-                                          widget.destinationAddress,
+                              const Divider(
+                                height: 0,
+                                color: AppColors.containerColor,
+                              ),
+                              CustomTextFields.plainTextField(
+                                autofocus: false,
+                                Style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.commonBlack.withOpacity(0.6),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                onTap: () async {
+                                  final selected = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => BookRideSearchScreen(
+                                            isPickup: false,
+                                            pickupData: {
+                                              'description':
+                                                  _startController.text,
+                                              'lat': _pickupPosition?.latitude,
+                                              'lng': _pickupPosition?.longitude,
+                                            },
+                                            destinationData: {
+                                              'description':
+                                                  _destController.text,
+                                              'lat':
+                                                  _destinationPosition
+                                                      ?.latitude,
+                                              'lng':
+                                                  _destinationPosition
+                                                      ?.longitude,
+                                            },
+                                          ),
                                     ),
+                                  );
+
+                                  if (selected != null &&
+                                      selected['destination'] != null) {
+                                    final dest = selected['destination'];
+                                    final LatLng updatedDestLoc =
+                                        dest['location'];
+
+                                    setState(() {
+                                      _destController.text =
+                                          dest['description'];
+                                      _destinationPosition = updatedDestLoc;
+                                      _drawPolyline();
+                                      _fitBounds();
+                                    });
+                                  }
+                                },
+
+                                controller: _destController,
+
+                                hintStyle: TextStyle(fontSize: 11),
+                                imgHeight: 17,
+                                containerColor: AppColors.commonWhite,
+                                leadingImage: AppImages.rectangleDest,
+                                title: 'Enter destination',
+                                readOnly: true,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        PackageContainer.bookContainers(
+                          isSendSelected: isSendSelected,
+                          onSelectionChanged: (selected) {
+                            setState(() {
+                              isSendSelected = selected;
+                            });
+                            AppLogger.log.i(isSendSelected);
+                          },
+                        ),
+                        SizedBox(height: 20),
+                        Obx(() {
+                          if (driverController.isGetLoading.value) {
+                            return AppLoader.circularLoader();
+                          }
+
+                          if (driverController.serviceType.isEmpty) {
+                            return Center(
+                              child: Text(
+                                'No drivers in your location',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
                               ),
                             );
                           }
-                        }
-                      },
 
-                      text:
-                          driverController.selectedCarType.value.isEmpty
-                              ? 'Book'
-                              : 'Book ${driverController.selectedCarType.value}',
+                          final luxuryDriver = driverController.serviceType
+                              .firstWhereOrNull(
+                                (e) =>
+                                    e.driverId.carType?.toLowerCase() ==
+                                    'luxury',
+                              );
+
+                          final sedanDriver = driverController.serviceType
+                              .firstWhereOrNull(
+                                (e) =>
+                                    e.driverId.carType?.toLowerCase() ==
+                                    'sedan',
+                              );
+
+                          if (!driverController.markerAdded.value &&
+                              (luxuryDriver != null || sedanDriver != null)) {
+                            final defaultDriver = luxuryDriver ?? sedanDriver;
+                            driverController.estimatedTime.value =
+                                defaultDriver?.estimatedTime?.toString() ?? '';
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              _addMarkers(driverController.estimatedTime.value);
+                              driverController.markerAdded.value = true;
+                            });
+                          }
+
+                          return Column(
+                            children: [
+                              if (luxuryDriver != null)
+                                PackageContainer.bookCarTypeContainer(
+                                  borderColor:
+                                      driverController.selectedCarType.value ==
+                                              'Luxury'
+                                          ? AppColors.commonBlack
+                                          : AppColors.containerColor,
+
+                                  carImg: AppImages.luxuryCar,
+                                  onTap: () {
+                                    driverController.selectedCarType.value =
+                                        'Luxury';
+                                    driverController.estimatedTime.value =
+                                        luxuryDriver.estimatedTime
+                                            ?.toString() ??
+                                        '';
+                                    _addMarkers(
+                                      driverController.estimatedTime.value,
+                                    );
+                                  },
+                                  carTitle: 'Luxury',
+                                  carMinRate:
+                                      luxuryDriver.estimatedPrice.toString(),
+                                  carMaxRate:
+                                      (luxuryDriver.estimatedPrice + 30)
+                                          .toString(),
+                                  carSubTitle: 'Comfy, Economical Cars',
+                                  arrivingTime:
+                                      '${luxuryDriver.estimatedTime ?? 0} min',
+                                ),
+                              const SizedBox(height: 20),
+                              if (sedanDriver != null)
+                                PackageContainer.bookCarTypeContainer(
+                                  borderColor:
+                                      driverController.selectedCarType.value ==
+                                              'Sedan'
+                                          ? AppColors.commonBlack
+                                          : AppColors.containerColor,
+
+                                  carImg: AppImages.sedan,
+                                  onTap: () {
+                                    driverController.selectedCarType.value =
+                                        'Sedan';
+                                    driverController.estimatedTime.value =
+                                        sedanDriver.estimatedTime?.toString() ??
+                                        '';
+                                    _addMarkers(
+                                      driverController.estimatedTime.value,
+                                    );
+                                  },
+                                  carTitle: 'Sedan',
+                                  carMinRate:
+                                      sedanDriver.estimatedPrice.toString(),
+                                  carMaxRate:
+                                      (sedanDriver.estimatedPrice + 32)
+                                          .toString(),
+                                  carSubTitle: 'Comfy, Economical Cars',
+                                  arrivingTime:
+                                      '${sedanDriver.estimatedTime ?? 0} min',
+                                ),
+                            ],
+                          );
+                        }),
+                      ],
                     ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          bottomNavigationBar: Obx(
+            () => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child:
+                  driverController.isLoading.value
+                      ? AppLoader.appLoader()
+                      : AppButtons.button(
+                        buttonColor:
+                            driverController.selectedCarType.value.isEmpty
+                                ? AppColors.containerColor
+                                : AppColors.commonBlack,
+                        textColor: Colors.white,
+                        onTap: () async {
+                          if (driverController.selectedCarType.value.isEmpty) {
+                            // ScaffoldMessenger.of(context).showSnackBar(
+                            //   const SnackBar(
+                            //     content: Text(
+                            //       'Please select a car to proceed.',
+                            //     ),
+                            //     backgroundColor: Colors.red,
+                            //   ),
+                            // );
+                            Get.closeAllSnackbars();
+                            Get.snackbar(
+                              'Info',
+                              'Please select a car before proceeding.',
+                              backgroundColor: AppColors.commonBlack,
+                              colorText: AppColors.commonWhite,
+                            );
+
+                            return;
+                          }
+
+                          String?
+                          result = await driverController.createBookingCar(
+                            fromLatitude: _pickupPosition?.latitude ?? 0.0,
+                            fromLongitude: _pickupPosition?.longitude ?? 0.0,
+                            toLatitude: _destinationPosition?.latitude ?? 0.0,
+                            toLongitude: _destinationPosition?.longitude ?? 0.0,
+                            customerId: '',
+                            context: context,
+                          );
+
+                          if (result != null) {
+                            final _selectedCarType =
+                                driverController.selectedCarType.value;
+                            if (isSendSelected) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => ConfirmBooking(
+                                        selectedCarType: _selectedCarType,
+                                        pickupData: {
+                                          'description': widget.pickupAddress,
+                                          'lat':
+                                              _pickupPosition?.latitude ?? 0.0,
+                                          'lng':
+                                              _pickupPosition?.longitude ?? 0.0,
+                                        },
+                                        destinationData: {
+                                          'description':
+                                              widget.destinationAddress,
+                                          'lat':
+                                              _destinationPosition?.latitude ??
+                                              0.0,
+                                          'lng':
+                                              _destinationPosition?.longitude ??
+                                              0.0,
+                                        },
+                                        pickupAddress: widget.pickupAddress,
+                                        destinationAddress:
+                                            widget.destinationAddress,
+                                      ),
+                                ),
+                              );
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => RideShareScreen(
+                                        selectedCarType: _selectedCarType,
+                                        pickupData: {
+                                          'description': widget.pickupAddress,
+                                          'lat':
+                                              _pickupPosition?.latitude ?? 0.0,
+                                          'lng':
+                                              _pickupPosition?.longitude ?? 0.0,
+                                        },
+                                        destinationData: {
+                                          'description':
+                                              widget.destinationAddress,
+                                          'lat':
+                                              _destinationPosition?.latitude ??
+                                              0.0,
+                                          'lng':
+                                              _destinationPosition?.longitude ??
+                                              0.0,
+                                        },
+                                        pickupAddress: widget.pickupAddress,
+                                        destinationAddress:
+                                            widget.destinationAddress,
+                                      ),
+                                ),
+                              );
+                            }
+                          }
+                        },
+
+                        text:
+                            driverController.selectedCarType.value.isEmpty
+                                ? 'Book'
+                                : 'Book ${driverController.selectedCarType.value}',
+                      ),
+            ),
           ),
         ),
       ),

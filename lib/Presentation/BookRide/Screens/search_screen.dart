@@ -10,6 +10,7 @@ import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:hopper/Presentation/BookRide/Screens/book_map_screen.dart';
 import 'package:hopper/Presentation/BookRide/Screens/locate_on_map_screen.dart';
 import 'package:hopper/uitls/map/search.dart';
+import 'package:hopper/uitls/netWorkHandling/network_handling_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BookRideSearchScreen extends StatefulWidget {
@@ -440,246 +441,243 @@ class _BookRideSearchScreenState extends State<BookRideSearchScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 20.0),
-          child: Column(
-            children: [
-              SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(15),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Image.asset(
-                              AppImages.backImage,
-                              height: 19,
-                              width: 19,
-                            ),
+        child: Column(
+          children: [
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(15),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Image.asset(
+                            AppImages.backImage,
+                            height: 19,
+                            width: 19,
                           ),
-                          SizedBox(width: 12),
-                          CustomTextFields.textWithStyles600(
-                            'Set pick up location',
+                        ),
+                        SizedBox(width: 12),
+                        CustomTextFields.textWithStyles600(
+                          'Set pick up location',
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          children: [
-                            Column(
-                              children: [
-                                CustomTextFields.plainTextField(
-                                  suffixIcon:
-                                      _isStartFieldFocused &&
-                                              _startController.text.isNotEmpty
-                                          ? IconButton(
-                                            icon: Icon(Icons.close, size: 18),
-                                            onPressed: () {
-                                              _startController.clear();
-                                              setState(() {});
-                                            },
-                                          )
-                                          : null,
-                                  hintStyle: TextStyle(fontSize: 11),
-                                  imgHeight: 15,
-                                  focusNode: _pickupFocus,
-                                  controller: _startController,
-                                  onChanged: _searchLocation,
-                                  onTap:
-                                      () => setState(
-                                        () => _isStartFieldFocused = true,
-                                      ),
-                                  containerColor: AppColors.commonWhite,
-                                  leadingImage: AppImages.circleStart,
-                                  title: 'Search for an address or landmark',
-                                  readOnly: false,
-                                ),
-                                const Divider(
-                                  height: 10,
-                                  color: AppColors.containerColor,
-                                ),
-                                CustomTextFields.plainTextField(
-                                  focusNode: _destinationFocus,
-                                  controller: _destController,
-                                  onChanged: _searchLocation,
-                                  onTap:
-                                      () => setState(
-                                        () => _isStartFieldFocused = false,
-                                      ),
-                                  hintStyle: TextStyle(fontSize: 11),
-                                  imgHeight: 16,
-                                  containerColor: AppColors.commonWhite,
-                                  leadingImage: AppImages.rectangleDest,
-                                  title: 'Enter destination',
-                                  readOnly: false,
-                                  suffixIcon:
-                                      !_isStartFieldFocused &&
-                                              _destController.text.isNotEmpty
-                                          ? IconButton(
-                                            icon: Icon(Icons.close, size: 18),
-                                            onPressed: () {
-                                              _destController.clear();
-                                              setState(() {});
-                                            },
-                                          )
-                                          : null,
-                                ),
-                              ],
-                            ),
-                            Positioned(
-                              left: 23,
-                              top: 33,
-                              bottom: 33,
-                              child: Container(
-                                width: 1.3,
-                                color: Colors.grey[700],
+                      child: Stack(
+                        children: [
+                          Column(
+                            children: [
+                              CustomTextFields.plainTextField(
+                                suffixIcon:
+                                    _isStartFieldFocused &&
+                                            _startController.text.isNotEmpty
+                                        ? IconButton(
+                                          icon: Icon(Icons.close, size: 18),
+                                          onPressed: () {
+                                            _startController.clear();
+                                            setState(() {});
+                                          },
+                                        )
+                                        : null,
+                                hintStyle: TextStyle(fontSize: 11),
+                                imgHeight: 15,
+                                focusNode: _pickupFocus,
+                                controller: _startController,
+                                onChanged: _searchLocation,
+                                onTap:
+                                    () => setState(
+                                      () => _isStartFieldFocused = true,
+                                    ),
+                                containerColor: AppColors.commonWhite,
+                                leadingImage: AppImages.circleStart,
+                                title: 'Search for an address or landmark',
+                                readOnly: false,
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                    ],
-                  ),
-                ),
-              ),
-              Expanded(
-                child:
-                    resultsToShow.isEmpty && _recentLocations.isNotEmpty
-                        ? Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Recent locations',
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                                ..._recentLocations.map((locString) {
-                                  try {
-                                    final locMap = jsonDecode(locString);
-                                    return ListTile(
-                                      leading: Icon(
-                                        Icons.history,
-                                        size: 18,
-                                        color: Colors.grey,
-                                      ),
-                                      title: Text(
-                                        locMap['description'],
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                      onTap: () {
-                                        final selectedMapData = {
-                                          'description': locMap['description'],
-                                          'location': LatLng(
-                                            locMap['lat'],
-                                            locMap['lng'],
-                                          ),
-                                        };
-                                        _handleSelection(selectedMapData);
-                                      },
-                                    );
-                                  } catch (e) {
-                                    return ListTile(
-                                      leading: Icon(
-                                        Icons.history,
-                                        size: 18,
-                                        color: Colors.grey,
-                                      ),
-                                      title: Text(
-                                        locString,
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                      onTap: () {
-                                        final selectedMapData = {
-                                          'description': locString,
-                                          'location': null,
-                                        };
-                                        _handleSelection(selectedMapData);
-                                      },
-                                    );
-                                  }
-                                }),
-                              ],
+                              const Divider(
+                                height: 10,
+                                color: AppColors.containerColor,
+                              ),
+                              CustomTextFields.plainTextField(
+                                focusNode: _destinationFocus,
+                                controller: _destController,
+                                onChanged: _searchLocation,
+                                onTap:
+                                    () => setState(
+                                      () => _isStartFieldFocused = false,
+                                    ),
+                                hintStyle: TextStyle(fontSize: 11),
+                                imgHeight: 16,
+                                containerColor: AppColors.commonWhite,
+                                leadingImage: AppImages.rectangleDest,
+                                title: 'Enter destination',
+                                readOnly: false,
+                                suffixIcon:
+                                    !_isStartFieldFocused &&
+                                            _destController.text.isNotEmpty
+                                        ? IconButton(
+                                          icon: Icon(Icons.close, size: 18),
+                                          onPressed: () {
+                                            _destController.clear();
+                                            setState(() {});
+                                          },
+                                        )
+                                        : null,
+                              ),
+                            ],
+                          ),
+                          Positioned(
+                            left: 23,
+                            top: 33,
+                            bottom: 33,
+                            child: Container(
+                              width: 1.3,
+                              color: Colors.grey[700],
                             ),
                           ),
-                        )
-                        : resultsToShow.isNotEmpty
-                        ? ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          padding: EdgeInsets.symmetric(horizontal: 15),
-                          itemCount: resultsToShow.length,
-                          itemBuilder: (context, index) {
-                            final item = resultsToShow[index];
-                            return ListTile(
-                              leading: Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-
-                                children: [
-                                  Icon(Icons.location_on_outlined, size: 19),
-                                  SizedBox(height: 4),
-                                  if (item['distance'] != null)
-                                    Text(
-                                      item['distance'],
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        color: Colors.grey[600],
-                                      ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child:
+                  resultsToShow.isEmpty && _recentLocations.isNotEmpty
+                      ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Recent locations',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              ..._recentLocations.map((locString) {
+                                try {
+                                  final locMap = jsonDecode(locString);
+                                  return ListTile(
+                                    leading: Icon(
+                                      Icons.history,
+                                      size: 18,
+                                      color: Colors.grey,
                                     ),
-                                ],
-                              ),
-                              title: Text(
-                                item['description'].split(',')[0],
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                item['description'],
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xff828284),
-                                ),
-                              ),
-                              onTap: () => _handleSelection(item),
-                            );
-                          },
-                        )
-                        : SizedBox.shrink(),
-              ),
+                                    title: Text(
+                                      locMap['description'],
+                                      style: TextStyle(fontSize: 14),
+                                    ),
+                                    onTap: () {
+                                      final selectedMapData = {
+                                        'description': locMap['description'],
+                                        'location': LatLng(
+                                          locMap['lat'],
+                                          locMap['lng'],
+                                        ),
+                                      };
+                                      _handleSelection(selectedMapData);
+                                    },
+                                  );
+                                } catch (e) {
+                                  return ListTile(
+                                    leading: Icon(
+                                      Icons.history,
+                                      size: 18,
+                                      color: Colors.grey,
+                                    ),
+                                    title: Text(
+                                      locString,
+                                      style: TextStyle(fontSize: 14),
+                                    ),
+                                    onTap: () {
+                                      final selectedMapData = {
+                                        'description': locString,
+                                        'location': null,
+                                      };
+                                      _handleSelection(selectedMapData);
+                                    },
+                                  );
+                                }
+                              }),
+                            ],
+                          ),
+                        ),
+                      )
+                      : resultsToShow.isNotEmpty
+                      ? ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        padding: EdgeInsets.symmetric(horizontal: 15),
+                        itemCount: resultsToShow.length,
+                        itemBuilder: (context, index) {
+                          final item = resultsToShow[index];
+                          return ListTile(
+                            leading: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
 
-              AppButtons.button(
-                hasBorder: true,
-                fontSize: 14,
-                borderColor: AppColors.containerColor,
-                buttonColor: AppColors.commonWhite,
-                textColor: AppColors.commonBlack,
-                imagePath: AppImages.mapLocation,
-                onTap: _locateOnMap,
-                text: AppTexts.locateOnMap,
-              ),
-            ],
-          ),
+                              children: [
+                                Icon(Icons.location_on_outlined, size: 19),
+                                SizedBox(height: 4),
+                                if (item['distance'] != null)
+                                  Text(
+                                    item['distance'],
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            title: Text(
+                              item['description'].split(',')[0],
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              item['description'],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xff828284),
+                              ),
+                            ),
+                            onTap: () => _handleSelection(item),
+                          );
+                        },
+                      )
+                      : SizedBox.shrink(),
+            ),
+
+            AppButtons.button(
+              hasBorder: true,
+              fontSize: 14,
+              borderColor: AppColors.containerColor,
+              buttonColor: AppColors.commonWhite,
+              textColor: AppColors.commonBlack,
+              imagePath: AppImages.mapLocation,
+              onTap: _locateOnMap,
+              text: AppTexts.locateOnMap,
+            ),
+          ],
         ),
       ),
     );

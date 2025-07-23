@@ -197,7 +197,6 @@ class _OtpScreensState extends State<OtpScreens> {
                 ),
               ),
               AppButtons.button(
-
                 onTap: () {
                   if (otp.text.length != 4) {
                     errorController?.add(ErrorAnimationType.shake);
