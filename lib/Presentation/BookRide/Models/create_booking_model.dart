@@ -11,7 +11,7 @@ class CreateBookingModel {
 
   factory CreateBookingModel.fromJson(Map<String, dynamic> json) {
     return CreateBookingModel(
-      status: json['status'],
+      status: json['status'] ?? 0,
       data: BookingData.fromJson(json['data']),
       message: json['message'] ?? '',
     );

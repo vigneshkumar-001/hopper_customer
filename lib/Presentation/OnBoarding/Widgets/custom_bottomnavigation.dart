@@ -32,12 +32,13 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
     super.initState();
     _selectedIndex = widget.initialIndex;
   }
+
   Widget _getScreen(int index) {
     switch (index) {
       case 0:
         return HomeScreens();
       case 1:
-        return BookRideSearchScreen( );
+        return BookRideSearchScreen();
       case 2:
         return PackageScreens();
       case 3:
@@ -55,8 +56,6 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -72,12 +71,12 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
             type: BottomNavigationBarType.fixed,
             currentIndex: _selectedIndex,
             onTap: _onItemTapped,
-        
+
             selectedItemColor: AppColors.commonBlack,
             unselectedItemColor: Color(0xFF93959F),
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-        
+
             items: [
               BottomNavigationBarItem(
                 icon: Image.asset(

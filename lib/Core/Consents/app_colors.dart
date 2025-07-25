@@ -34,5 +34,8 @@ class AppColors {
   static final rideShareContainerColor = Color(0xffDADADA);
   static final rideShareContainerColor2 = Color(0xff5C5C5C);
   static final rideShareContainerColor3 = Color(0xffC9FFD5);
-
+  static final chatCallContainerColor = Color(0xffE2FBE9);
+  static final userChatContainerColor = Color(0xff1677FF);
+  static final adminChatContainerColor = Color(0xffF0F0F0);
+  static final lowLightBlue = Color(0xffEDF3FF);
 }

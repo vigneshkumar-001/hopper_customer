@@ -4,6 +4,7 @@ import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
+import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Presentation/Authentication/controller/authcontroller.dart';
 import 'package:hopper/Presentation/Authentication/screens/otp_screens.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
@@ -117,6 +118,7 @@ class _MobileScreensState extends State<MobileScreens> {
                         ),
                         const SizedBox(height: 15),
                         CustomTextFields.textWithStylesSmall(
+                          maxLines: 3,
                           AppTexts.enterMobileNumberContent,
                         ),
                         const SizedBox(height: 20),
@@ -174,10 +176,10 @@ class _MobileScreensState extends State<MobileScreens> {
                               child: TextFormField(
                                 autovalidateMode:
                                     AutovalidateMode.onUserInteraction,
-
                                 onChanged: (value) {
                                   final code =
                                       controller.selectedCountryCode.value;
+
                                   if (value.isEmpty) {
                                     controller.errorText.value =
                                         'Please enter your Mobile Number';
@@ -191,9 +193,49 @@ class _MobileScreensState extends State<MobileScreens> {
                                         'Nigerian numbers must be exactly 10 digits';
                                   } else {
                                     controller.errorText.value = '';
+
+                                    if (_formKey.currentState?.validate() ??
+                                        false) {
+                                      Future.delayed(
+                                        Duration(milliseconds: 100),
+                                        () {
+                                          FocusScope.of(context).unfocus();
+                                          final String mbl =
+                                              controller.mobileNumber.text;
+                                          controller.login(
+                                            mobileNumber: mbl,
+                                            context: context,
+                                            countryCode: code,
+                                          );
+                                        },
+                                      );
+                                    }
                                   }
+
+                                  // Trigger validation error UI
                                   _formKey.currentState?.validate();
                                 },
+
+                                //
+                                // onChanged: (value) {
+                                //   final code =
+                                //       controller.selectedCountryCode.value;
+                                //   if (value.isEmpty) {
+                                //     controller.errorText.value =
+                                //         'Please enter your Mobile Number';
+                                //   } else if (code == '+91' &&
+                                //       value.length != 10) {
+                                //     controller.errorText.value =
+                                //         'Indian numbers must be exactly 10 digits';
+                                //   } else if (code == '+234' &&
+                                //       value.length != 10) {
+                                //     controller.errorText.value =
+                                //         'Nigerian numbers must be exactly 10 digits';
+                                //   } else {
+                                //     controller.errorText.value = '';
+                                //   }
+                                //   _formKey.currentState?.validate();
+                                // },
                                 controller: controller.mobileNumber,
                                 keyboardType: TextInputType.phone,
                                 autofocus: true,
@@ -252,43 +294,51 @@ class _MobileScreensState extends State<MobileScreens> {
                     ),
                   ),
                 ),
+                Obx(() {
+                  return controller.isLoading.value
+                      ? AppLoader.appLoader()
+                      : AppButtons.button(
+                        onTap: () async {
+                          final code = controller.selectedCountryCode.value;
+                          final value = controller.mobileNumber.text.trim();
 
-                AppButtons.button(
-                  onTap: () async {
-                    final code = controller.selectedCountryCode.value;
-                    final value = controller.mobileNumber.text.trim();
+                          // Manual validation
+                          if (value.isEmpty) {
+                            controller.errorText.value =
+                                'Please enter your Mobile Number';
+                            return;
+                          } else if (code == '+91' && value.length != 10) {
+                            controller.errorText.value =
+                                'Indian numbers must be exactly 10 digits';
+                            return;
+                          } else if (code == '+234' && value.length != 10) {
+                            controller.errorText.value =
+                                'Nigerian numbers must be exactly 10 digits';
+                            return;
+                          } else {
+                            controller.errorText.value = '';
+                          }
+                          final String mbl = controller.mobileNumber.text;
+                          controller.login(
+                            mobileNumber: mbl,
+                            context: context,
+                            countryCode: code,
+                          );
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder:
+                          //         (context) => OtpScreens(
+                          //           countyCode: controller.selectedCountryCode.value,
+                          //           mobileNumber: controller.mobileNumber.text,
+                          //         ),
+                          //   ),
+                          // );
+                        },
 
-                    // Manual validation
-                    if (value.isEmpty) {
-                      controller.errorText.value =
-                          'Please enter your Mobile Number';
-                      return;
-                    } else if (code == '+91' && value.length != 10) {
-                      controller.errorText.value =
-                          'Indian numbers must be exactly 10 digits';
-                      return;
-                    } else if (code == '+234' && value.length != 10) {
-                      controller.errorText.value =
-                          'Nigerian numbers must be exactly 10 digits';
-                      return;
-                    } else {
-                      controller.errorText.value = '';
-                    }
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => OtpScreens(
-                              countyCode: controller.selectedCountryCode.value,
-                              mobileNumber: controller.mobileNumber.text,
-                            ),
-                      ),
-                    );
-                  },
-
-                  text: AppTexts.continueWithPhoneNumber,
-                ),
+                        text: AppTexts.continueWithPhoneNumber,
+                      );
+                }),
               ],
             ),
           ),
