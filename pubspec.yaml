@@ -58,6 +58,10 @@ dev_dependencies:
   dotted_line: any
   socket_io_client: ^3.1.2
   connectivity_plus: any
+  flutter_sound: any
+  image_picker: any
+  url_launcher: any
+
 
 
 

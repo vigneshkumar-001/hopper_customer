@@ -231,7 +231,7 @@ class AppButtons {
                           Expanded(
                             child: AppButtons.button(
                               onTap: () {
-                                 Get.back();
+                                Get.back();
                               },
                               text: "Cancel Ride",
                             ),
@@ -239,6 +239,258 @@ class AppButtons {
                         ],
                       ),
                       SizedBox(height: 15),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  static void showPackageCancelBottomSheet(BuildContext context) {
+    String? selectedReason;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return DraggableScrollableSheet(
+              maxChildSize: 0.90,
+              minChildSize: 0.85,
+              initialChildSize: 0.90,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    // borderRadius: BorderRadius.vertical(
+                    //   top: Radius.circular(25),
+                    // ),
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: ListView(
+                          controller: scrollController,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFFEFF4FF,
+                                ), // light blue background
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Icon Circle
+                                  Image.asset(
+                                    AppImages.box,
+                                    width: 27,
+                                    height: 27,
+                                  ),
+                                  const SizedBox(width: 12),
+
+                                  // Text Content
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Courier Status',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                        SizedBox(height: 3),
+                                        Text(
+                                          'Rajesh Kumar is on the way to your location',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+
+                                        CustomTextFields.textWithStylesSmall(
+                                          maxLines: 2,
+                                          fontSize: 11,
+                                          '2.1 km away • ETA: 8 minutes • Order: PKG-2025-7841',
+                                          colors: AppColors.blueLight,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 10),
+                            CustomTextFields.textWithStyles600(
+                              'Why do you want to cancel?',
+                            ),
+                            const SizedBox(height: 5),
+                            ...[
+                              'Changed my mind',
+                              'Wrong pickup address',
+                              'Package not ready',
+                              'Found alternative delivery',
+                              'Other Reason',
+                            ].map((reason) {
+                              final isSelected = selectedReason == reason;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      selectedReason = reason;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 15),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color:
+                                          isSelected
+                                              ? AppColors.commonBlack
+                                              : AppColors.containerColor1,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 15,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            reason,
+                                            style: TextStyle(
+                                              color:
+                                                  isSelected
+                                                      ? AppColors.commonWhite
+                                                      : AppColors.commonBlack
+                                                          .withOpacity(0.6),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            CustomTextFields.textAndField(
+                              maxLines: 2,
+                              fontSize: 12,
+                              tittle: 'Please specify your reason',
+                              hintText:
+                                  'Tell us more about why you want to cancel',
+                            ),
+                            SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFFFFEDE7,
+                                ), // light blue background
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Icon Circle
+                                  Image.asset(
+                                    AppImages.warning,
+                                    width: 27,
+                                    height: 27,
+                                  ),
+                                  const SizedBox(width: 12),
+
+                                  // Text Content
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CustomTextFields.textWithStyles600(
+                                          fontSize: 14,
+                                          'Cancellation Policy',
+                                          color: AppColors.cancelRideColor,
+                                        ),
+                                        SizedBox(height: 3),
+                                        CustomTextFields.textWithStylesSmall(
+                                          colors: AppColors.commonBlack
+                                              .withOpacity(0.6),
+                                          maxLines: 2,
+                                          fontSize: 10,
+                                          'Since the courier is already en route, a cancellation fee of ₹25 applies.',
+                                        ),
+                                        SizedBox(height: 5),
+                                        CustomTextFields.textWithStylesSmall(
+                                          fontWeight: FontWeight.w500,
+                                          colors: AppColors.commonBlack,
+                                          fontSize: 10,
+                                          '• Total paid: ₹73',
+                                        ),
+                                        CustomTextFields.textWithStylesSmall(
+                                          fontWeight: FontWeight.w500,
+                                          colors: AppColors.commonBlack,
+                                          fontSize: 10,
+                                          '• Cancellation fee: ₹25',
+                                        ),
+                                        CustomTextFields.textWithStylesSmall(
+                                          colors: AppColors.commonBlack,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 10,
+                                          '• Refund amount: ₹48',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                          ],
+                        ),
+                      ),
+
+                      Row(
+                        children: [
+                          AppButtons.button(
+                            size: 135,
+                            buttonColor: AppColors.containerColor1,
+                            textColor: AppColors.commonBlack,
+                            onTap: () {
+                              Get.back();
+                            },
+                            text: "Cancel",
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: AppButtons.button(
+                              buttonColor: AppColors.cancelRideColor,
+                              size: 210,
+                              onTap: () {
+                                Get.back();
+                              },
+                              text: "Confirm Cancellation",
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10),
                     ],
                   ),
                 );

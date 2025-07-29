@@ -1,4 +1,6 @@
 import 'package:hopper/Core/Consents/app_logger.dart';
+import 'package:hopper/Presentation/Authentication/models/login_response.dart';
+import 'package:hopper/Presentation/Authentication/models/otp_response.dart';
 import 'package:hopper/Presentation/BookRide/Models/create_booking_model.dart';
 import 'package:hopper/Presentation/BookRide/Models/driver_search_models.dart';
 import 'package:hopper/Presentation/BookRide/Models/send_driver_request_models.dart';
@@ -12,28 +14,86 @@ import 'package:dio/dio.dart';
 import 'package:dartz/dartz.dart';
 
 abstract class BaseApiDataSource {
-  Future<Either<Failure, DriverSearchModels>> mobileNumberLogin(
+  Future<Either<Failure, LoginResponse>> mobileNumberLogin(
     String mobileNumber,
+    String countryCode,
   );
 }
 
 class ApiDataSource extends BaseApiDataSource {
   @override
-  Future<Either<Failure, DriverSearchModels>> mobileNumberLogin(
+  Future<Either<Failure, LoginResponse>> mobileNumberLogin(
     String mobileNumber,
+    String countryCode,
   ) async {
     try {
-      String url = ApiConsents.loginApi;
-
+      String url = ApiConsents.signIn;
+      final String phone = countryCode + mobileNumber;
       dynamic response = await Request.sendRequest(
         url,
-        {"mobileNumber": mobileNumber},
+        {"phone": phone},
         'Post',
         false,
       );
       if (response is! DioException && response.statusCode == 200) {
-        if (response.data['status'] == "200") {
-          return Right(DriverSearchModels.fromJson(response.data));
+        if (response.data['status'] == 200) {
+          return Right(LoginResponse.fromJson(response.data));
+        } else {
+          return Left(ServerFailure(response.data['message']));
+        }
+      } else {
+        return Left(ServerFailure((response as DioException).message ?? ""));
+      }
+    } catch (e) {
+      return Left(ServerFailure(''));
+    }
+  }
+
+  Future<Either<Failure, OtpResponse>> otpVerify(
+    String mobileNumber,
+    String countryCode,
+  ) async {
+    try {
+      String url = ApiConsents.verifyOtp;
+
+      dynamic response = await Request.sendRequest(
+        url,
+        {"phone": mobileNumber, "otp": countryCode},
+        'Post',
+        false,
+      );
+      if (response is! DioException && response.statusCode == 200) {
+        if (response.data['status'] == 200) {
+          return Right(OtpResponse.fromJson(response.data));
+        } else {
+          return Left(ServerFailure(response.data['message']));
+        }
+      } else {
+        return Left(ServerFailure((response as DioException).message ?? ""));
+      }
+    } catch (e) {
+      return Left(ServerFailure(''));
+    }
+  }
+
+  Future<Either<Failure, LoginResponse>> resendOtp(
+    String mobileNumber,
+    String countryCode,
+  ) async {
+    try {
+      String url = ApiConsents.resendOtp;
+      final String phone = countryCode + mobileNumber;
+      AppLogger.log.i(phone);
+      dynamic response = await Request.sendRequest(
+        url,
+        {"phone": phone},
+
+        'Post',
+        false,
+      );
+      if (response is! DioException && response.statusCode == 200) {
+        if (response.data['status'] == 200) {
+          return Right(LoginResponse.fromJson(response.data));
         } else {
           return Left(ServerFailure(response.data['message']));
         }
@@ -135,7 +195,7 @@ class ApiDataSource extends BaseApiDataSource {
     required String bookingId,
   }) async {
     try {
-      final url = ApiConsents. sendDriverRequest ;
+      final url = ApiConsents.sendDriverRequest;
       AppLogger.log.i(url);
 
       dynamic response = await Request.sendRequest(
@@ -145,8 +205,7 @@ class ApiDataSource extends BaseApiDataSource {
           "pickupLatitude": pickupLatitude,
           "pickupLongitude": pickupLongitude,
           "dropLatitude": dropLatitude,
-          "dropLongitude": dropLongitude
-
+          "dropLongitude": dropLongitude,
         },
         'Post',
         false,

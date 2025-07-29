@@ -511,4 +511,49 @@ class PackageContainer {
       ),
     );
   }
+
+  static pickUpFields({
+    required String imagePath,
+    required String title,
+    required String subTitle,
+    String? title1,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Image.asset(imagePath, height: 35, width: 35),
+        SizedBox(width: 10),
+
+        // Title and description in a Column
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CustomTextFields.textWithStylesSmall(
+                title,
+                fontWeight: FontWeight.w500,
+                fontSize: 15,
+                colors: AppColors.commonBlack,
+              ),
+
+              CustomTextFields.textWithStylesSmall(subTitle),
+            ],
+          ),
+        ),
+        if (title1 != null)
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.chatCallContainerColor,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: CustomTextFields.textWithStylesSmall(
+              title1 ?? '',
+              colors: AppColors.walletCurrencyColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+      ],
+    );
+  }
 }

@@ -707,7 +707,6 @@ class _HomeScreensState extends State<HomeScreens>
                                       'lng': _currentPosition!.longitude,
                                     };
 
-
                                     Get.to(
                                       BookRideSearchScreen(
                                         isPickup: false,

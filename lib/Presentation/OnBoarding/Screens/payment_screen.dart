@@ -4,6 +4,8 @@ import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/package_map_confrim_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -40,7 +42,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-                        onTap: (){
+                        onTap: () {
                           Navigator.pop(context);
                         },
                         child: Image.asset(
@@ -256,7 +258,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
                 const SizedBox(width: 40),
                 Expanded(
-                  child: AppButtons.button(onTap: () {}, text: 'Continue'),
+                  child: AppButtons.button(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => PackageMapConfirmScreen()),
+                      );
+                    },
+                    text: 'Continue',
+                  ),
                 ),
               ],
             ),

@@ -3,6 +3,7 @@ import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Presentation/Authentication/screens/splash_screens.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
 
 import 'package:hopper/init_controller.dart';
 import 'package:flutter/services.dart';
