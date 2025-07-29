@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -539,98 +540,182 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                         ],
                       ),
                       SizedBox(height: 20),
-                      Container(
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: Row(
-                          children: [
-                            CustomTextFields.textWithImage(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
-                              colors: AppColors.commonBlack,
-                              text: 'Total Fare',
-                              rightImagePath: AppImages.nBlackCurrency,
-                              rightImagePathText: ' 73',
+                      Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(50),
+                              color: AppColors.containerColor1,
                             ),
 
-                            Spacer(),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(6),
-                                color: Colors.orange[100],
-                              ),
-                              child: Text(
-                                "KJA978AZ",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepOrange,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: InkWell(
+                                onTap: () async {
+                                  const phoneNumber = 'tel:8248191110';
+                                  AppLogger.log.i(phoneNumber);
+                                  final Uri url = Uri.parse(phoneNumber);
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url);
+                                  } else {
+                                    print('Could not launch dialer');
+                                  }
+                                },
+                                child: Image.asset(
+                                  AppImages.call,
+
+                                  height: 20,
+                                  width: 20,
                                 ),
                               ),
                             ),
+                          ),
+                          SizedBox(width: 10),
+
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: AppColors.containerColor1,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  children: [
+                                    CustomTextFields.textWithStylesSmall(
+                                      colors: AppColors.commonBlack,
+                                      'Message your driver',
+                                    ),
+                                    Spacer(),
+                                    Image.asset(
+                                      AppImages.send,
+                                      height: 16,
+                                      width: 16,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.commonWhite,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
                           ],
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 20),
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                child: Row(
+                                  children: [
+                                    CustomTextFields.textWithImage(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16,
+                                      colors: AppColors.commonBlack,
+                                      text: 'Total Fare',
+                                      rightImagePath: AppImages.nBlackCurrency,
+                                      rightImagePathText: ' 73',
+                                    ),
 
-                      ListTile(
-                        leading: Image.asset(
-                          AppImages.cash,
-                          height: 24,
-                          width: 24,
-                        ),
-                        title: CustomTextFields.textWithStylesSmall(
-                          "Cash Payment",
-                          fontSize: 15,
-                          colors: AppColors.commonBlack,
-                          fontWeight: FontWeight.w500,
-                        ),
+                                    Spacer(),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(6),
+                                        color: AppColors.userChatContainerColor,
+                                      ),
+                                      child: CustomTextFields.textWithStyles600(
+                                        'OTP - 6839',
+                                        fontSize: 16,
+                                        color: AppColors.commonWhite,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(color: AppColors.containerColor),
 
-                        trailing: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
+                              ListTile(
+                                leading: Image.asset(
+                                  AppImages.cash,
+                                  height: 24,
+                                  width: 24,
+                                ),
+                                title: CustomTextFields.textWithStylesSmall(
+                                  "Cash Payment",
+                                  fontSize: 15,
+                                  colors: AppColors.commonBlack,
+                                  fontWeight: FontWeight.w500,
+                                ),
+
+                                trailing: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(5),
+                                    color: AppColors.resendBlue.withOpacity(
+                                      0.1,
+                                    ),
+                                  ),
+                                  child: CustomTextFields.textWithStyles600(
+                                    fontSize: 10,
+                                    color: AppColors.changeButtonColor,
+                                    'Change',
+                                  ),
+                                ),
+                                onTap: () {},
+                              ),
+                              ListTile(
+                                leading: Image.asset(
+                                  AppImages.digiPay,
+                                  height: 32,
+                                  width: 32,
+                                ),
+                                title: CustomTextFields.textWithStylesSmall(
+                                  "Pay using card, UPI & more",
+                                  fontSize: 15,
+                                  colors: AppColors.commonBlack,
+                                  fontWeight: FontWeight.w500,
+                                ),
+
+                                subtitle: CustomTextFields.textWithStylesSmall(
+                                  'Pay during the ride to avoid cash payments',
+                                  fontSize: 10,
+                                ),
+                                trailing: Image.asset(
+                                  AppImages.rightArrow,
+                                  height: 20,
+                                  color: AppColors.commonBlack,
+                                  width: 20,
+                                ),
+                                onTap: () {
+                                  Get.to(() => PaymentScreen());
+                                },
+                              ),
+                            ],
                           ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(5),
-                            color: AppColors.resendBlue.withOpacity(0.2),
-                          ),
-                          child: Text('Change'),
                         ),
-                        onTap: () {},
                       ),
-                      ListTile(
-                        leading: Image.asset(
-                          AppImages.digiPay,
-                          height: 32,
-                          width: 32,
-                        ),
-                        title: CustomTextFields.textWithStylesSmall(
-                          "Pay using card, UPI & more",
-                          fontSize: 15,
-                          colors: AppColors.commonBlack,
-                          fontWeight: FontWeight.w500,
-                        ),
-
-                        subtitle: CustomTextFields.textWithStylesSmall(
-                          'Pay during the ride to avoid cash payments',
-                          fontSize: 10,
-                        ),
-                        trailing: Image.asset(
-                          AppImages.rightArrow,
-                          height: 20,
-                          color: AppColors.commonBlack,
-                          width: 20,
-                        ),
-                        onTap: () {
-                          Get.to(() => PaymentScreen());
-                        },
-                      ),
+                      SizedBox(height: 20),
                       Container(
                         decoration: BoxDecoration(
                           color: AppColors.containerColor1,

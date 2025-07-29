@@ -53,11 +53,22 @@ class AppImages {
   static String rideShare  = "assets/images/rideShare.png";
   static String stearing  = "assets/images/stearing.png";
   static String chatCall  = "assets/images/chatCall.png";
+  static String chat  = "assets/images/chat.png";
   static String dummy  = "assets/images/dummy.jpg";
   static String box  = "assets/images/box.png";
   static String dummy1  = "assets/images/dummy1.png";
   static String camera  = "assets/images/camera.png";
   static String mic  = "assets/images/mic.png";
   static String sendButton  = "assets/images/sendButton.png";
+  static String star  = "assets/images/star.png";
+  static String direction  = "assets/images/direction.png";
+  static String clrDirection  = "assets/images/clrDirection.png";
+  static String clrTick1  = "assets/images/clrTick1.png";
+  static String paste  = "assets/images/paste.png";
+  static String clrBox1  = "assets/images/clrBox1.png";
+  static String clrHome  = "assets/images/clrHome.png";
+  static String warning  = "assets/images/warning.png";
+  static String call  = "assets/images/call.png";
+  static String send  = "assets/images/send.png";
 
 }

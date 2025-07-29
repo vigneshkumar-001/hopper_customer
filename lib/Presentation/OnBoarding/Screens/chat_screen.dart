@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
@@ -38,10 +40,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage(String message) async {
-
     if (message.isEmpty) return;
-    //
-    // final userText = _textController.text.trim();
 
     _textController.clear();
 
@@ -59,7 +58,7 @@ class _ChatScreenState extends State<ChatScreen> {
       });
     }
 
-    _scrollToBottom(); // Scroll after sending user's message
+    _scrollToBottom();
 
     await Future.delayed(Duration(seconds: 1));
 
@@ -74,7 +73,7 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     });
 
-    _scrollToBottom(); // Scroll again after bot reply
+    _scrollToBottom();
   }
 
   void _scrollToBottom() {
@@ -173,7 +172,19 @@ class _ChatScreenState extends State<ChatScreen> {
 
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Image.asset(AppImages.chatCall, height: 20, width: 20),
+                child: InkWell(
+                  onTap: () async {
+                    const phoneNumber = 'tel:8248191110';
+                    AppLogger.log.i(phoneNumber);
+                    final Uri url = Uri.parse(phoneNumber);
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url);
+                    } else {
+                      print('Could not launch dialer');
+                    }
+                  },
+                  child: Image.asset(AppImages.chatCall, height: 20, width: 20),
+                ),
               ),
             ),
           ],
@@ -222,7 +233,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                       ),
                       child: ListView.builder(
-                        reverse: false, // don’t reverse
+                        reverse: false,
                         controller: _scrollController,
                         itemCount: messages.length,
                         padding: const EdgeInsets.all(16),
@@ -263,8 +274,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         splashColor: Colors.black.withOpacity(
                           0.05,
                         ), // subtle splash
-                        highlightColor:
-                            Colors.transparent, // no harsh highlight
+                        highlightColor: Colors.transparent,
                         onTap: () {
                           _sendMessage("I'm waiting downstairs");
                         },
@@ -294,8 +304,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         splashColor: Colors.black.withOpacity(
                           0.05,
                         ), // subtle splash
-                        highlightColor:
-                            Colors.transparent, // no harsh highlight
+                        highlightColor: Colors.transparent,
                         onTap: () {
                           _sendMessage("Please call when you arrive");
                         },
@@ -371,7 +380,31 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
               child: Row(
                 children: [
-                  Image.asset(AppImages.camera, height: 26, width: 26),
+                  GestureDetector(
+                    onTap: () async {
+                      final ImagePicker picker = ImagePicker();
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.camera,
+                      );
+
+                      if (image != null) {
+                        setState(() {
+                          messages.add(
+                            ChatMessage(
+                              isMe: true,
+                              imageUrl: image.path,
+                              message: '',
+                              time: 'Now',
+                              avatar: AppImages.dummy1,
+                            ),
+                          );
+                        });
+                        _scrollToBottom();
+                      }
+                    },
+
+                    child: Image.asset(AppImages.camera, height: 26, width: 26),
+                  ),
 
                   const SizedBox(width: 10),
 
@@ -418,11 +451,14 @@ class _ChatScreenState extends State<ChatScreen> {
                                 _isRecording = !_isRecording;
                               });
                             },
-                            child: Image.asset(
-                              _isRecording ? AppImages.dart : AppImages.mic,
-                              height: 26,
-                              width: 26,
-                            ),
+                            child:
+                                _isRecording
+                                    ? Icon(Icons.pause)
+                                    : Image.asset(
+                                      AppImages.mic,
+                                      height: 26,
+                                      width: 26,
+                                    ),
                           ),
                         ],
                       ),
@@ -431,7 +467,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
                   SizedBox(width: 5),
 
-                  // Send button
                   InkWell(
                     borderRadius: BorderRadius.circular(15),
                     splashColor: Colors.blue.withOpacity(0.2),
@@ -527,11 +562,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   children: [
                     IconButton(
                       icon: Icon(
-                        _playingStates[msg.audioUrl] == true ? Icons.pause : Icons.play_arrow,
+                        _playingStates[msg.audioUrl] == true
+                            ? Icons.pause
+                            : Icons.play_arrow,
                         color: Colors.blue,
                       ),
                       onPressed: () async {
-                        bool isCurrentlyPlaying = _playingStates[msg.audioUrl] == true;
+                        bool isCurrentlyPlaying =
+                            _playingStates[msg.audioUrl] == true;
 
                         if (isCurrentlyPlaying) {
                           await _player.stopPlayer();
@@ -562,9 +600,23 @@ class _ChatScreenState extends State<ChatScreen> {
                       },
                     ),
 
-
                     const Text("Voice message"),
                   ],
+                ),
+              ),
+            if (msg.imageUrl != null)
+              Container(
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.adminChatContainerColor),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Image.file(
+                  File(msg.imageUrl ?? ''),
+                  fit: BoxFit.cover,
+                  width: 100,
+                  height: 100,
                 ),
               ),
 

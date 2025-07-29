@@ -82,7 +82,7 @@ class CustomTextFields {
     bool autofocus = false,
     String? leadingImage,
     double imgHeight = 10,
-
+FontWeight fontWeight = FontWeight.w500,
     Widget? prefixIcon,
     TextStyle? Style,
 
@@ -130,7 +130,7 @@ class CustomTextFields {
           hintStyle:
               hintStyle ??
               TextStyle(
-                fontWeight: FontWeight.w500,
+                fontWeight: fontWeight,
                 color: AppColors.commonBlack,
                 fontSize: 16,
               ),
@@ -190,6 +190,7 @@ class CustomTextFields {
       textAlign: textAlign,
       text + (text1 ?? ''),
       style: TextStyle(
+
         color: colors,
         fontSize: fontSize,
         fontWeight: fontWeight,
@@ -201,6 +202,7 @@ class CustomTextFields {
     required String tittle,
     GlobalKey<FormState>? formKey,
     required String hintText,
+    double? fontSize,
     TextEditingController? controller,
     TextInputType? type,
     FontWeight? fontWeight = FontWeight.w400,
@@ -245,6 +247,7 @@ class CustomTextFields {
 
             hintText: hintText,
             hintStyle: TextStyle(
+              fontSize: fontSize,
               color: Color(0xff666666),
               fontWeight: fontWeight,
             ),

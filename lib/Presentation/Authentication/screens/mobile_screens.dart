@@ -30,8 +30,8 @@ class _MobileScreensState extends State<MobileScreens> {
       countryListTheme: CountryListThemeData(
         flagSize: 22,
         backgroundColor: Colors.white,
-        // textStyle: TextStyle(fontSize: 16, color: Colors.blueGrey),
-        bottomSheetHeight: 600, // Optional. Country list modal height
+
+        bottomSheetHeight: 600,
         //Optional. Sets the border radius for the bottomsheet.
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(30.0),

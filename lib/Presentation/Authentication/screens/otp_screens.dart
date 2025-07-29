@@ -113,10 +113,10 @@ class _OtpScreensState extends State<OtpScreens> {
                                     onCompleted: (value) async {
                                       FocusScope.of(
                                         context,
-                                      ).unfocus(); // ✅ Dismiss keyboard early
+                                      ).unfocus();  
                                       await Future.delayed(
                                         Duration(milliseconds: 100),
-                                      ); // ✅ Give UI time to settle
+                                      );
                                       otpController.otpVerify(
                                         otp: otp.text,
                                         onSuccess: () {
@@ -138,14 +138,11 @@ class _OtpScreensState extends State<OtpScreens> {
                                         },
                                         mobileNumber: widget.mobileNumber ?? '',
                                         context: context,
-                                        countryCode: widget.countyCode?? '',
+                                        countryCode: widget.countyCode ?? '',
                                       );
                                     },
 
-                                    autoFocus:
-                                        otp
-                                            .text
-                                            .isEmpty, // ✅ only auto-focus when it's empty
+                                    autoFocus: otp.text.isEmpty,
 
                                     appContext: context,
                                     // pastedTextStyle: TextStyle(

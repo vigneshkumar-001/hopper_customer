@@ -5,6 +5,7 @@ import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/package_map_confrim_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -261,7 +262,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ChatScreen()),
+                        MaterialPageRoute(builder: (context) => PackageMapConfirmScreen()),
                       );
                     },
                     text: 'Continue',

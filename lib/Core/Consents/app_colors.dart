@@ -38,4 +38,9 @@ class AppColors {
   static final userChatContainerColor = Color(0xff1677FF);
   static final adminChatContainerColor = Color(0xffF0F0F0);
   static final lowLightBlue = Color(0xffEDF3FF);
+  static final chatBlueColor = Color(0xffDEEAFC);
+  static final starColor = Color(0xffE79700);
+  static final greyDark = Color(0xff898A8D);
+  static final blueLight = Color(0xFF2563EB);
+
 }

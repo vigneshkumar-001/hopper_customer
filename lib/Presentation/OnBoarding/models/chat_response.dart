@@ -4,6 +4,7 @@ class ChatMessage {
   final bool isMe;
   final String time;
   final String avatar;
+  final String? imageUrl;
 
   ChatMessage({
     required this.message,
@@ -11,5 +12,6 @@ class ChatMessage {
     required this.isMe,
     required this.time,
     required this.avatar,
+      this.imageUrl,
   });
 }
