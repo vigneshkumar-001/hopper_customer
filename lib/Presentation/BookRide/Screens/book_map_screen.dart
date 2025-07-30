@@ -469,7 +469,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
               slivers: [
                 SliverAppBar(
                   backgroundColor: Colors.white,
-                  expandedHeight: 380,
+                  expandedHeight: 320,
                   automaticallyImplyLeading: false,
                   pinned: true,
                   elevation: 0,
@@ -882,7 +882,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
                             return;
                           }
 
-                          String?
+                        final
                           result = await driverController.createBookingCar(
                             fromLatitude: _pickupPosition?.latitude ?? 0.0,
                             fromLongitude: _pickupPosition?.longitude ?? 0.0,
@@ -892,7 +892,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
                             context: context,
                           );
 
-                          if (result != null) {
+                          if (result == null  ) {
                             final _selectedCarType =
                                 driverController.selectedCarType.value;
                             if (isSendSelected) {

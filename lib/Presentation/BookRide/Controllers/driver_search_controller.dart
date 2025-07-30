@@ -90,7 +90,8 @@ class DriverSearchController extends GetxController {
           carBooking.value = response.data;
           AppLogger.log.i(response.data);
 
-          return '';
+          return null;
+
         },
       );
     } catch (e) {

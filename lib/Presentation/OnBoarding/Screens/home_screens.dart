@@ -42,6 +42,7 @@ class _HomeScreensState extends State<HomeScreens>
   GoogleMapController? _mapController;
   final socketService = SocketService();
   LatLng? _currentPosition;
+  String customerId  = '';
   bool _isCameraMoving = false;
   String _address = 'Search...';
   BitmapDescriptor? _customIcon;
@@ -240,14 +241,31 @@ class _HomeScreensState extends State<HomeScreens>
           ),
     );
   }
+  Future<void> loadCustomerId() async {
+    final prefs = await SharedPreferences.getInstance();
+    customerId = prefs.getString('customer_Id') ?? '';
+
+    if (customerId.isEmpty) {
+      AppLogger.log.w('⚠️ No customer ID found in shared preferences.');
+    } else {
+      AppLogger.log.i('✅ Loaded customerId = $customerId');
+    }
+  }
 
   @override
   bool get wantKeepAlive => true;
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeSocketAndData();
+    });
+  }
 
-    final userId = "68593b9efda38c44796aca61";
+
+  Future<void> _initializeSocketAndData() async {
+    await loadCustomerId();
+    final userId = customerId;
 
     socketService.initSocket(
       'https://hoppr-face-two-dbe557472d7f.herokuapp.com',
@@ -256,9 +274,7 @@ class _HomeScreensState extends State<HomeScreens>
     socketService.onConnect(() {
       socketService.registerUser(userId);
     });
-    // socketService.off(
-    //   'nearby-driver-update',
-    // ); // 👈 Important to remove existing listener
+
     socketService.on('registered', (data) {
       AppLogger.log.i("✅ Registered → $data");
     });
@@ -292,6 +308,7 @@ class _HomeScreensState extends State<HomeScreens>
     _initLocation(context);
     _loadRecentLocations();
   }
+
 
   @override
   /*  void initState() {
