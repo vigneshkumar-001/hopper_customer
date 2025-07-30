@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Core/Utility/app_loader.dart';
@@ -6,8 +7,9 @@ import 'package:hopper/Presentation/Authentication/controller/authController.dar
 import 'package:country_picker/country_picker.dart';
 import 'package:hopper/Presentation/Authentication/screens/otp_screens.dart';
 import 'package:hopper/Presentation/Authentication/screens/permission_screens.dart';
-import 'package:hopper/api/dataSource/apiDataSource.dart';
 
+import 'package:hopper/api/dataSource/apiDataSource.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 var getMobileNumber = '';
 var countryCodes = '';
 String selectedCountryFlag = '';
@@ -15,6 +17,7 @@ String selectedCountryFlag = '';
 class OtpController extends GetxController {
   ApiDataSource apiDataSource = ApiDataSource();
   String accessToken = '';
+  String customerId = '';
   RxString selectedCountryCode = ''.obs;
 
   RxBool isLoading = false.obs;
@@ -43,10 +46,21 @@ class OtpController extends GetxController {
           isLoading.value = false;
           onError("Invalid OTP. Please try again.");
         },
-        (response) {
-          AppLogger.log.i(response.data);
+        (response) async {
+          AppLogger.log.i(response.data.toString());
           onSuccess();
           isLoading.value = false;
+          accessToken = response.data.token;
+          accessToken = response.data.customer.id;
+
+          AppLogger.log.i('Response = $accessToken');
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('token', response.data.token);
+          await prefs.setString('customer_Id', response.data.customer.id);
+          String? token = prefs.getString('token');
+          String? customerId = prefs.getString('customer_Id');
+          AppLogger.log.i('token = $token');
+          AppLogger.log.i('token = $customerId');
           // Navigator.push(
           //   context,
           //   MaterialPageRoute(

@@ -30,8 +30,8 @@ class DriverData {
   final bool onlineStatus;
   final bool sharedBooking;
   final DateTime updatedAt;
-  final DateTime requestDateAndTime;
-  final String requestStatus;
+  final DateTime? requestDateAndTime;
+  final String? requestStatus;
   final double distance;
   final double estimatedPrice;
   final int estimatedTime;
@@ -46,8 +46,8 @@ class DriverData {
     required this.onlineStatus,
     required this.sharedBooking,
     required this.updatedAt,
-    required this.requestDateAndTime,
-    required this.requestStatus,
+    this.requestDateAndTime,
+    this.requestStatus,
     required this.distance,
     required this.estimatedPrice,
     required this.estimatedTime,
@@ -55,23 +55,26 @@ class DriverData {
 
   factory DriverData.fromJson(Map<String, dynamic> json) {
     return DriverData(
-      id: json['_id'],
+      id: json['_id'] ?? '',
       driverId: DriverDetails.fromJson(json['driverId']),
-      booked: json['booked'],
+      booked: json['booked'] ?? false,
       createdAt: DateTime.parse(json['createdAt']),
       currentLatitude: (json['currentLatitude'] as num).toDouble(),
       currentLongitude: (json['currentLongitude'] as num).toDouble(),
-      onlineStatus: json['onlineStatus'],
-      sharedBooking: json['sharedBooking'],
+      onlineStatus: json['onlineStatus'] ?? false,
+      sharedBooking: json['sharedBooking'] ?? false,
       updatedAt: DateTime.parse(json['updatedAt']),
-      requestDateAndTime: DateTime.parse(json['requestDateAndTime']),
+      requestDateAndTime: json['requestDateAndTime'] != null
+          ? DateTime.tryParse(json['requestDateAndTime'])
+          : null,
       requestStatus: json['requestStatus'],
       distance: (json['distance'] as num).toDouble(),
       estimatedPrice: (json['estimatedPrice'] as num).toDouble(),
-      estimatedTime: json['estimatedTime'],
+      estimatedTime: json['estimatedTime'] ?? 0,
     );
   }
 }
+
 
 class DriverDetails {
   final String id;

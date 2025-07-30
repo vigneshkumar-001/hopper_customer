@@ -113,7 +113,7 @@ class _OtpScreensState extends State<OtpScreens> {
                                     onCompleted: (value) async {
                                       FocusScope.of(
                                         context,
-                                      ).unfocus();  
+                                      ).unfocus();
                                       await Future.delayed(
                                         Duration(milliseconds: 100),
                                       );

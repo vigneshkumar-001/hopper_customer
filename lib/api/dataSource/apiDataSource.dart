@@ -161,7 +161,7 @@ class ApiDataSource extends BaseApiDataSource {
           "fromLongitude": fromLongitude,
           "toLatitude": toLatitude,
           "toLongitude": toLongitude,
-          "customerId": "68593b9efda38c44796aca61",
+
           "sharedBooking": false,
           "sharedCount": 1,
         },
