@@ -4,6 +4,7 @@ import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Presentation/BookRide/Models/create_booking_model.dart';
 import 'package:hopper/Presentation/BookRide/Models/driver_search_models.dart';
 import 'package:hopper/Presentation/BookRide/Models/send_driver_request_models.dart';
+import 'package:hopper/uitls/websocket/socket_io_client.dart';
 
 import '../../../api/dataSource/apiDataSource.dart';
 
@@ -14,6 +15,7 @@ class DriverSearchController extends GetxController {
   Rxn<BookingData> carBooking = Rxn<BookingData>();
   Rxn<BookingDriverData> sendDriverRequestData = Rxn<BookingDriverData>();
   RxString estimatedTime = ''.obs;
+  final socketService = SocketService();
   RxBool markerAdded = false.obs;
   RxBool isLoading = false.obs;
   RxBool isGetLoading = false.obs;
@@ -42,7 +44,6 @@ class DriverSearchController extends GetxController {
 
       return results.fold(
         (failure) {
-
           isGetLoading.value = false;
           return null;
         },
@@ -80,18 +81,36 @@ class DriverSearchController extends GetxController {
         toLongitude: toLongitude,
         customerId: customerId,
       );
+
       return results.fold(
-        (failure) {
+            (failure) {
           isLoading.value = false;
           return failure.message;
         },
-        (response) {
+            (response) {
           isLoading.value = false;
           carBooking.value = response.data;
+
+          final bookingData = {
+            'bookingId': response.data.bookingId,
+            'userId': response.data.customerId,
+          };
+
+          // Log the data
+          AppLogger.log.i("📤 Join booking data: $bookingData");
+
+          if (socketService.connected) {
+            socketService.emit('join-booking', bookingData);
+            AppLogger.log.i("✅ Socket already connected, emitted join-booking");
+          } else {
+            socketService.onConnect(() {
+              AppLogger.log.i("✅ Socket connected, emitting join-booking");
+              socketService.emit('join-booking', bookingData);
+            });
+          }
+
           AppLogger.log.i(response.data);
-
           return null;
-
         },
       );
     } catch (e) {
