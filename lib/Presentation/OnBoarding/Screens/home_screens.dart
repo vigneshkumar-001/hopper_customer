@@ -42,7 +42,7 @@ class _HomeScreensState extends State<HomeScreens>
   GoogleMapController? _mapController;
   final socketService = SocketService();
   LatLng? _currentPosition;
-  String customerId  = '';
+  String customerId = '';
   bool _isCameraMoving = false;
   String _address = 'Search...';
   BitmapDescriptor? _customIcon;
@@ -241,6 +241,7 @@ class _HomeScreensState extends State<HomeScreens>
           ),
     );
   }
+
   Future<void> loadCustomerId() async {
     final prefs = await SharedPreferences.getInstance();
     customerId = prefs.getString('customer_Id') ?? '';
@@ -261,7 +262,6 @@ class _HomeScreensState extends State<HomeScreens>
       _initializeSocketAndData();
     });
   }
-
 
   Future<void> _initializeSocketAndData() async {
     await loadCustomerId();
@@ -299,16 +299,15 @@ class _HomeScreensState extends State<HomeScreens>
         _driverMarkers[driverId] = marker;
       });
     });
-
-    socketService.on('tracked-driver-location', (data) {
-      AppLogger.log.i('tracked-driver-location: $data');
-    });
+    //
+    // socketService.on('tracked-driver-location', (data) {
+    //   AppLogger.log.i('tracked-driver-location: $data');
+    // });
 
     _loadCustomMarker();
     _initLocation(context);
     _loadRecentLocations();
   }
-
 
   @override
   /*  void initState() {
