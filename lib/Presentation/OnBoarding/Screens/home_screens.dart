@@ -280,7 +280,7 @@ class _HomeScreensState extends State<HomeScreens>
     });
 
     socketService.on('nearby-driver-update', (data) {
-      AppLogger.log.i("📍 Nearby driver update: $data");
+      // AppLogger.log.i("📍 Nearby driver update: $data");
 
       if (!mounted) return;
 
