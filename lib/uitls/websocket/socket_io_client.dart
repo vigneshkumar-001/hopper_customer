@@ -8,6 +8,7 @@ class SocketService {
 
   late IO.Socket _socket;
   bool _initialized = false;
+  bool get connected => _socket.connected;
 
   SocketService._internal();
 

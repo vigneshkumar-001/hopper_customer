@@ -128,28 +128,28 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     });
 
     // 🔶 Step 1: Driver Accepted
-    socketService.on('driver-accepted', (data) {
-      if (!mounted) return;
-
-      final String bookingId = data['bookingId'] ?? '';
-      final String status = data['status'] ?? '';
-      final String driverId = data['driverId'] ?? '';
-
-      AppLogger.log.i(
-        "✅ Driver accepted: bookingId=$bookingId, driverId=$driverId, status=$status",
-      );
-
-      if (status == "SUCCESS" && driverId.trim().isNotEmpty) {
-        socketService.emit('join-booking', {
-          'bookingId': bookingId,
-          'userId': driverId,
-        });
-      }
-    });
+    // socketService.on('driver-accepted', (data) {
+    //   if (!mounted) return;
+    //
+    //   final String bookingId = data['bookingId'] ?? '';
+    //   final String status = data['status'] ?? '';
+    //   final String driverId = data['driverId'] ?? '';
+    //
+    //   AppLogger.log.i(
+    //     "✅ Driver accepted: bookingId=$bookingId, driverId=$driverId, status=$status",
+    //   );
+    //
+    //   if (status == "SUCCESS" && driverId.trim().isNotEmpty) {
+    //     socketService.emit('join-booking', {
+    //       'bookingId': bookingId,
+    //       'userId': driverId,
+    //     });
+    //   }
+    // });
 
     socketService.on('joined-booking', (data) {
       if (!mounted) return;
-
+      AppLogger.log.i("🚕 Joined booking data: $data");
       final vehicle = data['vehicle'] ?? {};
       final String driverId = data['driverId'] ?? '';
       final String driverFullName = data['driverName'] ?? '';
@@ -202,9 +202,9 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     });
 
     // 🔶 Optional fallback (if using 'tracked-driver-location' too)
-    socketService.on('tracked-driver-location', (data) {
-      AppLogger.log.i("📡 tracked-driver-location received: $data");
-    });
+    // socketService.on('tracked-driver-location', (data) {
+    //   AppLogger.log.i("📡 tracked-driver-location received: $data");
+    // });
 
     _initLocation();
     _goToCurrentLocation();
