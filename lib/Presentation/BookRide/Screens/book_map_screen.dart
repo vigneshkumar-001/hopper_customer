@@ -882,25 +882,30 @@ class _BookMapScreenState extends State<BookMapScreen> {
                             return;
                           }
 
-                        final
-                          result = await driverController.createBookingCar(
-                            fromLatitude: _pickupPosition?.latitude ?? 0.0,
-                            fromLongitude: _pickupPosition?.longitude ?? 0.0,
-                            toLatitude: _destinationPosition?.latitude ?? 0.0,
-                            toLongitude: _destinationPosition?.longitude ?? 0.0,
-                            customerId: '',
-                            context: context,
-                          );
+                          final result = await driverController
+                              .createBookingCar(
+                                fromLatitude: _pickupPosition?.latitude ?? 0.0,
+                                fromLongitude:
+                                    _pickupPosition?.longitude ?? 0.0,
+                                toLatitude:
+                                    _destinationPosition?.latitude ?? 0.0,
+                                toLongitude:
+                                    _destinationPosition?.longitude ?? 0.0,
+                                customerId: '',
+                                context: context,
+                              );
 
-                          if (result == null  ) {
+                          if (result == null) {
                             final _selectedCarType =
                                 driverController.selectedCarType.value;
                             if (isSendSelected) {
+                              final carType = driverController.selectedCarType.value;
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder:
                                       (context) => ConfirmBooking(
+                                        carType: carType,
                                         selectedCarType: _selectedCarType,
                                         pickupData: {
                                           'description': widget.pickupAddress,

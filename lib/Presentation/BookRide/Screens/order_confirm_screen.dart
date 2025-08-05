@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 
@@ -45,6 +47,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   final TextEditingController _destController = TextEditingController();
 
   bool isDriverConfirmed = false;
+  bool driverStartedRide = false;
   final socketService = SocketService();
   GoogleMapController? _mapController;
   LatLng? _pickedPosition;
@@ -55,6 +58,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   BitmapDescriptor? _carIcon;
   LatLng? _currentPosition;
   LatLng? _customerLatLng;
+  LatLng? _customerToLatLang;
   LatLng? _currentDriverLatLng;
 
   String _address = 'Search...';
@@ -62,6 +66,9 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   String driverName = '';
   double driverRating = 0.0;
   String carDetails = '';
+  String CUSTOMERPHONE = '';
+  String CARTYPE = '';
+  String otp = '';
   Set<Polyline> _polylines = {};
 
   Future<void> _loadCustomMarker() async {
@@ -127,6 +134,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       AppLogger.log.i("✅ Socket connected on booking screen");
     });
 
+
     // 🔶 Step 1: Driver Accepted
     // socketService.on('driver-accepted', (data) {
     //   if (!mounted) return;
@@ -147,16 +155,20 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     //   }
     // });
 
+
     socketService.on('joined-booking', (data) {
       if (!mounted) return;
       AppLogger.log.i("🚕 Joined booking data: $data");
       final vehicle = data['vehicle'] ?? {};
       final String driverId = data['driverId'] ?? '';
       final String driverFullName = data['driverName'] ?? '';
+      final String customerPhone = data['customerPhone'].toString() ?? '';
       final double rating =
           double.tryParse(data['driverRating'].toString()) ?? 0.0;
       final String color = vehicle['color'] ?? '';
       final String model = vehicle['model'] ?? '';
+      final String brand = vehicle['brand'] ?? '';
+      final String carType = vehicle['carType'] ?? '';
       final bool driverAccepted = data['driver_accept_status'] == true;
       final String type = vehicle['type'] ?? '';
       final String plate = vehicle['plateNumber'] ?? '';
@@ -166,12 +178,18 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         customerLoc['fromLatitude'],
         customerLoc['fromLongitude'],
       );
+      _customerToLatLang = LatLng(
+        customerLoc['toLatitude'],
+        customerLoc['toLongitude'],
+      );
 
       setState(() {
         plateNumber = plate;
         driverName = '$driverFullName ⭐ $rating';
-        carDetails = '$color - $type $model';
+        carDetails = '$color - $brand';
         isDriverConfirmed = driverAccepted;
+        CUSTOMERPHONE = customerPhone;
+        CARTYPE = carType;
       });
 
       AppLogger.log.i("🚕 Joined booking data: $data");
@@ -201,10 +219,58 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       _animateCarTo(_currentDriverLatLng!, newDriverLatLng);
     });
 
+
+    socketService.on('driver-arrived', (data) {
+      AppLogger.log.i("driver-arrived: $data");
+    });
+
+    socketService.on('otp-generated', (data) {
+      if (!mounted) return;
+      final otpGenerated = data['otpCode'];
+      setState(() {
+        otp = otpGenerated;
+      });
+
+      AppLogger.log.i("otp-generated: $data");
+    });
+
+    socketService.on('ride-started', (data) {
+      final bool status = data['status'] == true;
+      AppLogger.log.i("ride-started: $data");
+      setState(() {
+        driverStartedRide = status;
+      });
+
+      if (status &&
+          _currentDriverLatLng != null &&
+          _customerToLatLang != null) {
+        // 🚘 Show only driver + drop markers
+
+        final dropMarker = Marker(
+          markerId: const MarkerId("drop_marker"),
+          position: _customerToLatLang!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          infoWindow: const InfoWindow(title: "Destination"),
+        );
+
+        setState(() {
+          // Remove all other markers except driver and destination
+          _markers = {if (_driverMarker != null) _driverMarker!, dropMarker};
+        });
+
+        // 🧭 Draw polyline from driver to destination
+        _drawPolylineFromDriverToCustomer(
+          driverLatLng: _currentDriverLatLng!,
+          customerLatLng: _customerToLatLang!,
+        );
+      }
+    });
+
     // 🔶 Optional fallback (if using 'tracked-driver-location' too)
     // socketService.on('tracked-driver-location', (data) {
     //   AppLogger.log.i("📡 tracked-driver-location received: $data");
     // });
+
 
     _initLocation();
     _goToCurrentLocation();
@@ -221,7 +287,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       anchor: const Offset(0.5, 0.5),
       flat: true,
     );
-
+    if (!mounted) return;
     setState(() {
       _markers
         ..removeWhere((m) => m.markerId == const MarkerId("driver_marker"))
@@ -288,11 +354,11 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
 
     final response = await http.get(Uri.parse(url));
     final data = json.decode(response.body);
-
+    if (!mounted) return;
     if (data['status'] == 'OK') {
       final encoded = data['routes'][0]['overview_polyline']['points'];
       final points = _decodePolyline(encoded);
-
+      if (!mounted) return;
       setState(() {
         _polylines = {
           Polyline(
@@ -339,6 +405,9 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     return points;
   }
 
+  final DriverSearchController driverSearchController = Get.put(
+    DriverSearchController(),
+  );
   @override
   Widget build(BuildContext context) {
     _startController.text = widget.pickupAddress;
@@ -493,9 +562,23 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                         buttonColor: AppColors.commonWhite,
                         textColor: AppColors.cancelRideColor,
                         onTap: () {
-                          setState(() {
-                            isDriverConfirmed = !isDriverConfirmed;
-                          });
+                          // setState(() {
+                          //   isDriverConfirmed = !isDriverConfirmed;
+                          // });
+                          AppButtons.showCancelRideBottomSheet(
+                            context,
+                            onConfirmCancel: (String selectedReason) {
+                              driverSearchController.cancelRide(
+                                bookingId:
+                                    driverSearchController
+                                        .carBooking
+                                        .value!
+                                        .bookingId,
+                                selectedReason: selectedReason,
+                                context: context,
+                              );
+                            },
+                          );
                         },
                         text: 'Cancel Ride',
                       ),
@@ -505,7 +588,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                           fontSize: 20,
                           imageSize: 24,
                           fontWeight: FontWeight.w600,
-                          text: 'Your ride is confirmed',
+                          text:
+                              driverStartedRide
+                                  ? 'Ride in Progress'
+                                  : 'Your ride is confirmed',
                           colors: AppColors.commonBlack,
                           rightImagePath: AppImages.clrTick,
                         ),
@@ -529,14 +615,19 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                 fontWeight: FontWeight.w500,
                               ),
                               CustomTextFields.textWithStylesSmall(
-                                'Black color - Toyota Corolla',
+                                carDetails,
                                 fontSize: 12,
                                 colors: AppColors.carTypeColor,
                               ),
                             ],
                           ),
                           Spacer(),
-                          Image.asset(AppImages.confirmCar, height: 50),
+                          Image.asset(
+                            CARTYPE == 'sedan'
+                                ? AppImages.sedan
+                                : AppImages.luxuryCar,
+                            height: 50,
+                          ),
                         ],
                       ),
                       SizedBox(height: 20),
@@ -549,10 +640,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                             ),
 
                             child: Padding(
-                              padding: const EdgeInsets.all(8.0),
+                              padding: EdgeInsets.all(8.0),
                               child: InkWell(
                                 onTap: () async {
-                                  const phoneNumber = 'tel:8248191110';
+                                  final phoneNumber = 'tel:$CUSTOMERPHONE';
                                   AppLogger.log.i(phoneNumber);
                                   final Uri url = Uri.parse(phoneNumber);
                                   if (await canLaunchUrl(url)) {
@@ -573,26 +664,36 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                           SizedBox(width: 10),
 
                           Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: AppColors.containerColor1,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  children: [
-                                    CustomTextFields.textWithStylesSmall(
-                                      colors: AppColors.commonBlack,
-                                      'Message your driver',
-                                    ),
-                                    Spacer(),
-                                    Image.asset(
-                                      AppImages.send,
-                                      height: 16,
-                                      width: 16,
-                                    ),
-                                  ],
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ChatScreen(),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: AppColors.containerColor1,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    children: [
+                                      CustomTextFields.textWithStylesSmall(
+                                        colors: AppColors.commonBlack,
+                                        'Message your driver',
+                                      ),
+                                      Spacer(),
+                                      Image.asset(
+                                        AppImages.send,
+                                        height: 16,
+                                        width: 16,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -632,21 +733,28 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                     ),
 
                                     Spacer(),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(6),
-                                        color: AppColors.userChatContainerColor,
-                                      ),
-                                      child: CustomTextFields.textWithStyles600(
-                                        'OTP - 6839',
-                                        fontSize: 16,
-                                        color: AppColors.commonWhite,
-                                      ),
-                                    ),
+                                    otp == ''
+                                        ? SizedBox.shrink()
+                                        : Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                            color:
+                                                AppColors
+                                                    .userChatContainerColor,
+                                          ),
+                                          child:
+                                              CustomTextFields.textWithStyles600(
+                                                'OTP - $otp',
+                                                fontSize: 16,
+                                                color: AppColors.commonWhite,
+                                              ),
+                                        ),
                                   ],
                                 ),
                               ),
@@ -810,6 +918,19 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                       // });
                                       AppButtons.showCancelRideBottomSheet(
                                         context,
+                                        onConfirmCancel: (
+                                          String selectedReason,
+                                        ) {
+                                          driverSearchController.cancelRide(
+                                            bookingId:
+                                                driverSearchController
+                                                    .carBooking
+                                                    .value!
+                                                    .bookingId,
+                                            selectedReason: selectedReason,
+                                            context: context,
+                                          );
+                                        },
                                       );
                                     },
                                     text: ' Cancel Ride',

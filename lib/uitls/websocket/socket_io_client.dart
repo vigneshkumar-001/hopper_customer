@@ -53,7 +53,7 @@ class SocketService {
 
     // Optional: log all incoming events
     _socket.onAny((event, data) {
-      AppLogger.log.i("📦 [onAny] Event: $event, Data: $data");
+      AppLogger.log. i("📦 [onAny] Event: $event, Data: $data");
     });
   }
 

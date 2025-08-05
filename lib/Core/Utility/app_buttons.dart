@@ -94,7 +94,10 @@ class AppButtons {
     );
   }
 
-  static void showCancelRideBottomSheet(BuildContext context) {
+  static void showCancelRideBottomSheet(
+    BuildContext context, {
+    required Function(String selectedReason) onConfirmCancel,
+  }) {
     String? selectedReason;
     showModalBottomSheet(
       context: context,
@@ -231,7 +234,15 @@ class AppButtons {
                           Expanded(
                             child: AppButtons.button(
                               onTap: () {
-                                Get.back();
+                                if (selectedReason != null) {
+                                  onConfirmCancel(selectedReason!);
+                                  Get.back();
+                                } else {
+                                  Get.snackbar(
+                                    'Info',
+                                    'Please Select a reason before proceeding',
+                                  );
+                                }
                               },
                               text: "Cancel Ride",
                             ),

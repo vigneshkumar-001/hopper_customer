@@ -12,7 +12,8 @@ class Request {
     Map<String, dynamic> body,
     String? method,
     bool isTokenRequired,
-  ) async {
+  ) async
+  {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     String? userId = prefs.getString('userId');
@@ -177,8 +178,10 @@ class Request {
     String method,
     bool isTokenRequired,
   ) async {
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
+    String? userId = prefs.getString('userId');
 
     Dio dio = Dio();
 

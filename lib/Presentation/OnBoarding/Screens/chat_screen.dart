@@ -420,6 +420,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           // Text Field
                           Expanded(
                             child: TextField(
+
                               controller: _textController,
                               decoration: const InputDecoration(
                                 hintText: 'Type a message...',
