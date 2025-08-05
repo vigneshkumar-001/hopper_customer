@@ -18,10 +18,12 @@ class ConfirmBooking extends StatefulWidget {
   final Map<String, dynamic> destinationData;
   final String pickupAddress;
   final String destinationAddress;
+  final String? carType;
   const ConfirmBooking({
     super.key,
     this.selectedCarType,
     required this.pickupData,
+    this.carType,
     required this.destinationData,
     required this.pickupAddress,
     required this.destinationAddress,
@@ -302,6 +304,7 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                   onTap: () async {
                     final allData = driverController.carBooking.value;
                     String? result = await driverController.sendDriverRequest(
+                      carType: widget.carType ?? '',
                       pickupLatitude: allData?.fromLatitude ?? 0.0,
                       pickupLongitude: allData?.fromLongitude ?? 0.0,
                       dropLatitude: allData?.toLatitude ?? 0.0,
@@ -309,6 +312,7 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                       bookingId: allData?.bookingId.toString() ?? '',
                       context: context,
                     );
+                    AppLogger.log.i(result);
                     if (result != null) {
                       Navigator.push(
                         context,

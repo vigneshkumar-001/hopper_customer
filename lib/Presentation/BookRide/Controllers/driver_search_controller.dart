@@ -4,6 +4,7 @@ import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Presentation/BookRide/Models/create_booking_model.dart';
 import 'package:hopper/Presentation/BookRide/Models/driver_search_models.dart';
 import 'package:hopper/Presentation/BookRide/Models/send_driver_request_models.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
 import 'package:hopper/uitls/websocket/socket_io_client.dart';
 
 import '../../../api/dataSource/apiDataSource.dart';
@@ -83,11 +84,11 @@ class DriverSearchController extends GetxController {
       );
 
       return results.fold(
-            (failure) {
+        (failure) {
           isLoading.value = false;
           return failure.message;
         },
-            (response) {
+        (response) {
           isLoading.value = false;
           carBooking.value = response.data;
 
@@ -126,12 +127,14 @@ class DriverSearchController extends GetxController {
     required double dropLongitude,
 
     required String bookingId,
+    required String carType,
     required BuildContext context,
   }) async {
     isLoading.value = true;
 
     try {
       final results = await apiDataSource.sendDriverRequest(
+        carType: carType,
         pickupLatitude: pickupLatitude,
         pickupLongitude: pickupLongitude,
         dropLatitude: dropLatitude,
@@ -145,6 +148,46 @@ class DriverSearchController extends GetxController {
           return failure.message;
         },
         (response) {
+          isLoading.value = false;
+          sendDriverRequestData.value = response.data;
+          AppLogger.log.i(response.data);
+
+          return '';
+        },
+      );
+    } catch (e) {
+      isLoading.value = false;
+      return 'An error occurred';
+    }
+  }
+
+  Future<String?> cancelRide({
+    required String bookingId,
+    required String selectedReason,
+    required BuildContext context,
+  }) async {
+    isLoading.value = true;
+
+    try {
+      final results = await apiDataSource.cancelRide(
+        selectedReason: selectedReason,
+        bookingId: bookingId,
+      );
+
+      return results.fold(
+        (failure) {
+          isLoading.value = false;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreens()),
+          );
+          return failure.message;
+        },
+        (response) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreens()),
+          );
           isLoading.value = false;
           sendDriverRequestData.value = response.data;
           AppLogger.log.i(response.data);

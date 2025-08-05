@@ -299,75 +299,12 @@ class _HomeScreensState extends State<HomeScreens>
         _driverMarkers[driverId] = marker;
       });
     });
-    //
-    // socketService.on('tracked-driver-location', (data) {
-    //   AppLogger.log.i('tracked-driver-location: $data');
-    // });
 
     _loadCustomMarker();
     _initLocation(context);
     _loadRecentLocations();
   }
 
-  @override
-  /*  void initState() {
-    super.initState();
-    // socketService.initSocket(
-    //   'https://hoppr-face-two-dbe557472d7f.herokuapp.com/',
-    // );
-    // socketService.emit('register', {
-    //   'userId': "68593b9efda38c44796aca61",
-    //   'type': 'customer',
-    // });
-    // socketService.on('registered', (data) {
-    //   AppLogger.log.i("📩 Received: $data");
-    // });
-
-    socketService.initSocket(
-      'https://hoppr-face-two-dbe557472d7f.herokuapp.com/',
-    );
-
-    // 2. On connect, register user
-    socketService.onConnect(() {
-      socketService.emit('register', {
-        'userId': "68593b9efda38c44796aca61",
-        'type': 'customer',
-      });
-    });
-
-    // 3. On registration confirmation
-    socketService.on('registered', (data) {
-      AppLogger.log.i("✅ Registered → $data");
-    });
-
-    // 4. Listen to driver location updates
-    socketService.on('nearby-driver-update', (data) {
-      final String driverId = data['driverId'];
-      final double lat = data['latitude'];
-      final double lng = data['longitude'];
-
-      AppLogger.log.i("📍 Nearby driver update: $data");
-      final Marker marker = Marker(
-        markerId: MarkerId(driverId),
-        position: LatLng(lat, lng),
-        icon: _carIcon,
-        anchor: const Offset(0.5, 0.5),
-      );
-
-      setState(() {
-        _driverMarkers[driverId] = marker;
-      });
-    });
-    _loadCarIcon();
-    _initLocation();
-    _loadCustomMarker();
-    _getCurrentLocation();
-  }*/
-  // @override
-  // void dispose() {
-  //   socketService.dispose();
-  //   super.dispose();
-  // }
   Widget build(BuildContext context) {
     super.build(context);
     Set<Marker> _markers = {};

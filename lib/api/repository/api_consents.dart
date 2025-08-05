@@ -18,5 +18,9 @@ class ApiConsents {
         '&dropLat=$dropLat&dropLng=$dropLng';
   }
 
+  static String cancelRide({required String bookingId}) {
+    return '$baseUrl/api/customer/cancel-booking/$bookingId';
+  }
+
   // https://hoppr-backend-3d2b7f783917.herokuapp.com/api/users/districts?state=$state
 }

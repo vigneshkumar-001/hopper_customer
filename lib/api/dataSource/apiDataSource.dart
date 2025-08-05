@@ -193,6 +193,7 @@ class ApiDataSource extends BaseApiDataSource {
     required double dropLatitude,
     required double dropLongitude,
     required String bookingId,
+    required String carType,
   }) async {
     try {
       final url = ApiConsents.sendDriverRequest;
@@ -206,7 +207,41 @@ class ApiDataSource extends BaseApiDataSource {
           "pickupLongitude": pickupLongitude,
           "dropLatitude": dropLatitude,
           "dropLongitude": dropLongitude,
+          "carType": carType,
         },
+        'Post',
+        false,
+      );
+      if (response.statusCode == 200) {
+        if (response.data['status'] == 200) {
+          return Right(SendDriverRequestModels.fromJson(response.data));
+        } else {
+          return Left(ServerFailure(response.data['message'] ?? " "));
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
+  Future<Either<Failure, SendDriverRequestModels>> cancelRide({
+    required String bookingId,
+    required String selectedReason,
+  }) async {
+    try {
+      final url = ApiConsents.cancelRide(bookingId: bookingId);
+      AppLogger.log.i(url);
+
+      dynamic response = await Request.sendRequest(
+        url,
+        {"rejectedReason": selectedReason},
         'Post',
         false,
       );
