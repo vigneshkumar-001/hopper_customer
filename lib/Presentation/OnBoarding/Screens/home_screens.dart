@@ -300,6 +300,13 @@ class _HomeScreensState extends State<HomeScreens>
       });
     });
 
+
+    //
+    // socketService.on('tracked-driver-location', (data) {
+    //   AppLogger.log.i('tracked-driver-location: $data');
+    // });
+
+
     _loadCustomMarker();
     _initLocation(context);
     _loadRecentLocations();
