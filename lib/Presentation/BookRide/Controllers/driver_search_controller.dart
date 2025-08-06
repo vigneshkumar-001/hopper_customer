@@ -4,7 +4,9 @@ import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Presentation/BookRide/Models/create_booking_model.dart';
 import 'package:hopper/Presentation/BookRide/Models/driver_search_models.dart';
 import 'package:hopper/Presentation/BookRide/Models/send_driver_request_models.dart';
+
 import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
+
 import 'package:hopper/uitls/websocket/socket_io_client.dart';
 
 import '../../../api/dataSource/apiDataSource.dart';
@@ -84,11 +86,11 @@ class DriverSearchController extends GetxController {
       );
 
       return results.fold(
-        (failure) {
+            (failure) {
           isLoading.value = false;
           return failure.message;
         },
-        (response) {
+            (response) {
           isLoading.value = false;
           carBooking.value = response.data;
 
@@ -100,6 +102,7 @@ class DriverSearchController extends GetxController {
           // Log the data
           AppLogger.log.i("📤 Join booking data: $bookingData");
 
+
           if (socketService.connected) {
             socketService.emit('join-booking', bookingData);
             AppLogger.log.i("✅ Socket already connected, emitted join-booking");
@@ -109,6 +112,19 @@ class DriverSearchController extends GetxController {
               socketService.emit('join-booking', bookingData);
             });
           }
+
+
+
+          if (socketService.connected) {
+            socketService.emit('join-booking', bookingData);
+            AppLogger.log.i("✅ Socket already connected, emitted join-booking");
+          } else {
+            socketService.onConnect(() {
+              AppLogger.log.i("✅ Socket connected, emitting join-booking");
+              socketService.emit('join-booking', bookingData);
+            });
+          }
+
 
           AppLogger.log.i(response.data);
           return null;
