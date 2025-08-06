@@ -186,15 +186,33 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       final newDriverLatLng = LatLng(data['latitude'], data['longitude']);
 
       if (_currentDriverLatLng == null) {
-        // First time assigning driver's current location
         _currentDriverLatLng = newDriverLatLng;
-
         _updateDriverMarker(newDriverLatLng, 0);
         return;
       }
 
-      // Animate movement and rotation
+      // ✅ Animate movement
       _animateCarTo(_currentDriverLatLng!, newDriverLatLng);
+
+      if (!driverStartedRide && _customerLatLng != null) {
+        _drawPolylineFromDriverToCustomer(
+          driverLatLng: newDriverLatLng,
+          customerLatLng: _customerLatLng!,
+        );
+      }
+
+
+
+// ✅ CASE 2: After ride starts → Draw polyline to drop
+      if (driverStartedRide && _customerToLatLang != null) {
+        _drawPolylineFromDriverToCustomer(
+          driverLatLng: newDriverLatLng,
+          customerLatLng: _customerToLatLang!,
+        );
+      }
+
+      // ✅ Update current driver position
+      _currentDriverLatLng = newDriverLatLng;
     });
 
     socketService.on('driver-arrived', (data) {
@@ -258,6 +276,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       anchor: const Offset(0.5, 0.5),
       flat: true,
     );
+
     if (!mounted) return;
     setState(() {
       _markers
@@ -271,6 +290,8 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     const duration = Duration(milliseconds: 800);
     final interval = duration.inMilliseconds ~/ steps;
 
+    double currentBearing = _driverMarker?.rotation ?? 0; // ❗ Fixed here
+
     for (int i = 1; i <= steps; i++) {
       await Future.delayed(Duration(milliseconds: interval));
 
@@ -278,9 +299,16 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       final lng = _lerp(from.longitude, to.longitude, i / steps);
       final intermediate = LatLng(lat, lng);
 
-      double bearing = _getBearing(from, intermediate);
+      double newBearing = _getBearing(from, intermediate);
 
-      _updateDriverMarker(intermediate, bearing);
+      // ✅ No null error here now
+      if ((newBearing - currentBearing).abs() > 10) {
+        currentBearing = newBearing;
+      }
+
+      _updateDriverMarker(intermediate, currentBearing);
+
+      _mapController?.animateCamera(CameraUpdate.newLatLng(intermediate));
     }
 
     _currentDriverLatLng = to;
@@ -288,7 +316,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     if (_customerLatLng != null) {
       _drawPolylineFromDriverToCustomer(
         driverLatLng: _currentDriverLatLng!,
-        customerLatLng: _customerLatLng!,
+        customerLatLng: _customerToLatLang!,
       );
     }
   }
@@ -300,13 +328,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     double lon2 = to.longitude * (pi / 180);
 
     double dLon = lon2 - lon1;
-
     double y = sin(dLon) * cos(lat2);
     double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
 
     double bearing = atan2(y, x);
-
-    // Convert to degrees and normalize to 0-360
     return (bearing * (180 / pi) + 360) % 360;
   }
 

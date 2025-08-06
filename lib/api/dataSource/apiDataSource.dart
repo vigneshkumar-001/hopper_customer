@@ -207,7 +207,7 @@ class ApiDataSource extends BaseApiDataSource {
           "pickupLongitude": pickupLongitude,
           "dropLatitude": dropLatitude,
           "dropLongitude": dropLongitude,
-          "carType": carType,
+          "carType": 'sedan',
         },
         'Post',
         false,

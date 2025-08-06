@@ -47,13 +47,19 @@ class SocketService {
       AppLogger.log.e("❗ Connect error: $err");
     });
 
+
+
+    _socket.onReconnectAttempt((attempt) {
+      AppLogger.log.w("🔁 Reconnect attempt #$attempt");
+    });
+
     _socket.onError((err) {
       AppLogger.log.e("❗ General socket error: $err");
     });
 
     // Optional: log all incoming events
     _socket.onAny((event, data) {
-      AppLogger.log. i("📦 [onAny] Event: $event, Data: $data");
+      AppLogger.log.i("📦 [onAny] Event: $event, Data: $data");
     });
   }
 
@@ -64,6 +70,11 @@ class SocketService {
   void onConnect(Function() callback) {
     _socket.onConnect((_) {
       AppLogger.log.i("📡 onConnect triggered");
+      callback();
+    });
+  }
+  void onReconnect(Function() callback) {
+    _socket.onReconnect((_) {
       callback();
     });
   }

@@ -273,6 +273,11 @@ class _HomeScreensState extends State<HomeScreens>
 
     socketService.onConnect(() {
       socketService.registerUser(userId);
+
+      socketService.onReconnect(() {
+        AppLogger.log.i("🔄 Reconnected");
+        socketService.registerUser(customerId); // re-register after reconnect
+      });
     });
 
     socketService.on('registered', (data) {
