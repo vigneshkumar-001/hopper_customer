@@ -899,7 +899,8 @@ class _BookMapScreenState extends State<BookMapScreen> {
                             final _selectedCarType =
                                 driverController.selectedCarType.value;
                             if (isSendSelected) {
-                              final carType = driverController.selectedCarType.value;
+                              final carType =
+                                  driverController.selectedCarType.value;
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -930,6 +931,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
                                       ),
                                 ),
                               );
+                             
                             } else {
                               Navigator.push(
                                 context,

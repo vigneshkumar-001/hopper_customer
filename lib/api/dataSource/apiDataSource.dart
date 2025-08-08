@@ -198,6 +198,7 @@ class ApiDataSource extends BaseApiDataSource {
     try {
       final url = ApiConsents.sendDriverRequest;
       AppLogger.log.i(url);
+      final carTypes = carType == 'Sedan' ? 'sedan' : 'luxury';
 
       dynamic response = await Request.sendRequest(
         url,
@@ -207,7 +208,7 @@ class ApiDataSource extends BaseApiDataSource {
           "pickupLongitude": pickupLongitude,
           "dropLatitude": dropLatitude,
           "dropLongitude": dropLongitude,
-          "carType": 'sedan',
+          "carType": carTypes,
         },
         'Post',
         false,
