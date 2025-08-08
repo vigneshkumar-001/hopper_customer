@@ -6,6 +6,7 @@ import 'package:hopper/Presentation/BookRide/Models/driver_search_models.dart';
 import 'package:hopper/Presentation/BookRide/Models/send_driver_request_models.dart';
 
 import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
+import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
 
 import 'package:hopper/uitls/websocket/socket_io_client.dart';
 
@@ -183,6 +184,50 @@ class DriverSearchController extends GetxController {
     try {
       final results = await apiDataSource.cancelRide(
         selectedReason: selectedReason,
+        bookingId: bookingId,
+      );
+
+      return results.fold(
+        (failure) {
+          isLoading.value = false;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CommonBottomNavigation(initialIndex: 0),
+            ),
+          );
+          return failure.message;
+        },
+        (response) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CommonBottomNavigation(initialIndex: 0),
+            ),
+          );
+          isLoading.value = false;
+          sendDriverRequestData.value = response.data;
+          AppLogger.log.i(response.data);
+
+          return '';
+        },
+      );
+    } catch (e) {
+      isLoading.value = false;
+      return 'An error occurred';
+    }
+  }
+
+  Future<String?> rateDriver({
+    required String bookingId,
+    required String rating,
+    required BuildContext context,
+  }) async {
+    isLoading.value = true;
+
+    try {
+      final results = await apiDataSource.starRating(
+        selectedReason: rating,
         bookingId: bookingId,
       );
 

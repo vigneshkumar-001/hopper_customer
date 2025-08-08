@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -22,6 +23,7 @@ import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 
 class OrderConfirmScreen extends StatefulWidget {
   final Map<String, dynamic> pickupData;
@@ -80,8 +82,8 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   Future<void> _loadCustomMarker() async {
     _carIcon = await BitmapDescriptor.asset(
       height: 60,
-      const ImageConfiguration(size: Size(52, 52)),
-      AppImages.movingCar,
+      ImageConfiguration(size: Size(52, 52)),
+      AppImages.carHop,
     );
   }
 
@@ -334,18 +336,21 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     }
   }
 
-  double _getBearing(LatLng from, LatLng to) {
-    double lat1 = from.latitude * (pi / 180);
-    double lon1 = from.longitude * (pi / 180);
-    double lat2 = to.latitude * (pi / 180);
-    double lon2 = to.longitude * (pi / 180);
+  double _getBearing(LatLng start, LatLng end) {
+    final lat1 = start.latitude * math.pi / 180;
+    final lon1 = start.longitude * math.pi / 180;
+    final lat2 = end.latitude * math.pi / 180;
+    final lon2 = end.longitude * math.pi / 180;
 
-    double dLon = lon2 - lon1;
-    double y = sin(dLon) * cos(lat2);
-    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
+    final dLon = lon2 - lon1;
 
-    double bearing = atan2(y, x);
-    return (bearing * (180 / pi) + 360) % 360;
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x =
+        math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+
+    final bearing = math.atan2(y, x);
+    return (bearing * 180 / math.pi + 360) % 360;
   }
 
   double _lerp(double start, double end, double t) {
@@ -994,6 +999,17 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                   ),
                                   SizedBox(width: 10),
                                   CustomTextFields.textWithImage(
+                                    onTap: () {
+                                      final String bookingId =
+                                          driverSearchController
+                                              .carBooking
+                                              .value!
+                                              .bookingId;
+                                      final url =
+                                          "https://hoppr-admin-e7bebfb9fb05.herokuapp.com/ride-tracker/$bookingId}";
+                                      Share.share(url);
+
+                                    },
                                     text: 'Share',
                                     fontWeight: FontWeight.w500,
                                     colors: AppColors.cancelRideColor,

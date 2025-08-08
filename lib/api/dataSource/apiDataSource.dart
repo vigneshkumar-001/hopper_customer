@@ -264,4 +264,37 @@ class ApiDataSource extends BaseApiDataSource {
       return Left(ServerFailure('Something went wrong'));
     }
   }
+
+  Future<Either<Failure, SendDriverRequestModels>> starRating({
+    required String bookingId,
+    required String selectedReason,
+  }) async {
+    try {
+      final url = ApiConsents.rateDriver(bookingId: bookingId);
+      AppLogger.log.i(url);
+
+      dynamic response = await Request.sendRequest(
+        url,
+        {"rating": selectedReason, "review": ''},
+        'Post',
+        false,
+      );
+      if (response.statusCode == 200) {
+        if (response.data['status'] == 200) {
+          return Right(SendDriverRequestModels.fromJson(response.data));
+        } else {
+          return Left(ServerFailure(response.data['message'] ?? " "));
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
 }

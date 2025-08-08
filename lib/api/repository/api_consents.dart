@@ -22,5 +22,8 @@ class ApiConsents {
     return '$baseUrl/api/customer/cancel-booking/$bookingId';
   }
 
+  static String rateDriver({required String bookingId}) {
+    return '$baseUrl/api/customer/rate-driver/$bookingId';
+  }
   // https://hoppr-backend-3d2b7f783917.herokuapp.com/api/users/districts?state=$state
 }

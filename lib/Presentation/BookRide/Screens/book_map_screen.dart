@@ -931,7 +931,6 @@ class _BookMapScreenState extends State<BookMapScreen> {
                                       ),
                                 ),
                               );
-                             
                             } else {
                               Navigator.push(
                                 context,
