@@ -86,11 +86,11 @@ class DriverSearchController extends GetxController {
       );
 
       return results.fold(
-            (failure) {
+        (failure) {
           isLoading.value = false;
           return failure.message;
         },
-            (response) {
+        (response) {
           isLoading.value = false;
           carBooking.value = response.data;
 
@@ -102,7 +102,6 @@ class DriverSearchController extends GetxController {
           // Log the data
           AppLogger.log.i("📤 Join booking data: $bookingData");
 
-
           if (socketService.connected) {
             socketService.emit('join-booking', bookingData);
             AppLogger.log.i("✅ Socket already connected, emitted join-booking");
@@ -113,8 +112,6 @@ class DriverSearchController extends GetxController {
             });
           }
 
-
-
           if (socketService.connected) {
             socketService.emit('join-booking', bookingData);
             AppLogger.log.i("✅ Socket already connected, emitted join-booking");
@@ -124,7 +121,6 @@ class DriverSearchController extends GetxController {
               socketService.emit('join-booking', bookingData);
             });
           }
-
 
           AppLogger.log.i(response.data);
           return null;

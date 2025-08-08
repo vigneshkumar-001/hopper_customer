@@ -365,7 +365,6 @@ class _RideShareScreenState extends State<RideShareScreen> {
                                 ),
                                 const SizedBox(height: 20),
 
-                                // First Row
                                 Row(
                                   children: [
                                     Expanded(
@@ -421,7 +420,6 @@ class _RideShareScreenState extends State<RideShareScreen> {
 
                                 const SizedBox(height: 20),
 
-                                // Second Row
                                 Row(
                                   children: [
                                     Expanded(
