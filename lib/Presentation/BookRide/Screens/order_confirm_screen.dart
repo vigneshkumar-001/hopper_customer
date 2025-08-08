@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
@@ -45,9 +46,14 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   bool get wantKeepAlive => true;
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _destController = TextEditingController();
+  bool _isDrawingPolyline = false;
 
   bool isDriverConfirmed = false;
   bool driverStartedRide = false;
+  bool destinationReached = false;
+  bool _autoFollowEnabled = false;
+  Timer? _autoFollowTimer;
+  bool _userInteractingWithMap = false;
   final socketService = SocketService();
   GoogleMapController? _mapController;
   LatLng? _pickedPosition;
@@ -73,7 +79,8 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
 
   Future<void> _loadCustomMarker() async {
     _carIcon = await BitmapDescriptor.asset(
-      const ImageConfiguration(size: Size(48, 48)),
+      height: 60,
+      const ImageConfiguration(size: Size(52, 52)),
       AppImages.movingCar,
     );
   }
@@ -84,36 +91,6 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       _currentPosition = LatLng(position.latitude, position.longitude);
     });
     AppLogger.log.i(_currentPosition);
-  }
-
-  Future<void> _getAndSetCurrentLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      _currentPosition = LatLng(position.latitude, position.longitude);
-      _pickedPosition = _currentPosition;
-      setState(() {});
-    } catch (e) {
-      print("Location error: $e");
-    }
-  }
-
-  Future<void> _getAddressFromLatLng(LatLng position) async {
-    try {
-      final placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
-      if (placemarks.isNotEmpty) {
-        final placemark = placemarks.first;
-        setState(() {
-          _address = "${placemark.street}, ${placemark.locality}";
-        });
-      }
-    } catch (e) {
-      print("Error getting address: $e");
-    }
   }
 
   void _goToCurrentLocation() async {
@@ -133,28 +110,6 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     socketService.onConnect(() {
       AppLogger.log.i("✅ Socket connected on booking screen");
     });
-
-
-    // 🔶 Step 1: Driver Accepted
-    // socketService.on('driver-accepted', (data) {
-    //   if (!mounted) return;
-    //
-    //   final String bookingId = data['bookingId'] ?? '';
-    //   final String status = data['status'] ?? '';
-    //   final String driverId = data['driverId'] ?? '';
-    //
-    //   AppLogger.log.i(
-    //     "✅ Driver accepted: bookingId=$bookingId, driverId=$driverId, status=$status",
-    //   );
-    //
-    //   if (status == "SUCCESS" && driverId.trim().isNotEmpty) {
-    //     socketService.emit('join-booking', {
-    //       'bookingId': bookingId,
-    //       'userId': driverId,
-    //     });
-    //   }
-    // });
-
 
     socketService.on('joined-booking', (data) {
       if (!mounted) return;
@@ -223,9 +178,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         );
       }
 
-
-
-// ✅ CASE 2: After ride starts → Draw polyline to drop
+      // ✅ CASE 2: After ride starts → Draw polyline to drop
       if (driverStartedRide && _customerToLatLang != null) {
         _drawPolylineFromDriverToCustomer(
           driverLatLng: newDriverLatLng,
@@ -236,7 +189,6 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       // ✅ Update current driver position
       _currentDriverLatLng = newDriverLatLng;
     });
-
 
     socketService.on('driver-arrived', (data) {
       AppLogger.log.i("driver-arrived: $data");
@@ -255,15 +207,15 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     socketService.on('ride-started', (data) {
       final bool status = data['status'] == true;
       AppLogger.log.i("ride-started: $data");
-      setState(() {
-        driverStartedRide = status;
-      });
+
+      driverStartedRide = status; // don't wait for setState
+
+      if (!mounted) return;
+      setState(() {}); // only for UI like info card updates
 
       if (status &&
           _currentDriverLatLng != null &&
           _customerToLatLang != null) {
-        // 🚘 Show only driver + drop markers
-
         final dropMarker = Marker(
           markerId: const MarkerId("drop_marker"),
           position: _customerToLatLang!,
@@ -272,15 +224,30 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         );
 
         setState(() {
-          // Remove all other markers except driver and destination
           _markers = {if (_driverMarker != null) _driverMarker!, dropMarker};
         });
 
-        // 🧭 Draw polyline from driver to destination
         _drawPolylineFromDriverToCustomer(
           driverLatLng: _currentDriverLatLng!,
           customerLatLng: _customerToLatLang!,
         );
+      }
+    });
+    socketService.on('driver-reached-destination', (data) {
+      final status = data['status'];
+      if (status == true || status.toString() == 'status') {
+        if (!mounted) return;
+        setState(() {
+          destinationReached = true;
+        });
+        Future.delayed(const Duration(seconds: 3), () {
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => PaymentScreen()),
+          );
+        });
+
+        AppLogger.log.i("driver_reached,$data");
       }
     });
 
@@ -288,7 +255,6 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     // socketService.on('tracked-driver-location', (data) {
     //   AppLogger.log.i("📡 tracked-driver-location received: $data");
     // });
-
 
     _initLocation();
     _goToCurrentLocation();
@@ -308,9 +274,11 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
 
     if (!mounted) return;
     setState(() {
-      _markers
-        ..removeWhere((m) => m.markerId == const MarkerId("driver_marker"))
-        ..add(_driverMarker!);
+      // 🟢 Remove old marker and add updated one
+      _markers = {
+        ..._markers.where((m) => m.markerId != const MarkerId("driver_marker")),
+        _driverMarker!,
+      };
     });
   }
 
@@ -319,7 +287,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     const duration = Duration(milliseconds: 800);
     final interval = duration.inMilliseconds ~/ steps;
 
-    double currentBearing = _driverMarker?.rotation ?? 0; // ❗ Fixed here
+    double currentBearing = _driverMarker?.rotation ?? 0;
 
     for (int i = 1; i <= steps; i++) {
       await Future.delayed(Duration(milliseconds: interval));
@@ -327,25 +295,41 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       final lat = _lerp(from.latitude, to.latitude, i / steps);
       final lng = _lerp(from.longitude, to.longitude, i / steps);
       final intermediate = LatLng(lat, lng);
-
       double newBearing = _getBearing(from, intermediate);
 
-      // ✅ No null error here now
       if ((newBearing - currentBearing).abs() > 10) {
         currentBearing = newBearing;
       }
 
       _updateDriverMarker(intermediate, currentBearing);
 
-      _mapController?.animateCamera(CameraUpdate.newLatLng(intermediate));
+      // ✅ Only auto-move camera if user is not interacting
+      if (Geolocator.distanceBetween(
+            _currentDriverLatLng!.latitude,
+            _currentDriverLatLng!.longitude,
+            intermediate.latitude,
+            intermediate.longitude,
+          ) >
+          1) {
+        _updateDriverMarker(intermediate, currentBearing);
+
+        if (_autoFollowEnabled) {
+          _mapController?.animateCamera(CameraUpdate.newLatLng(intermediate));
+        }
+      }
     }
 
     _currentDriverLatLng = to;
 
-    if (_customerLatLng != null) {
-      _drawPolylineFromDriverToCustomer(
-        driverLatLng: _currentDriverLatLng!,
+    if (driverStartedRide && _customerToLatLang != null) {
+      await _drawPolylineFromDriverToCustomer(
+        driverLatLng: to,
         customerLatLng: _customerToLatLang!,
+      );
+    } else if (!driverStartedRide && _customerLatLng != null) {
+      await _drawPolylineFromDriverToCustomer(
+        driverLatLng: to,
+        customerLatLng: _customerLatLng!,
       );
     }
   }
@@ -372,6 +356,9 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     required LatLng driverLatLng,
     required LatLng customerLatLng,
   }) async {
+    if (_isDrawingPolyline) return; // prevent multiple calls
+    _isDrawingPolyline = true;
+
     const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
 
     final url =
@@ -387,7 +374,9 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       setState(() {
         _polylines = {
           Polyline(
-            polylineId: const PolylineId("driver_to_customer"),
+            polylineId: PolylineId(
+              driverStartedRide ? "driver_to_drop" : "driver_to_pickup",
+            ),
             points: points,
             color: Colors.black,
             width: 4,
@@ -397,6 +386,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     } else {
       print("❗ Error fetching directions: ${data['status']}");
     }
+    _isDrawingPolyline = false;
   }
 
   List<LatLng> _decodePolyline(String encoded) {
@@ -445,6 +435,19 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
             height: 550,
             width: double.infinity,
             child: GoogleMap(
+              onCameraMoveStarted: () {
+                _userInteractingWithMap = true;
+                _autoFollowEnabled = false;
+
+                _autoFollowTimer?.cancel();
+
+                // Re-enable auto-follow after 10 seconds
+                _autoFollowTimer = Timer(Duration(seconds: 10), () {
+                  _autoFollowEnabled = true;
+                  _userInteractingWithMap = false;
+                });
+              },
+
               initialCameraPosition: CameraPosition(
                 target: _currentPosition ?? LatLng(9.9144908, 78.0970899),
                 zoom: 16,
@@ -614,7 +617,9 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                           imageSize: 24,
                           fontWeight: FontWeight.w600,
                           text:
-                              driverStartedRide
+                              destinationReached
+                                  ? 'Ride Completed'
+                                  : driverStartedRide
                                   ? 'Ride in Progress'
                                   : 'Your ride is confirmed',
                           colors: AppColors.commonBlack,

@@ -314,6 +314,7 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                     );
                     AppLogger.log.i(result);
                     if (result != null) {
+                      driverController.selectedCarType.value = '';
                       Navigator.push(
                         context,
                         MaterialPageRoute(
