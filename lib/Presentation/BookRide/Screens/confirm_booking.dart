@@ -292,7 +292,6 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
           );
         }),
       ),
-/*
       bottomNavigationBar: Obx(() {
         return driverController.isLoading.value
             ? const SizedBox.shrink()
@@ -349,8 +348,8 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                 ),
               ),
             );
-      }),*/
-      bottomNavigationBar: Obx(() {
+      }),
+      /*      bottomNavigationBar: Obx(() {
         return driverController.isLoading.value
             ? const SizedBox.shrink()
             : SafeArea(
@@ -377,7 +376,7 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                 ),
               ),
             );
-      }),
+      }),*/
     );
   }
 }

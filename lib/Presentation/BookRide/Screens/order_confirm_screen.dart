@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 
@@ -242,7 +243,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         setState(() {
           destinationReached = true;
         });
-        Future.delayed(const Duration(seconds: 3), () {
+        Future.delayed(const Duration(seconds: 2), () {
           if (!mounted) return;
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => PaymentScreen()),
@@ -252,7 +253,15 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         AppLogger.log.i("driver_reached,$data");
       }
     });
+    socketService.on('CANCELLED_BY_CUSTOMER-cancelled', (data) async {
+      AppLogger.log.i('CANCELLED_BY_CUSTOMER-cancelled : $data');
 
+      if (data != null) {
+        if (data['status'] == true) {
+          Get.offAll(() => HomeScreens());
+        }
+      }
+    });
     // 🔶 Optional fallback (if using 'tracked-driver-location' too)
     // socketService.on('tracked-driver-location', (data) {
     //   AppLogger.log.i("📡 tracked-driver-location received: $data");
@@ -1008,7 +1017,6 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                       final url =
                                           "https://hoppr-admin-e7bebfb9fb05.herokuapp.com/ride-tracker/$bookingId}";
                                       Share.share(url);
-
                                     },
                                     text: 'Share',
                                     fontWeight: FontWeight.w500,

@@ -111,9 +111,7 @@ class _OtpScreensState extends State<OtpScreens> {
                                   child: PinCodeTextField(
                                     focusNode: otpFocusNode,
                                     onCompleted: (value) async {
-                                      FocusScope.of(
-                                        context,
-                                      ).unfocus();
+                                      FocusScope.of(context).unfocus();
                                       await Future.delayed(
                                         Duration(milliseconds: 100),
                                       );
