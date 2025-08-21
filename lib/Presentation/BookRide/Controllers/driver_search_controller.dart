@@ -236,14 +236,18 @@ class DriverSearchController extends GetxController {
           isLoading.value = false;
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => HomeScreens()),
+            MaterialPageRoute(
+              builder: (context) => CommonBottomNavigation(initialIndex: 0),
+            ),
           );
           return failure.message;
         },
         (response) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => HomeScreens()),
+            MaterialPageRoute(
+              builder: (context) => CommonBottomNavigation(initialIndex: 0),
+            ),
           );
           isLoading.value = false;
           sendDriverRequestData.value = response.data;

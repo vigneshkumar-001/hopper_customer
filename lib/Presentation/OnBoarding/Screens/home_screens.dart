@@ -304,13 +304,20 @@ class _HomeScreensState extends State<HomeScreens>
         _driverMarkers[driverId] = marker;
       });
     });
+    socketService.on('remove-nearby-driver', (data) {
+      AppLogger.log.i("📍remove-nearby-driver: $data");
 
+      final String driverId = data['driverId'];
+
+      setState(() {
+        _driverMarkers.remove(driverId);
+      });
+    });
 
     //
     // socketService.on('tracked-driver-location', (data) {
     //   AppLogger.log.i('tracked-driver-location: $data');
     // });
-
 
     _loadCustomMarker();
     _initLocation(context);

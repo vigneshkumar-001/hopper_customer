@@ -210,6 +210,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
+  // displayPaymentSheet() async {
+  //   try {
+  //     await Stripe.instance.presentPaymentSheet();
+  //
+  //     ScaffoldMessenger.of(
+  //       context,
+  //     ).showSnackBar(SnackBar(content: Text("Payment successful")));
+  //   } catch (e) {
+  //     AppLogger.log.i('Error: $e');
+  //   }
+  // }
   displayPaymentSheet() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -267,14 +278,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   createPaymentIntent(String amount) async {
     try {
-      final booking = driverSearchController.carBooking.value;
-
-      if (booking == null) {
-        AppLogger.log.e('❌ Booking data is null');
-        return null;
-      }
-
-      final String bookingId = booking.bookingId;
+      final String bookingId = '102386';
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
 

@@ -237,6 +237,8 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       }
     });
     socketService.on('driver-reached-destination', (data) {
+      final String bookingId =
+          driverSearchController.carBooking.value!.bookingId;
       final status = data['status'];
       if (status == true || status.toString() == 'status') {
         if (!mounted) return;
@@ -246,7 +248,9 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         Future.delayed(const Duration(seconds: 2), () {
           if (!mounted) return;
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => PaymentScreen()),
+            MaterialPageRoute(
+              builder: (context) => PaymentScreen(bookingId: bookingId),
+            ),
           );
         });
 
@@ -303,7 +307,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   }
 
   Future<void> _animateCarTo(LatLng from, LatLng to) async {
-    const steps = 20;
+    const steps = 10;
     const duration = Duration(milliseconds: 800);
     final interval = duration.inMilliseconds ~/ steps;
 
@@ -354,6 +358,22 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     }
   }
 
+  /*  double _getBearing(LatLng start, LatLng end) {
+    final lat1 = start.latitude * math.pi / 180;
+    final lon1 = start.longitude * math.pi / 180;
+    final lat2 = end.latitude * math.pi / 180;
+    final lon2 = end.longitude * math.pi / 180;
+
+    final dLon = lon2 - lon1;
+
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x =
+        math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+
+    final bearing = math.atan2(y, x);
+    return (bearing * 180 / math.pi + 360) % 360;
+  }*/
   double _getBearing(LatLng start, LatLng end) {
     final lat1 = start.latitude * math.pi / 180;
     final lon1 = start.longitude * math.pi / 180;
@@ -1024,7 +1044,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                               .value!
                                               .bookingId;
                                       final url =
-                                          "https://hoppr-admin-e7bebfb9fb05.herokuapp.com/ride-tracker/$bookingId}";
+                                          "https://hoppr-admin-e7bebfb9fb05.herokuapp.com/ride-tracker/$bookingId";
                                       Share.share(url);
                                     },
                                     text: 'Share',
