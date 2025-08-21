@@ -11,6 +11,7 @@ import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controlle
 import 'package:hopper/Presentation/BookRide/Screens/order_confirm_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:get/get.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/payment_screen.dart';
 
 class ConfirmBooking extends StatefulWidget {
   final String? selectedCarType;
@@ -348,6 +349,34 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
               ),
             );
       }),
+      /*      bottomNavigationBar: Obx(() {
+        return driverController.isLoading.value
+            ? const SizedBox.shrink()
+            : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
+                child: AppButtons.button(
+                  onTap: () async {
+                    final allData = driverController.carBooking.value;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => PaymentScreen()),
+                    );
+                  },
+                  text: 'Confirm',
+                  rightImagePath: AppImages.nBlackCurrency,
+                  rightImagePathText:
+                      ((driverController.carBooking.value?.baseFare ?? 0) +
+                              (driverController.carBooking.value?.serviceFare ??
+                                  0))
+                          .toString(),
+                ),
+              ),
+            );
+      }),*/
     );
   }
 }

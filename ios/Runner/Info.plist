@@ -43,7 +43,10 @@
         <true/>
         <key>UIApplicationSupportsIndirectInputEvents</key>
         <true/>
-
+        <key>NSCameraUsageDescription</key>
+        <string>Scan your card to add it automatically</string>
+        <key>NSCameraUsageDescription</key>
+        <string>To scan cards</string>
         <!-- Location Permissions -->
         <key>NSLocationWhenInUseUsageDescription</key>
         <string>This app needs your location to show your position on the map.</string>

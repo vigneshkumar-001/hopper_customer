@@ -4,13 +4,20 @@ import 'package:hopper/Presentation/Authentication/screens/splash_screens.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/payment_screen.dart';
 
 import 'package:hopper/init_controller.dart';
 import 'package:flutter/services.dart';
 
 import 'package:hopper/uber_screen.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  Stripe.publishableKey =
+      "pk_test_51RTgU2Qhzmr6TYhsKMWtfICaQ72crva7xVWCA0hPeV1qdH9CInnl9WwJLNcxIIUWKDhCeipRLztD82DTnBXKx05700iEGBQWjw";
+  await Stripe.instance.applySettings();
   await initController();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

@@ -61,6 +61,8 @@ dev_dependencies:
   flutter_sound: any
   image_picker: any
   url_launcher: any
+  flutter_stripe: any
+  share_plus: any
 
 
 
