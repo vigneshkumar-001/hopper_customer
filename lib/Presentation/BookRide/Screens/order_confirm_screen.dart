@@ -262,6 +262,15 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         }
       }
     });
+    socketService.on('CANCELLED_BY_DRIVER-cancelled', (data) async {
+      AppLogger.log.i('CANCELLED_BY_DRIVER-cancelled : $data');
+
+      if (data != null) {
+        if (data['status'] == true) {
+          Get.offAll(() => HomeScreens());
+        }
+      }
+    });
     // 🔶 Optional fallback (if using 'tracked-driver-location' too)
     // socketService.on('tracked-driver-location', (data) {
     //   AppLogger.log.i("📡 tracked-driver-location received: $data");
