@@ -10,6 +10,7 @@ import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.d
 
 import 'package:hopper/uitls/websocket/socket_io_client.dart';
 
+import '../../../Core/Utility/app_toasts.dart';
 import '../../../api/dataSource/apiDataSource.dart';
 
 class DriverSearchController extends GetxController {
@@ -199,6 +200,7 @@ class DriverSearchController extends GetxController {
           return failure.message;
         },
         (response) {
+          AppToasts.customToast(context, response.message);
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(

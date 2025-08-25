@@ -244,7 +244,7 @@ class ApiDataSource extends BaseApiDataSource {
         url,
         {"rejectedReason": selectedReason},
         'Post',
-        false,
+        true,
       );
       if (response.statusCode == 200) {
         if (response.data['status'] == 200) {

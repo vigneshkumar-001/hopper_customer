@@ -26,9 +26,8 @@ class AppButtons {
 
     String? imagePath,
     String? rightImagePath,
-    String? rightImagePathText,
-  })
-  {
+    int? rightImagePathText,
+  }) {
     return SizedBox(
       width: size,
 
@@ -74,7 +73,7 @@ class AppButtons {
                 color: AppColors.commonWhite,
               ),
               Text(
-                rightImagePathText ?? '',
+                rightImagePathText.toString() ?? '',
                 style: TextStyle(
                   fontFamily: "Roboto-normal",
                   fontSize: 20,
@@ -529,8 +528,7 @@ class AppButtons {
     bool? isLoading,
     bool hasBorder = false,
     String? imagePath,
-  })
-  {
+  }) {
     return SizedBox(
       width: size,
       child: ElevatedButton(
@@ -539,16 +537,16 @@ class AppButtons {
           foregroundColor: foreGroundColor,
 
           shape:
-          hasBorder
-              ? RoundedRectangleBorder(
-            side: BorderSide(color: Color(0xff3F5FF2)),
-            borderRadius: BorderRadius.circular(borderRadius!),
-          )
-              : RoundedRectangleBorder(
-            side: BorderSide(color: borderColor ?? Colors.transparent),
+              hasBorder
+                  ? RoundedRectangleBorder(
+                    side: BorderSide(color: Color(0xff3F5FF2)),
+                    borderRadius: BorderRadius.circular(borderRadius!),
+                  )
+                  : RoundedRectangleBorder(
+                    side: BorderSide(color: borderColor ?? Colors.transparent),
 
-            borderRadius: BorderRadius.circular(borderRadius!),
-          ),
+                    borderRadius: BorderRadius.circular(borderRadius!),
+                  ),
           elevation: 0,
           fixedSize: Size(150.w, 40.h),
           backgroundColor: buttonColor,

@@ -906,6 +906,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
                                 MaterialPageRoute(
                                   builder:
                                       (context) => ConfirmBooking(
+
                                         carType: carType,
                                         selectedCarType: _selectedCarType,
                                         pickupData: {
