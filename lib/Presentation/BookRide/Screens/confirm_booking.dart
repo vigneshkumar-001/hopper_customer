@@ -56,7 +56,18 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
       widget.destinationData['lng'],
     );
   }
+  String formatDistance(double meters) {
+    double kilometers = meters / 1000;
+    return '${kilometers.toStringAsFixed(1)} Km';
+  }
 
+  String formatDuration(int minutes) {
+    int hours = minutes ~/ 60;
+    int remainingMinutes = minutes % 60;
+    return hours > 0
+        ? '$hours hr $remainingMinutes min'
+        : '$remainingMinutes min';
+  }
   @override
   Widget build(BuildContext context) {
     _startController.text = widget.pickupAddress;
@@ -220,15 +231,54 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                               Row(
                                 children: [
                                   Expanded(child: Text(AppTexts.serviceFare)),
+                                    CustomTextFields.textWithImage(
+                                      text:   driverController
+                                          .carBooking
+                                          .value
+                                          ?.serviceFare
+                                          .toString() ??
+                                          "",
+
+
+                                      imagePath: AppImages.nCurrency,
+                                      fontWeight: FontWeight.w900,
+                                 ),
+                                ],
+                              ),
+                              SizedBox(height: 3),
+                              SizedBox(
+                                height: 2,
+                                child: DottedLine(
+                                  direction: Axis.horizontal,
+                                  lineLength: double.infinity,
+                                  lineThickness: 1.4,
+                                  dashLength: 4.0,
+                                  dashColor: Colors.grey.shade400,
+                                ),
+                              ),
+                              SizedBox(height: 3),
+                              Row(
+                                children: [
+                                  Expanded(child: Text(AppTexts.estTime)),
                                   CustomTextFields.textWithImage(
-                                    text:
-                                        driverController
-                                            .carBooking
-                                            .value
-                                            ?.serviceFare
-                                            .toString() ??
-                                        "",
-                                    imagePath: AppImages.nCurrency,
+                                    text:formatDuration(  driverController
+                                        .carBooking
+                                        .value
+                                        ?. duration ??0),
+
+
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ],
+                              ),
+
+                              Row(
+                                children: [
+                                  Expanded(child: Text(AppTexts.totalKm)),
+                                  CustomTextFields.textWithImage(
+
+                                  text: formatDistance((driverController.carBooking.value?.distance ?? 0).toDouble()),
+
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ],
@@ -292,6 +342,7 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
           );
         }),
       ),
+
       bottomNavigationBar: Obx(() {
         return driverController.isLoading.value
             ? const SizedBox.shrink()
@@ -340,16 +391,12 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                   },
                   text: 'Confirm',
                   rightImagePath: AppImages.nBlackCurrency,
-                  rightImagePathText:
-                      ((driverController.carBooking.value?.baseFare ?? 0) +
-                              (driverController.carBooking.value?.serviceFare ??
-                                  0))
-                          .toString(),
+                  rightImagePathText: driverController.carBooking.value?.amount ?? 0,
                 ),
               ),
             );
       }),
-      /*      bottomNavigationBar: Obx(() {
+      /* bottomNavigationBar: Obx(() {
         return driverController.isLoading.value
             ? const SizedBox.shrink()
             : SafeArea(
@@ -361,9 +408,16 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                 child: AppButtons.button(
                   onTap: () async {
                     final allData = driverController.carBooking.value;
+                    AppLogger.log.i(allData?.bookingId.toString() ?? '');
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => PaymentScreen()),
+                      MaterialPageRoute(
+                        builder:
+                            (context) => PaymentScreen(
+                              amount: 0,
+                              bookingId: allData?.bookingId.toString() ?? '',
+                            ),
+                      ),
                     );
                   },
                   text: 'Confirm',

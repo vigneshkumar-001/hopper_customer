@@ -16,7 +16,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key});
+  final String? bookingId;
+  final int? amount;
+  const PaymentScreen({super.key, this.bookingId,this.amount});
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -131,11 +133,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                   borderRadius: 8,
                                   buttonColor: AppColors.commonBlack,
                                   onTap: () {
-                                    final String bookingId =
-                                        driverSearchController
-                                            .carBooking
-                                            .value!
-                                            .bookingId;
+                                    final String bookingId = widget.bookingId ?? '';
                                     selectedRating;
                                     AppLogger.log.i(selectedRating);
                                     driverSearchController.rateDriver(
@@ -186,6 +184,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }*/
   Future<void> makePayment() async {
     try {
+
+
       final result = await createPaymentIntent('1500000');
 
       if (result == null || !result.containsKey('clientSecret')) {
@@ -210,6 +210,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
+  // displayPaymentSheet() async {
+  //   try {
+  //     await Stripe.instance.presentPaymentSheet();
+  //
+  //     ScaffoldMessenger.of(
+  //       context,
+  //     ).showSnackBar(SnackBar(content: Text("Payment successful")));
+  //   } catch (e) {
+  //     AppLogger.log.i('Error: $e');
+  //   }
+  // }
   displayPaymentSheet() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -220,6 +231,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     try {
+      final String bookingId = widget.bookingId ?? '';
       await Stripe.instance.presentPaymentSheet();
 
       String? clientSecret = paymentIntentData?['clientSecret'];
@@ -239,7 +251,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             'Authorization': 'Bearer $token',
           },
           body: jsonEncode({
-            "userBookingId": '412145',
+            "userBookingId": bookingId,
             "paymentIntentId": transactionId,
           }),
         );
@@ -267,14 +279,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   createPaymentIntent(String amount) async {
     try {
-      final booking = driverSearchController.carBooking.value;
-
-      if (booking == null) {
-        AppLogger.log.e('❌ Booking data is null');
-        return null;
-      }
-
-      final String bookingId = booking.bookingId;
+      final String bookingId = widget.bookingId ?? '';
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
 
@@ -542,7 +547,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CustomTextFields.textWithImage(
-                      text: '125',
+                      text: widget.amount.toString()??'280',
                       fontSize: 25,
                       colors: AppColors.commonBlack,
                       fontWeight: FontWeight.w700,

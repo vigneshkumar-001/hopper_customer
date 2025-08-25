@@ -34,10 +34,11 @@ class BookingData {
   final int amount;
   final String status;
   final int duration;
+  final int distance;
   final bool scheduled;
   final bool trackingEnabled;
-  final int baseFare;
-  final int serviceFare;
+  final double baseFare;
+  final double serviceFare;
   final String id;
   final DateTime otpGeneratedAt;
   final DateTime createdAt;
@@ -63,6 +64,7 @@ class BookingData {
     required this.otpGeneratedAt,
     required this.createdAt,
     required this.updatedAt,
+    required this.distance,
   });
 
   factory BookingData.fromJson(Map<String, dynamic> json) {
@@ -78,6 +80,7 @@ class BookingData {
       amount: json['amount'],
       status: json['status'],
       duration: json['duration'],
+      distance: json['distance']?? 0,
       scheduled: json['scheduled'],
       trackingEnabled: json['trackingEnabled'],
       baseFare: json['baseFare'],
@@ -105,6 +108,7 @@ class BookingData {
       'scheduled': scheduled,
       'trackingEnabled': trackingEnabled,
       'baseFare': baseFare,
+      'distance': distance,
       'serviceFare': serviceFare,
       '_id': id,
       'otpGeneratedAt': otpGeneratedAt.toIso8601String(),

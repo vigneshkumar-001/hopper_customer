@@ -70,16 +70,14 @@ class _HomeScreensState extends State<HomeScreens>
     setState(() {});
   }
 
-  Future<void> _getCurrentLocation() async {
-    final status = await Permission.location.request();
-    if (status.isGranted) {
-      final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      _currentPosition = LatLng(pos.latitude, pos.longitude);
-      _mapController?.animateCamera(CameraUpdate.newLatLng(_currentPosition!));
-      setState(() {});
-    }
+  void _goToCurrentLocation() async {
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    final latLng = LatLng(position.latitude, position.longitude);
+
+    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 17));
   }
 
   Future<String> _getAddressFromLatLng(LatLng position) async {
@@ -304,13 +302,20 @@ class _HomeScreensState extends State<HomeScreens>
         _driverMarkers[driverId] = marker;
       });
     });
+    socketService.on('remove-nearby-driver', (data) {
+      AppLogger.log.i("📍remove-nearby-driver: $data");
 
+      final String driverId = data['driverId'];
+      if (!mounted) return;
+      setState(() {
+        _driverMarkers.remove(driverId);
+      });
+    });
 
     //
     // socketService.on('tracked-driver-location', (data) {
     //   AppLogger.log.i('tracked-driver-location: $data');
     // });
-
 
     _loadCustomMarker();
     _initLocation(context);
@@ -438,6 +443,20 @@ class _HomeScreensState extends State<HomeScreens>
                             AppImages.pinLocation,
                             height: 40,
                             width: 25,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 290,
+                        right: 10,
+                        child: FloatingActionButton(
+                          mini: true,
+                          backgroundColor: Colors.white,
+                          onPressed: _goToCurrentLocation,
+
+                          child: const Icon(
+                            Icons.my_location,
+                            color: Colors.black,
                           ),
                         ),
                       ),

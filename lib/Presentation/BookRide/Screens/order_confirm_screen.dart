@@ -78,6 +78,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   String CUSTOMERPHONE = '';
   String CARTYPE = '';
   String otp = '';
+  int Amount = 0;
   Set<Polyline> _polylines = {};
 
   Future<void> _loadCustomMarker() async {
@@ -131,6 +132,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       final String type = vehicle['type'] ?? '';
       final String plate = vehicle['plateNumber'] ?? '';
       final customerLoc = data['customerLocation'];
+      final amount = data['amount'];
 
       _customerLatLng = LatLng(
         customerLoc['fromLatitude'],
@@ -148,6 +150,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         isDriverConfirmed = driverAccepted;
         CUSTOMERPHONE = customerPhone;
         CARTYPE = carType;
+        Amount = amount;
       });
 
       AppLogger.log.i("🚕 Joined booking data: $data");
@@ -237,7 +240,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       }
     });
     socketService.on('driver-reached-destination', (data) {
+      final String bookingId =
+          driverSearchController.carBooking.value!.bookingId;
       final status = data['status'];
+      final amount = data['amount'];
       if (status == true || status.toString() == 'status') {
         if (!mounted) return;
         setState(() {
@@ -246,15 +252,19 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         Future.delayed(const Duration(seconds: 2), () {
           if (!mounted) return;
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => PaymentScreen()),
+            MaterialPageRoute(
+              builder:
+                  (context) =>
+                      PaymentScreen(bookingId: bookingId, amount: Amount),
+            ),
           );
         });
 
         AppLogger.log.i("driver_reached,$data");
       }
     });
-    socketService.on('CANCELLED_BY_CUSTOMER-cancelled', (data) async {
-      AppLogger.log.i('CANCELLED_BY_CUSTOMER-cancelled : $data');
+    socketService.on('customer-cancelled', (data) async {
+      AppLogger.log.i('customer-cancelled : $data');
 
       if (data != null) {
         if (data['status'] == true) {
@@ -262,8 +272,8 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         }
       }
     });
-    socketService.on('CANCELLED_BY_DRIVER-cancelled', (data) async {
-      AppLogger.log.i('CANCELLED_BY_DRIVER-cancelled : $data');
+    socketService.on('driver-cancelled', (data) async {
+      AppLogger.log.i('driver-cancelled : $data');
 
       if (data != null) {
         if (data['status'] == true) {
@@ -303,7 +313,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   }
 
   Future<void> _animateCarTo(LatLng from, LatLng to) async {
-    const steps = 20;
+    const steps = 10;
     const duration = Duration(milliseconds: 800);
     final interval = duration.inMilliseconds ~/ steps;
 
@@ -334,7 +344,18 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         _updateDriverMarker(intermediate, currentBearing);
 
         if (_autoFollowEnabled) {
-          _mapController?.animateCamera(CameraUpdate.newLatLng(intermediate));
+          final zoom = await _mapController?.getZoomLevel() ?? 17;
+
+          _mapController?.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: intermediate,
+                zoom: zoom,
+                tilt: 45, // optional
+                bearing: currentBearing, // 👈 map rotates with car
+              ),
+            ),
+          );
         }
       }
     }
@@ -354,6 +375,22 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     }
   }
 
+  /*  double _getBearing(LatLng start, LatLng end) {
+    final lat1 = start.latitude * math.pi / 180;
+    final lon1 = start.longitude * math.pi / 180;
+    final lat2 = end.latitude * math.pi / 180;
+    final lon2 = end.longitude * math.pi / 180;
+
+    final dLon = lon2 - lon1;
+
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x =
+        math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+
+    final bearing = math.atan2(y, x);
+    return (bearing * 180 / math.pi + 360) % 360;
+  }*/
   double _getBearing(LatLng start, LatLng end) {
     final lat1 = start.latitude * math.pi / 180;
     final lon1 = start.longitude * math.pi / 180;
@@ -782,7 +819,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                       colors: AppColors.commonBlack,
                                       text: 'Total Fare',
                                       rightImagePath: AppImages.nBlackCurrency,
-                                      rightImagePathText: ' 73',
+                                      rightImagePathText: ' $Amount',
                                     ),
 
                                     Spacer(),
@@ -869,7 +906,17 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                   width: 20,
                                 ),
                                 onTap: () {
-                                  Get.to(() => PaymentScreen());
+                                  final String bookingId =
+                                      driverSearchController
+                                          .carBooking
+                                          .value!
+                                          .bookingId;
+                                  Get.to(
+                                    () => PaymentScreen(
+                                      bookingId: bookingId,
+                                      amount: Amount,
+                                    ),
+                                  );
                                 },
                               ),
                             ],
@@ -963,30 +1010,39 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                 vertical: 15,
                               ),
                               child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   CustomTextFields.textWithImage(
-                                    onTap: () {
-                                      // setState(() {
-                                      //   isDriverConfirmed = !isDriverConfirmed;
-                                      // });
-                                      AppButtons.showCancelRideBottomSheet(
-                                        context,
-                                        onConfirmCancel: (
-                                          String selectedReason,
-                                        ) {
-                                          driverSearchController.cancelRide(
-                                            bookingId:
-                                                driverSearchController
-                                                    .carBooking
-                                                    .value!
-                                                    .bookingId,
-                                            selectedReason: selectedReason,
-                                            context: context,
-                                          );
-                                        },
-                                      );
-                                    },
-                                    text: ' Cancel Ride',
+                                    onTap:
+                                        otp.isNotEmpty
+                                            ? null
+                                            : () {
+                                              // setState(() {
+                                              //   isDriverConfirmed = !isDriverConfirmed;
+                                              // });
+                                              AppButtons.showCancelRideBottomSheet(
+                                                context,
+                                                onConfirmCancel: (
+                                                  String selectedReason,
+                                                ) {
+                                                  driverSearchController
+                                                      .cancelRide(
+                                                        bookingId:
+                                                            driverSearchController
+                                                                .carBooking
+                                                                .value!
+                                                                .bookingId,
+                                                        selectedReason:
+                                                            selectedReason,
+                                                        context: context,
+                                                      );
+                                                },
+                                              );
+                                            },
+                                    text:
+                                        otp.isNotEmpty
+                                            ? 'Ratings'
+                                            : ' Cancel Ride',
                                     fontWeight: FontWeight.w500,
                                     colors: AppColors.cancelRideColor,
                                     imagePath: AppImages.cancel,
@@ -1024,7 +1080,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                               .value!
                                               .bookingId;
                                       final url =
-                                          "https://hoppr-admin-e7bebfb9fb05.herokuapp.com/ride-tracker/$bookingId}";
+                                          "https://hoppr-admin-e7bebfb9fb05.herokuapp.com/ride-tracker/$bookingId";
                                       Share.share(url);
                                     },
                                     text: 'Share',
