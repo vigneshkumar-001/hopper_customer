@@ -87,6 +87,10 @@ class SocketService {
     _socket.emit(event, data);
   }
 
+  void emitWithAck(String event, dynamic data, Function(dynamic)? ack) {
+    _socket.emitWithAck(event, data, ack: ack);
+  }
+
   void off(String event) {
     _socket.off(event);
   }

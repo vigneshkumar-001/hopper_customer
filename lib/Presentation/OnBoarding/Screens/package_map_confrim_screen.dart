@@ -269,7 +269,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                     padding: const EdgeInsets.all(8.0),
                                     child: InkWell(
                                       onTap: () async {
-                                        Get.to(ChatScreen());
+                                        Get.to(ChatScreen(bookingId: '',));
                                       },
                                       child: Image.asset(
                                         AppImages.chat,

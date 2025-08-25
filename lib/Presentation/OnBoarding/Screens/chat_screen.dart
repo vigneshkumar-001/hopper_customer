@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:hopper/uitls/websocket/socket_io_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -11,9 +12,11 @@ import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:hopper/Presentation/OnBoarding/models/chat_response.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final String bookingId;
+  const ChatScreen({super.key, required this.bookingId});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -26,6 +29,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final FlutterSoundPlayer _player = FlutterSoundPlayer();
   bool _isRecording = false;
   String? _audioPath;
+  final socketService = SocketService();
+  String customerId = '';
   Map<String, bool> _playingStates = {};
 
   String? _pendingAudioPath;
@@ -38,7 +43,39 @@ class _ChatScreenState extends State<ChatScreen> {
       throw Exception('Microphone permission not granted');
     }
   }
+  Future<void> _sendMessage(String message) async {
+    if (message.trim().isEmpty) return;
 
+    final locationData = {
+      'bookingId': '565176',
+      'senderId': customerId,
+      'senderType': 'customer',
+      'message': message,
+    };
+
+    socketService.emitWithAck("booking-message", locationData, (ack) {
+      print("📩 Ack received from server: $ack"); // 👈 this will show what server sends back
+
+      if (ack != null && ack['success'] == true) {
+        setState(() {
+          messages.add(
+            ChatMessage(
+              message: message,
+              isMe: true,
+              time: "Now",
+              avatar: AppImages.dummy1,
+            ),
+          );
+        });
+        _textController.clear();
+        _scrollToBottom();
+      } else {
+        AppLogger.log.e("Message send failed: $ack");
+      }
+    });
+  }
+
+/*
   Future<void> _sendMessage(String message) async {
     if (message.isEmpty) return;
 
@@ -59,22 +96,29 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     _scrollToBottom();
-
-    await Future.delayed(Duration(seconds: 1));
-
-    setState(() {
-      messages.add(
-        ChatMessage(
-          message: "Auto-reply: $message",
-          isMe: false,
-          time: 'Now',
-          avatar: AppImages.dummy,
-        ),
-      );
-    });
-
-    _scrollToBottom();
+    final locationData = {
+      'bookingId': '565176',
+      'senderId': customerId,
+      'senderType': 'customer',
+      'message': message,
+    };
+    socketService.emit('booking-message', locationData);
+    // await Future.delayed(Duration(seconds: 1));
+    //
+    // setState(() {
+    //   messages.add(
+    //     ChatMessage(
+    //       message: "Auto-reply: $message",
+    //       isMe: false,
+    //       time: 'Now',
+    //       avatar: AppImages.dummy,
+    //     ),
+    //   );
+    // });
+    //
+    // _scrollToBottom();
   }
+*/
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -91,8 +135,46 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeSocketAndData();
     _initRecorder();
     _player.openPlayer();
+  }
+
+  Future<void> loadCustomerId() async {
+    final prefs = await SharedPreferences.getInstance();
+    customerId = prefs.getString('customer_Id') ?? '';
+
+    if (customerId.isEmpty) {
+      AppLogger.log.w('⚠️ No customer ID found in shared preferences.');
+    } else {
+      AppLogger.log.i('✅ Loaded customerId = $customerId');
+    }
+  }
+
+  Future<void> _initializeSocketAndData() async {
+    await loadCustomerId();
+    final userId = customerId;
+
+    socketService.initSocket(
+      'https://hoppr-face-two-dbe557472d7f.herokuapp.com',
+    );
+
+    socketService.onConnect(() {
+      socketService.registerUser(userId);
+
+      socketService.onReconnect(() {
+        AppLogger.log.i("🔄 Reconnected");
+        socketService.registerUser(customerId); // re-register after reconnect
+      });
+    });
+
+    socketService.on('registered', (data) {
+      AppLogger.log.i("✅ Registered → $data");
+    });
+
+    socketService.on('booking-message', (data) {
+      AppLogger.log.i("booking-message: $data");
+    });
   }
 
   Future<void> _initRecorder() async {
@@ -327,22 +409,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
 
                     SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.containerColor1,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: CustomTextFields.textWithStylesSmall(
-                        fontSize: 14,
-                        colors: AppColors.commonBlack,
-                        'I’m waiting downstairs',
-                      ),
-                    ),
-                    SizedBox(width: 10),
+
                   ],
                 ),
               ),
@@ -420,7 +487,6 @@ class _ChatScreenState extends State<ChatScreen> {
                           // Text Field
                           Expanded(
                             child: TextField(
-
                               controller: _textController,
                               decoration: const InputDecoration(
                                 hintText: 'Type a message...',
@@ -582,7 +648,6 @@ class _ChatScreenState extends State<ChatScreen> {
                           await _player.stopPlayer();
 
                           setState(() {
-                            // Set all to false
                             _playingStates.updateAll((key, value) => false);
                             // Set current to true
                             _playingStates[msg.audioUrl!] = true;
