@@ -56,6 +56,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   bool destinationReached = false;
   bool _autoFollowEnabled = false;
   Timer? _autoFollowTimer;
+    String bookingId= ' ';
   bool _userInteractingWithMap = false;
   final socketService = SocketService();
   GoogleMapController? _mapController;
@@ -756,10 +757,13 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                           Expanded(
                             child: InkWell(
                               onTap: () {
+
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ChatScreen(),
+                                    builder:
+                                        (context) =>
+                                            ChatScreen(bookingId: bookingId),
                                   ),
                                 );
                               },

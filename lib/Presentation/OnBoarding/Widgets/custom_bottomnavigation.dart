@@ -3,6 +3,7 @@ import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/BookRide/Screens/book_map_screen.dart';
 import 'package:hopper/Presentation/BookRide/Screens/search_screen.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
 import 'package:hopper/uber_screen.dart';
@@ -19,13 +20,13 @@ class CommonBottomNavigation extends StatefulWidget {
 class CommonBottomNavigationState extends State<CommonBottomNavigation> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = <Widget>[
-    HomeScreens(),
-    BookRideSearchScreen(),
-    PackageScreens(),
-    PackageScreens(),
-    PackageScreens(),
-  ];
+  // final List<Widget> _screens = <Widget>[
+  //   HomeScreens(),
+  //   BookRideSearchScreen(),
+  //   PackageScreens(),
+  //   PackageScreens(),
+  //   ChatScreen(),
+  // ];
 
   @override
   void initState() {
@@ -44,7 +45,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
       case 3:
         return PackageScreens();
       case 4:
-        return PackageScreens();
+        return ChatScreen(bookingId: '',);
       default:
         return HomeScreens();
     }
