@@ -10,12 +10,14 @@ import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Core/Utility/app_toasts.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/Presentation/OnBoarding/Controller/package_controller.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/payment_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
 import 'package:hopper/Presentation/OnBoarding/models/address_models.dart';
 import 'package:hopper/uitls/map/google_map.dart';
 import 'package:hopper/uitls/map/search_loaction.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
 
 class ConfirmationScreen extends StatefulWidget {
   final AddressModel sender;
@@ -34,6 +36,7 @@ class ConfirmationScreen extends StatefulWidget {
 }
 
 class _ConfirmationScreenState extends State<ConfirmationScreen> {
+  final PackageController packageController = Get.put(PackageController());
   String? selectedParcel;
   bool isSendSelected = true;
   final GlobalKey senderKey = GlobalKey();
@@ -512,35 +515,49 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                   ),
                                 ),
                                 SizedBox(height: 3),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(AppTexts.senderDetails),
-                                    ),
-                                    CustomTextFields.textWithImage(
-                                      text: '125',
-                                      imagePath: AppImages.nCurrency,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: CustomTextFields.textWithStyles600(
-                                        AppTexts.totalBill,
-                                        fontSize: 14,
+                                Obx(() {
+                                  final data =
+                                      packageController
+                                          .packageDetails
+                                          .value
+                                          ?.data;
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(AppTexts.senderDetails),
+                                          ),
+                                          CustomTextFields.textWithImage(
+                                            text: data?.amount.toString() ?? '',
+                                            imagePath: AppImages.nCurrency,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                        ],
                                       ),
-                                    ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child:
+                                                CustomTextFields.textWithStyles600(
+                                                  AppTexts.totalBill,
+                                                  fontSize: 14,
+                                                ),
+                                          ),
 
-                                    CustomTextFields.textWithImage(
-                                      text: '125',
-                                      imagePath: AppImages.nBlackCurrency,
-                                      fontWeight: FontWeight.w900,
-                                      colors: AppColors.commonBlack,
-                                    ),
-                                  ],
-                                ),
+                                          CustomTextFields.textWithImage(
+                                            text: data?.amount.toString() ?? '',
+                                            imagePath: AppImages.nBlackCurrency,
+                                            fontWeight: FontWeight.w900,
+                                            colors: AppColors.commonBlack,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                }),
                               ],
                             ),
                           ),

@@ -17,4 +17,9 @@ class AddressModel {
     required this.latitude,
     required this.longitude,
   });
+
+  @override
+  String toString() {
+    return 'AddressModel(name: $name, phone: $phone, address: $address, landmark: $landmark, mapAddress: $mapAddress, latitude: $latitude, longitude: $longitude)';
+  }
 }
