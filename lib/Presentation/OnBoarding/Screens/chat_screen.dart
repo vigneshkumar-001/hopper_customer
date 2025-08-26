@@ -43,18 +43,25 @@ class _ChatScreenState extends State<ChatScreen> {
       throw Exception('Microphone permission not granted');
     }
   }
+
   Future<void> _sendMessage(String message) async {
     if (message.trim().isEmpty) return;
 
     final locationData = {
-      'bookingId': '565176',
+      'bookingId': widget.bookingId,
       'senderId': customerId,
-      'senderType': 'customer',
-      'message': message,
+      'senderType': "customer",
+      "contents": [
+        {"type": "text", "value": message},
+        // {"type": "image", "value": uploadedImageUrl},
+        // {"type": "voice", "value": uploadedVoiceUrl},
+      ],
     };
-
+    AppLogger.log.i(locationData);
     socketService.emitWithAck("booking-message", locationData, (ack) {
-      print("📩 Ack received from server: $ack"); // 👈 this will show what server sends back
+      print(
+        "📩 Ack received from server: $ack",
+      ); // 👈 this will show what server sends back
 
       if (ack != null && ack['success'] == true) {
         setState(() {
@@ -75,7 +82,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-/*
+  /*
   Future<void> _sendMessage(String message) async {
     if (message.isEmpty) return;
 
@@ -172,9 +179,64 @@ class _ChatScreenState extends State<ChatScreen> {
       AppLogger.log.i("✅ Registered → $data");
     });
 
-    socketService.on('booking-message', (data) {
-      AppLogger.log.i("booking-message: $data");
-    });
+    // --- store handler in a variable so we can remove it in dispose ---
+    _bookingMessageHandler = (data) {
+      AppLogger.log.i("📩 booking-message: $data");
+      final senderId = data['senderId'] ?? '';
+      if (senderId == customerId) return;
+
+      final senderType = data['senderType'] ?? 'driver';
+      final List<dynamic> contents = data['contents'] ?? [];
+      final textContent = contents.firstWhere(
+        (c) => c['type'] == 'text',
+        orElse: () => null,
+      );
+
+      if (textContent == null) return;
+
+      if (!mounted) return; // <-- prevents setState after dispose
+
+      final message = textContent['value'];
+      setState(() {
+        messages.add(
+          ChatMessage(
+            message: message,
+            isMe: senderType == "customer" ? true : false,
+            time: DateTime.now().toString().substring(11, 16),
+            avatar: AppImages.dummy1,
+          ),
+        );
+      });
+
+      // Scroll to bottom
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    };
+
+    socketService.on('booking-message', _bookingMessageHandler);
+  }
+
+  // keep a reference so we can remove it
+  late final Function(dynamic) _bookingMessageHandler;
+
+  @override
+  void dispose() {
+    // Remove socket listener to avoid calling setState after dispose
+    // socketService.off('booking-message', _bookingMessageHandler);
+
+    // clean up player, recorder, controllers, etc.
+    _player.closePlayer();
+    _textController.dispose();
+    _scrollController.dispose();
+
+    super.dispose();
   }
 
   Future<void> _initRecorder() async {
@@ -184,12 +246,14 @@ class _ChatScreenState extends State<ChatScreen> {
     _recorder.setSubscriptionDuration(const Duration(milliseconds: 500));
   }
 
+  /*
   @override
   void dispose() {
     _recorder.closeRecorder();
     _player.closePlayer();
     super.dispose();
   }
+*/
 
   @override
   Widget build(BuildContext context) {
@@ -409,7 +473,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
 
                     SizedBox(width: 10),
-
                   ],
                 ),
               ),

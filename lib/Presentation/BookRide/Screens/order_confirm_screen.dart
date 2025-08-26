@@ -757,7 +757,11 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                           Expanded(
                             child: InkWell(
                               onTap: () {
-
+                                final String bookingId =
+                                    driverSearchController
+                                        .carBooking
+                                        .value!
+                                        .bookingId;
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
