@@ -8,6 +8,7 @@ import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
+import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Core/Utility/app_toasts.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:hopper/Presentation/OnBoarding/Controller/package_controller.dart';
@@ -86,503 +87,396 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 25),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Center(
-                            child: Image.asset(
-                              AppImages.hopprPackage,
-                              height: 24,
-                            ),
-                          ),
-                          Positioned(
-                            right: 0,
-                            child: Image.asset(
-                              AppImages.history,
-                              height: 20,
-                              width: 20,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
-                      CustomTextFields.textWithStyles700(
-                        'Location Details',
-                        fontSize: 16,
-                      ),
-                      const SizedBox(height: 20),
-                      Stack(
-                        children: [
-                          Column(
-                            children: [
-                              Container(
-                                key: senderKey,
-                                child: PackageContainer.customPlainContainers(
-                                  isSelected: senderData != null,
-                                  containerColor: AppColors.commonWhite,
-                                  leadingImage: AppImages.colorUpArrow,
-                                  title:
-                                      senderData != null
-                                          ? 'Pick up Location'
-                                          : 'Collect from',
-                                  subTitle:
-                                      senderData != null
-                                          ? '${senderData!.address}, ${senderData!.landmark}, ${senderData!.mapAddress}'
-                                          : AppTexts.addSenderAddress,
-                                  userNameAndPhn:
-                                      senderData != null
-                                          ? '${capitalizeFirstLetter(senderData!.name)} (${senderData!.phone})'
-                                          : '',
-                                  onEditTap: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (_) => MapScreen(
-                                              cameFromPackage: true,
-                                              searchQuery:
-                                                  senderData?.mapAddress ?? '',
-                                              initialAddress:
-                                                  senderData?.address,
-                                              initialLandmark:
-                                                  senderData?.landmark,
-                                              initialName: senderData?.name,
-                                              initialPhone: senderData?.phone,
-                                              location:
-                                                  senderData != null
-                                                      ? LatLng(
-                                                        senderData!.latitude,
-                                                        senderData!.longitude,
-                                                      )
-                                                      : null,
-                                            ),
-                                      ),
-                                    );
-
-                                    if (result != null) {
-                                      final loc = result['location'];
-                                      if (receiverData != null &&
-                                          isWithin1Km(
-                                            receiverData!.latitude,
-                                            receiverData!.longitude,
-                                            loc.latitude,
-                                            loc.longitude,
-                                          )) {
-                                        AppToasts.customToast(
-                                          context,
-                                          "Pickup and drop locations cannot be the same or within 1km.",
-                                        );
-                                        return;
-                                      }
-                                      setState(() {
-                                        senderData = AddressModel(
-                                          name: result['name'],
-                                          phone: result['phone'],
-                                          address: result['address'],
-                                          landmark: result['landmark'],
-                                          mapAddress: result['mapAddress'],
-                                          latitude: result['location'].latitude,
-                                          longitude:
-                                              result['location'].longitude,
-                                        );
-                                      });
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                            _calculateLineHeight();
-                                          });
-                                    }
-                                  },
-                                  onTap: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (_) => const CommonLocationSearch(),
-                                      ),
-                                    );
-                                    if (result != null) {
-                                      final loc = result['location'];
-                                      if (receiverData != null &&
-                                          isWithin1Km(
-                                            receiverData!.latitude,
-                                            receiverData!.longitude,
-                                            loc.latitude,
-                                            loc.longitude,
-                                          )) {
-                                        AppToasts.customToast(
-                                          context,
-                                          "Pickup and drop locations cannot be the same or within 1km.",
-                                        );
-                                        return;
-                                      }
-
-                                      setState(() {
-                                        senderData = AddressModel(
-                                          name: result['name'],
-                                          phone: result['phone'],
-                                          address: result['address'],
-                                          landmark: result['landmark'],
-                                          mapAddress: result['mapAddress'],
-                                          latitude: result['location'].latitude,
-                                          longitude:
-                                              result['location'].longitude,
-                                        );
-                                      });
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                            _calculateLineHeight();
-                                          });
-                                    }
-                                  },
-                                  onClear:
-                                      senderData != null
-                                          ? () {
-                                            setState(() {
-                                              senderData = null;
-                                            });
-                                            WidgetsBinding.instance
-                                                .addPostFrameCallback((_) {
-                                                  _calculateLineHeight();
-                                                });
-                                          }
-                                          : null,
-                                ),
-                              ),
-                              const SizedBox(height: 15),
-                              Container(
-                                key: receiverKey,
-                                child: PackageContainer.customPlainContainers(
-                                  isSelected: receiverData != null,
-                                  containerColor: AppColors.commonBlack,
-                                  titleColor: AppColors.commonWhite,
-                                  subColor: AppColors.commonWhite.withOpacity(
-                                    0.7,
-                                  ),
-                                  trailingColor: AppColors.commonWhite,
-                                  iconColor: AppColors.commonWhite,
-                                  leadingImage: AppImages.colorDownArrow,
-                                  title:
-                                      receiverData != null
-                                          ? 'Drop up Location'
-                                          : 'Send to',
-                                  subTitle:
-                                      receiverData != null
-                                          ? '${receiverData!.address}, ${receiverData!.landmark}, ${receiverData!.mapAddress}'
-                                          : AppTexts.addRecipientAddress,
-                                  userNameAndPhn:
-                                      receiverData != null
-                                          ? '${capitalizeFirstLetter(receiverData!.name)} (${receiverData!.phone})'
-                                          : '',
-                                  onEditTap: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (_) => MapScreen(
-                                              cameFromPackage: true,
-                                              searchQuery:
-                                                  receiverData?.mapAddress ??
-                                                  '',
-                                              initialAddress:
-                                                  receiverData?.address,
-                                              initialLandmark:
-                                                  receiverData?.landmark,
-                                              initialName: receiverData?.name,
-                                              initialPhone: receiverData?.phone,
-                                              location:
-                                                  receiverData != null
-                                                      ? LatLng(
-                                                        receiverData!.latitude,
-                                                        receiverData!.longitude,
-                                                      )
-                                                      : null,
-                                            ),
-                                      ),
-                                    );
-
-                                    if (result != null) {
-                                      final loc = result['location'];
-                                      if (senderData != null &&
-                                          isWithin1Km(
-                                            senderData!.latitude,
-                                            senderData!.longitude,
-                                            loc.latitude,
-                                            loc.longitude,
-                                          )) {
-                                        AppToasts.customToast(
-                                          context,
-                                          "Pickup and drop locations cannot be the same or within 1km.",
-                                        );
-                                        return;
-                                      }
-                                      setState(() {
-                                        receiverData = AddressModel(
-                                          name: result['name'],
-                                          phone: result['phone'],
-                                          address: result['address'],
-                                          landmark: result['landmark'],
-                                          mapAddress: result['mapAddress'],
-                                          latitude: result['location'].latitude,
-                                          longitude:
-                                              result['location'].longitude,
-                                        );
-                                      });
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                            _calculateLineHeight();
-                                          });
-                                    }
-                                  },
-                                  onTap: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (_) => const CommonLocationSearch(
-                                              type: 'receiver',
-                                            ),
-                                      ),
-                                    );
-                                    if (result != null) {
-                                      final loc = result['location'];
-                                      if (senderData != null &&
-                                          isWithin1Km(
-                                            senderData!.latitude,
-                                            senderData!.longitude,
-                                            loc.latitude,
-                                            loc.longitude,
-                                          )) {
-                                        AppToasts.customToast(
-                                          context,
-                                          "Pickup and drop locations cannot be the same or within 1km.",
-                                        );
-                                        return;
-                                      }
-
-                                      setState(() {
-                                        receiverData = AddressModel(
-                                          name: result['name'],
-                                          phone: result['phone'],
-                                          address: result['address'],
-                                          landmark: result['landmark'],
-                                          mapAddress: result['mapAddress'],
-                                          latitude: result['location'].latitude,
-                                          longitude:
-                                              result['location'].longitude,
-                                        );
-                                      });
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                            _calculateLineHeight();
-                                          });
-                                    }
-                                  },
-                                  onClear:
-                                      receiverData != null
-                                          ? () {
-                                            setState(() {
-                                              receiverData = null;
-                                            });
-                                            WidgetsBinding.instance
-                                                .addPostFrameCallback((_) {
-                                                  _calculateLineHeight();
-                                                });
-                                          }
-                                          : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Positioned(
-                            top: 45,
-                            left: 24,
-                            child: SizedBox(
-                              height: lineHeight,
-                              child: DottedLine(
-                                direction: Axis.vertical,
-                                lineLength: lineHeight,
-                                dashLength: 4,
-                                dashColor: AppColors.dotLineColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 20),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.resendBlue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 15.0,
-                            horizontal: 15,
-                          ),
-                          child: Row(
-                            children: [
-                              Image.asset(AppImages.tag, height: 24, width: 24),
-                              SizedBox(width: 10),
-                              CustomTextFields.textWithStyles700(
-                                'Apply Coupon',
-                                color: AppColors.resendBlue,
-                                fontSize: 15,
-                              ),
-                              Spacer(),
-                              Image.asset(
-                                AppImages.rightArrow,
-                                width: 24,
+      body: Obx(() {
+        if (packageController.isConfirmLoading.value) {
+          return Center(child: AppLoader.appLoader());
+        }
+        return SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 25),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Center(
+                              child: Image.asset(
+                                AppImages.hopprPackage,
                                 height: 24,
                               ),
-                            ],
-                          ),
+                            ),
+                            Positioned(
+                              right: 0,
+                              child: Image.asset(
+                                AppImages.history,
+                                height: 20,
+                                width: 20,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      CustomTextFields.textWithStyles700(
-                        'Order Summary',
-                        fontSize: 17,
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: AppColors.commonBlack.withOpacity(0.1),
-                            width: 1.5,
-                          ),
+                        const SizedBox(height: 20),
+
+                        CustomTextFields.textWithStyles700(
+                          'Location Details',
+                          fontSize: 16,
                         ),
-                        child: ListTile(
-                          subtitle: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5.0),
-                            child: Column(
-                              spacing: 5,
+                        const SizedBox(height: 20),
+                        Stack(
+                          children: [
+                            Column(
                               children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(AppTexts.senderDetails),
-                                    Text(
-                                      capitalizeFirstLetter(
-                                        widget.sender.name ?? '',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(AppTexts.recipientDetails),
-                                    Text(
-                                      capitalizeFirstLetter(
-                                        widget.receiver.name ?? '',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(AppTexts.itemType),
-                                    Text(widget.parcelType ?? ''),
-                                  ],
-                                ),
-                                SizedBox(height: 3),
-                                SizedBox(
-                                  height: 2,
-                                  child: DottedLine(
-                                    direction: Axis.horizontal,
-                                    lineLength: double.infinity,
-                                    lineThickness: 1.4,
-                                    dashLength: 4.0,
-                                    dashColor: Colors.grey.shade400,
+                                Container(
+                                  key: senderKey,
+                                  child: PackageContainer.customPlainContainers(
+                                    isSelected: senderData != null,
+                                    containerColor: AppColors.commonWhite,
+                                    leadingImage: AppImages.colorUpArrow,
+                                    title:
+                                        senderData != null
+                                            ? 'Pick up Location'
+                                            : 'Collect from',
+                                    subTitle:
+                                        senderData != null
+                                            ? '${senderData!.address}, ${senderData!.landmark}, ${senderData!.mapAddress}'
+                                            : AppTexts.addSenderAddress,
+                                    userNameAndPhn:
+                                        senderData != null
+                                            ? '${capitalizeFirstLetter(senderData!.name)} (${senderData!.phone})'
+                                            : '',
+                                    onEditTap: () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) => MapScreen(
+                                                cameFromPackage: true,
+                                                searchQuery:
+                                                    senderData?.mapAddress ??
+                                                    '',
+                                                initialAddress:
+                                                    senderData?.address,
+                                                initialLandmark:
+                                                    senderData?.landmark,
+                                                initialName: senderData?.name,
+                                                initialPhone: senderData?.phone,
+                                                location:
+                                                    senderData != null
+                                                        ? LatLng(
+                                                          senderData!.latitude,
+                                                          senderData!.longitude,
+                                                        )
+                                                        : null,
+                                              ),
+                                        ),
+                                      );
+
+                                      if (result != null) {
+                                        final loc = result['location'];
+                                        if (receiverData != null &&
+                                            isWithin1Km(
+                                              receiverData!.latitude,
+                                              receiverData!.longitude,
+                                              loc.latitude,
+                                              loc.longitude,
+                                            )) {
+                                          AppToasts.customToast(
+                                            context,
+                                            "Pickup and drop locations cannot be the same or within 1km.",
+                                          );
+                                          return;
+                                        }
+                                        setState(() {
+                                          senderData = AddressModel(
+                                            name: result['name'],
+                                            phone: result['phone'],
+                                            address: result['address'],
+                                            landmark: result['landmark'],
+                                            mapAddress: result['mapAddress'],
+                                            latitude:
+                                                result['location'].latitude,
+                                            longitude:
+                                                result['location'].longitude,
+                                          );
+                                        });
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                              _calculateLineHeight();
+                                            });
+                                      }
+                                    },
+                                    onTap: () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) =>
+                                                  const CommonLocationSearch(),
+                                        ),
+                                      );
+                                      if (result != null) {
+                                        final loc = result['location'];
+                                        if (receiverData != null &&
+                                            isWithin1Km(
+                                              receiverData!.latitude,
+                                              receiverData!.longitude,
+                                              loc.latitude,
+                                              loc.longitude,
+                                            )) {
+                                          AppToasts.customToast(
+                                            context,
+                                            "Pickup and drop locations cannot be the same or within 1km.",
+                                          );
+                                          return;
+                                        }
+
+                                        setState(() {
+                                          senderData = AddressModel(
+                                            name: result['name'],
+                                            phone: result['phone'],
+                                            address: result['address'],
+                                            landmark: result['landmark'],
+                                            mapAddress: result['mapAddress'],
+                                            latitude:
+                                                result['location'].latitude,
+                                            longitude:
+                                                result['location'].longitude,
+                                          );
+                                        });
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                              _calculateLineHeight();
+                                            });
+                                      }
+                                    },
+                                    onClear:
+                                        senderData != null
+                                            ? () {
+                                              setState(() {
+                                                senderData = null;
+                                              });
+                                              WidgetsBinding.instance
+                                                  .addPostFrameCallback((_) {
+                                                    _calculateLineHeight();
+                                                  });
+                                            }
+                                            : null,
                                   ),
                                 ),
-                                SizedBox(height: 3),
-                                Obx(() {
-                                  final data =
-                                      packageController
-                                          .packageDetails
-                                          .value
-                                          ?.data;
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(AppTexts.senderDetails),
-                                          ),
-                                          CustomTextFields.textWithImage(
-                                            text: data?.amount.toString() ?? '',
-                                            imagePath: AppImages.nCurrency,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child:
-                                                CustomTextFields.textWithStyles600(
-                                                  AppTexts.totalBill,
-                                                  fontSize: 14,
-                                                ),
-                                          ),
+                                const SizedBox(height: 15),
+                                Container(
+                                  key: receiverKey,
+                                  child: PackageContainer.customPlainContainers(
+                                    isSelected: receiverData != null,
+                                    containerColor: AppColors.commonBlack,
+                                    titleColor: AppColors.commonWhite,
+                                    subColor: AppColors.commonWhite.withOpacity(
+                                      0.7,
+                                    ),
+                                    trailingColor: AppColors.commonWhite,
+                                    iconColor: AppColors.commonWhite,
+                                    leadingImage: AppImages.colorDownArrow,
+                                    title:
+                                        receiverData != null
+                                            ? 'Drop up Location'
+                                            : 'Send to',
+                                    subTitle:
+                                        receiverData != null
+                                            ? '${receiverData!.address}, ${receiverData!.landmark}, ${receiverData!.mapAddress}'
+                                            : AppTexts.addRecipientAddress,
+                                    userNameAndPhn:
+                                        receiverData != null
+                                            ? '${capitalizeFirstLetter(receiverData!.name)} (${receiverData!.phone})'
+                                            : '',
+                                    onEditTap: () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) => MapScreen(
+                                                cameFromPackage: true,
+                                                searchQuery:
+                                                    receiverData?.mapAddress ??
+                                                    '',
+                                                initialAddress:
+                                                    receiverData?.address,
+                                                initialLandmark:
+                                                    receiverData?.landmark,
+                                                initialName: receiverData?.name,
+                                                initialPhone:
+                                                    receiverData?.phone,
+                                                location:
+                                                    receiverData != null
+                                                        ? LatLng(
+                                                          receiverData!
+                                                              .latitude,
+                                                          receiverData!
+                                                              .longitude,
+                                                        )
+                                                        : null,
+                                              ),
+                                        ),
+                                      );
 
-                                          CustomTextFields.textWithImage(
-                                            text: data?.amount.toString() ?? '',
-                                            imagePath: AppImages.nBlackCurrency,
-                                            fontWeight: FontWeight.w900,
-                                            colors: AppColors.commonBlack,
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  );
-                                }),
+                                      if (result != null) {
+                                        final loc = result['location'];
+                                        if (senderData != null &&
+                                            isWithin1Km(
+                                              senderData!.latitude,
+                                              senderData!.longitude,
+                                              loc.latitude,
+                                              loc.longitude,
+                                            )) {
+                                          AppToasts.customToast(
+                                            context,
+                                            "Pickup and drop locations cannot be the same or within 1km.",
+                                          );
+                                          return;
+                                        }
+                                        setState(() {
+                                          receiverData = AddressModel(
+                                            name: result['name'],
+                                            phone: result['phone'],
+                                            address: result['address'],
+                                            landmark: result['landmark'],
+                                            mapAddress: result['mapAddress'],
+                                            latitude:
+                                                result['location'].latitude,
+                                            longitude:
+                                                result['location'].longitude,
+                                          );
+                                        });
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                              _calculateLineHeight();
+                                            });
+                                      }
+                                    },
+                                    onTap: () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) => const CommonLocationSearch(
+                                                type: 'receiver',
+                                              ),
+                                        ),
+                                      );
+                                      if (result != null) {
+                                        final loc = result['location'];
+                                        if (senderData != null &&
+                                            isWithin1Km(
+                                              senderData!.latitude,
+                                              senderData!.longitude,
+                                              loc.latitude,
+                                              loc.longitude,
+                                            )) {
+                                          AppToasts.customToast(
+                                            context,
+                                            "Pickup and drop locations cannot be the same or within 1km.",
+                                          );
+                                          return;
+                                        }
+
+                                        setState(() {
+                                          receiverData = AddressModel(
+                                            name: result['name'],
+                                            phone: result['phone'],
+                                            address: result['address'],
+                                            landmark: result['landmark'],
+                                            mapAddress: result['mapAddress'],
+                                            latitude:
+                                                result['location'].latitude,
+                                            longitude:
+                                                result['location'].longitude,
+                                          );
+                                        });
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                              _calculateLineHeight();
+                                            });
+                                      }
+                                    },
+                                    onClear:
+                                        receiverData != null
+                                            ? () {
+                                              setState(() {
+                                                receiverData = null;
+                                              });
+                                              WidgetsBinding.instance
+                                                  .addPostFrameCallback((_) {
+                                                    _calculateLineHeight();
+                                                  });
+                                            }
+                                            : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Positioned(
+                              top: 45,
+                              left: 24,
+                              child: SizedBox(
+                                height: lineHeight,
+                                child: DottedLine(
+                                  direction: Axis.vertical,
+                                  lineLength: lineHeight,
+                                  dashLength: 4,
+                                  dashColor: AppColors.dotLineColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.resendBlue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 15.0,
+                              horizontal: 15,
+                            ),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  AppImages.tag,
+                                  height: 24,
+                                  width: 24,
+                                ),
+                                SizedBox(width: 10),
+                                CustomTextFields.textWithStyles700(
+                                  'Apply Coupon',
+                                  color: AppColors.resendBlue,
+                                  fontSize: 15,
+                                ),
+                                Spacer(),
+                                Image.asset(
+                                  AppImages.rightArrow,
+                                  width: 24,
+                                  height: 24,
+                                ),
                               ],
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  color: Color(0xFFF6F7FF).withOpacity(0.7),
-
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 20),
                         CustomTextFields.textWithStyles700(
-                          AppTexts.reviewYourOrderToAvoidCancellations,
-                          fontSize: 16,
+                          'Order Summary',
+                          fontSize: 17,
                         ),
                         const SizedBox(height: 10),
                         Container(
                           decoration: BoxDecoration(
-                            color: AppColors.commonWhite,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: AppColors.commonBlack.withOpacity(0.1),
@@ -590,52 +484,194 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                             ),
                           ),
                           child: ListTile(
-                            subtitle: Column(
-                              spacing: 5,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child:
-                                          CustomTextFields.textWithStylesSmall(
-                                            AppTexts.readPolicy,
-                                          ),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 5.0,
+                              ),
+                              child: Column(
+                                spacing: 5,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(AppTexts.senderDetails),
+                                      Text(
+                                        capitalizeFirstLetter(
+                                          widget.sender.name ?? '',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(AppTexts.recipientDetails),
+                                      Text(
+                                        capitalizeFirstLetter(
+                                          widget.receiver.name ?? '',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(AppTexts.itemType),
+                                      Text(widget.parcelType ?? ''),
+                                    ],
+                                  ),
+                                  SizedBox(height: 3),
+                                  SizedBox(
+                                    height: 2,
+                                    child: DottedLine(
+                                      direction: Axis.horizontal,
+                                      lineLength: double.infinity,
+                                      lineThickness: 1.4,
+                                      dashLength: 4.0,
+                                      dashColor: Colors.grey.shade400,
                                     ),
-                                  ],
-                                ),
-                                CustomTextFields.textWithStyles600(
-                                  'Read Policy',
-                                  color: AppColors.resendBlue,
-                                ),
-                              ],
+                                  ),
+                                  SizedBox(height: 3),
+                                  Obx(() {
+                                    final data =
+                                        packageController
+                                            .packageDetails
+                                            .value
+                                            ?.data;
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                AppTexts.senderDetails,
+                                              ),
+                                            ),
+                                            CustomTextFields.textWithImage(
+                                              text:
+                                                  data?.amount.toString() ?? '',
+                                              imagePath: AppImages.nCurrency,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child:
+                                                  CustomTextFields.textWithStyles600(
+                                                    AppTexts.totalBill,
+                                                    fontSize: 14,
+                                                  ),
+                                            ),
+
+                                            CustomTextFields.textWithImage(
+                                              text:
+                                                  data?.amount.toString() ?? '',
+                                              imagePath:
+                                                  AppImages.nBlackCurrency,
+                                              fontWeight: FontWeight.w900,
+                                              colors: AppColors.commonBlack,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    );
+                                  }),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                        SizedBox(height: 25),
                       ],
                     ),
                   ),
-                ),
-              ],
+                  Container(
+                    color: Color(0xFFF6F7FF).withOpacity(0.7),
+
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 10),
+                          CustomTextFields.textWithStyles700(
+                            AppTexts.reviewYourOrderToAvoidCancellations,
+                            fontSize: 16,
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.commonWhite,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: AppColors.commonBlack.withOpacity(0.1),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: ListTile(
+                              subtitle: Column(
+                                spacing: 5,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child:
+                                            CustomTextFields.textWithStylesSmall(
+                                              AppTexts.readPolicy,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  CustomTextFields.textWithStyles600(
+                                    'Read Policy',
+                                    color: AppColors.resendBlue,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 25),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-          child: AppButtons.button(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-            },
-            text: 'Confirm Booking',
+        );
+      }),
+      bottomNavigationBar: Obx(() {
+        if (packageController.isConfirmLoading.value) {
+          return SizedBox.shrink();
+        }
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+            child: AppButtons.button(
+              onTap: () {
+                final String? bookingId =
+                    packageController.packageDetails.value?.data.bookingId;
+                packageController.confirmPackageAddressDetails(
+                  bookingId: bookingId ?? '',
+                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => PaymentScreen()),
+                // );
+              },
+              text: 'Confirm Booking',
+            ),
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 }
