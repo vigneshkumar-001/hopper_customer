@@ -4,6 +4,9 @@ import 'package:hopper/Presentation/Authentication/models/otp_response.dart';
 import 'package:hopper/Presentation/BookRide/Models/create_booking_model.dart';
 import 'package:hopper/Presentation/BookRide/Models/driver_search_models.dart';
 import 'package:hopper/Presentation/BookRide/Models/send_driver_request_models.dart';
+import 'package:hopper/Presentation/OnBoarding/models/address_models.dart';
+import 'package:hopper/Presentation/OnBoarding/models/confrom_package_response.dart';
+import 'package:hopper/Presentation/OnBoarding/models/package_details_response.dart';
 
 import 'package:hopper/api/repository/api_consents.dart';
 
@@ -282,6 +285,85 @@ class ApiDataSource extends BaseApiDataSource {
       if (response.statusCode == 200) {
         if (response.data['status'] == 200) {
           return Right(SendDriverRequestModels.fromJson(response.data));
+        } else {
+          return Left(ServerFailure(response.data['message'] ?? " "));
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
+  Future<Either<Failure, PackageDetailsResponse>> packageAddressDetails({
+    required AddressModel senderData,
+    required AddressModel receiverData,
+  }) async {
+    try {
+      final url = ApiConsents.createBooking;
+      AppLogger.log.i(url);
+      final data = {
+        "fromLatitude": senderData.latitude,
+        "fromLongitude": senderData.longitude,
+        "pickupAddress": senderData.address,
+        "fromContact_name": senderData.name,
+        "fromContact_phone": senderData.phone,
+        "toLatitude": receiverData.latitude,
+        "toLongitude": receiverData.longitude,
+        "dropAddress": receiverData.address,
+        "toContact_name": receiverData.name,
+        "toContact_phone": receiverData.phone,
+        "parcel_type": "Documents",
+        "description": "Important legal papers",
+        "delivery_instruction": "Deliver at reception desk",
+        "address_type": "Work",
+        "rideType": "Bike",
+        "bookingType": "Parcel",
+        "maxWeight": "50",
+      };
+
+      dynamic response = await Request.sendRequest(url, data, 'Post', false);
+      if (response.statusCode == 200) {
+        if (response.data['status'] == 200) {
+          return Right(PackageDetailsResponse.fromJson(response.data));
+        } else {
+          return Left(ServerFailure(response.data['message'] ?? " "));
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
+  Future<Either<Failure, ConfirmPackageResponse>> confirmPackageScreen({
+    required String bookingId,
+  }) async {
+    try {
+      final url = ApiConsents.confirmBooking;
+      AppLogger.log.i(url);
+
+      dynamic response = await Request.sendRequest(
+        url,
+        {"bookingId": bookingId},
+        'Post',
+        false,
+      );
+      if (response.statusCode == 200) {
+        if (response.data['success'] == true) {
+          return Right(ConfirmPackageResponse.fromJson(response.data));
         } else {
           return Left(ServerFailure(response.data['message'] ?? " "));
         }

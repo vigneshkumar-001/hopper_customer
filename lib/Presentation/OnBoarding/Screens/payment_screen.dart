@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hopper/Core/Consents/app_colors.dart';
@@ -18,7 +20,7 @@ import 'dart:convert';
 class PaymentScreen extends StatefulWidget {
   final String? bookingId;
   final int? amount;
-  const PaymentScreen({super.key, this.bookingId,this.amount});
+  const PaymentScreen({super.key, this.bookingId, this.amount});
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -28,6 +30,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final DriverSearchController driverSearchController =
       DriverSearchController();
   bool _isLoading = false;
+  bool payPalLoading = false;
   void _showRatingBottomSheet(BuildContext context) {
     int selectedRating = 0;
 
@@ -133,7 +136,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                   borderRadius: 8,
                                   buttonColor: AppColors.commonBlack,
                                   onTap: () {
-                                    final String bookingId = widget.bookingId ?? '';
+                                    final String bookingId =
+                                        widget.bookingId ?? '';
                                     selectedRating;
                                     AppLogger.log.i(selectedRating);
                                     driverSearchController.rateDriver(
@@ -184,8 +188,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }*/
   Future<void> makePayment() async {
     try {
-
-
       final result = await createPaymentIntent('1500000');
 
       if (result == null || !result.containsKey('clientSecret')) {
@@ -207,6 +209,25 @@ class _PaymentScreenState extends State<PaymentScreen> {
       displayPaymentSheet();
     } catch (e) {
       AppLogger.log.e('💡 Exception in makePayment: $e');
+    }
+  }
+
+  Future<void> payPall() async {
+    try {
+      final Uri url = Uri.parse(
+        "https://hoppr-face-two-dbe557472d7f.herokuapp.com/api/paypal?amount=10&userBookingId=0001",
+      );
+
+      if (await canLaunchUrl(url)) {
+        await launchUrl(
+          url,
+          mode: LaunchMode. inAppWebView , // Opens in browser / PayPal app
+        );
+      } else {
+        AppLogger.log.e("❌ Could not launch PayPal link");
+      }
+    } catch (e) {
+      AppLogger.log.e('💡 : $e');
     }
   }
 
@@ -363,31 +384,50 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        height: 50,
-                        width: 170,
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.containerColor1,
-                          border: Border.all(color: AppColors.containerColor),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              AppImages.payPall,
-                              height: 24,
-                              width: 24,
-                            ),
-                            SizedBox(width: 10),
+                      InkWell(
+                        onTap:
+                            payPalLoading
+                                ? null
+                                : () async {
+                                  setState(() {
+                                    payPalLoading = true;
+                                  });
 
-                            CustomTextFields.textWithStylesSmall(
-                              'PayPal',
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                              colors: AppColors.commonBlack,
-                            ),
-                          ],
+                                  await payPall();
+
+                                  setState(() {
+                                    payPalLoading = false;
+                                  });
+                                },
+                        child: Container(
+                          height: 50,
+                          width: 170,
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.commonWhite,
+                            border: Border.all(color: AppColors.containerColor),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child:
+                              payPalLoading
+                                  ? Center(child: AppLoader.circularLoader())
+                                  : Row(
+                                    children: [
+                                      Image.asset(
+                                        AppImages.payPall,
+                                        height: 24,
+                                        width: 24,
+                                      ),
+                                      SizedBox(width: 10),
+
+                                      CustomTextFields.textWithStylesSmall(
+                                        'PayPal',
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 16,
+                                        colors: AppColors.commonBlack,
+                                      ),
+                                    ],
+                                  ),
                         ),
                       ),
 
@@ -547,7 +587,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CustomTextFields.textWithImage(
-                      text: widget.amount.toString()??'280',
+                      text: widget.amount.toString() ?? '280',
                       fontSize: 25,
                       colors: AppColors.commonBlack,
                       fontWeight: FontWeight.w700,

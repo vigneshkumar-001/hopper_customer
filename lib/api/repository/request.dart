@@ -81,7 +81,7 @@ class Request {
           );
 
       AppLogger.log.i(
-        "RESPONSE \n API: $url \n RESPONSE: ${response.toString()}",
+        "RESPONSE \n API: $url \n token: $token \n RESPONSE: ${response.toString()}",
       );
       AppLogger.log.i("$token");
       AppLogger.log.i("$body");
