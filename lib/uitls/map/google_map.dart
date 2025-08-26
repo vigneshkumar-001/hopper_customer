@@ -446,7 +446,7 @@ class _MapScreenState extends State<MapScreen>
                                 'name': nameController.text.trim(),
                                 'phone': phoneController.text.trim(),
                               };
-
+                              AppLogger.log.i(result);
                               // ✅ Reset flag before closing
                               _bottomSheetShown = false;
 
