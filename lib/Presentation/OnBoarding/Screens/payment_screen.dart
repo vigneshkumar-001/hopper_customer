@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/pay_pall_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
@@ -213,22 +214,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Future<void> payPall() async {
-    try {
-      final Uri url = Uri.parse(
-        "https://hoppr-face-two-dbe557472d7f.herokuapp.com/api/paypal?amount=10&userBookingId=0001",
-      );
 
-      if (await canLaunchUrl(url)) {
-        await launchUrl(
-          url,
-          mode: LaunchMode. inAppWebView , // Opens in browser / PayPal app
-        );
-      } else {
-        AppLogger.log.e("❌ Could not launch PayPal link");
-      }
-    } catch (e) {
-      AppLogger.log.e('💡 : $e');
-    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaypalWebviewPage(amount: widget.amount.toString()?? '', bookingId: widget.bookingId?? ''),
+      ),
+    );
   }
 
   // displayPaymentSheet() async {
