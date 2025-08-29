@@ -661,6 +661,8 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                     packageController.packageDetails.value?.data.bookingId;
                 packageController.confirmPackageAddressDetails(
                   bookingId: bookingId ?? '',
+                  receiverData: receiverData!,
+                  senderData: senderData!,
                 );
                 // Navigator.push(
                 //   context,

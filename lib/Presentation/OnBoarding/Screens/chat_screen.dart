@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:hopper/uitls/websocket/socket_io_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:shared_preferences_android/shared_preferences_android.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
@@ -14,6 +14,12 @@ import 'package:hopper/Presentation/OnBoarding/models/chat_response.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../Core/Utility/app_loader.dart';
+import '../../../Core/Utility/shared_pref_helper.dart';
+import '../../../Core/Utility/typing_animate.dart';
+import '../Controller/upload_image_controller.dart';
+import 'package:get/get.dart';
+
 class ChatScreen extends StatefulWidget {
   final String bookingId;
   const ChatScreen({super.key, required this.bookingId});
@@ -24,13 +30,15 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
+  final UploadImageController controller = Get.put(UploadImageController());
   final ScrollController _scrollController = ScrollController();
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   final FlutterSoundPlayer _player = FlutterSoundPlayer();
   bool _isRecording = false;
   String? _audioPath;
-  final socketService = SocketService();
   String customerId = '';
+  final socketService = SocketService();
+  String? driverId;
   Map<String, bool> _playingStates = {};
 
   String? _pendingAudioPath;
@@ -44,7 +52,97 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _sendMessage(String message) async {
+  Future<void> _pickAndSendImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.camera);
+
+    if (image != null) {
+      // Add local image with loading state
+      setState(() {
+        messages.add(
+          ChatMessage(
+            isMe: true,
+            imageUrl: image.path,
+            message: '',
+            time: 'Now',
+            avatar: AppImages.dummy1,
+            isSending: true,
+          ),
+        );
+      });
+      _scrollToBottom();
+
+      // Upload image via controller
+      await controller.uploadImage(context, File(image.path));
+      final uploadedUrl = controller.frontImageUrl.value;
+
+      int index = messages.lastIndexWhere((m) => m.isSending);
+      if (uploadedUrl.isNotEmpty && index != -1) {
+        // Send via WebSocket
+        _sendMessage('', imageUrl: uploadedUrl);
+      } else {
+        // Upload failed: remove placeholder message
+        setState(() {
+          messages.removeAt(index);
+        });
+      }
+    }
+  }
+
+  Future<void> _sendMessage(String message, {String? imageUrl}) async {
+    if ((message.trim().isEmpty) && imageUrl == null) return;
+
+    // Only add placeholder for text messages
+    if (message.trim().isNotEmpty) {
+      setState(() {
+        messages.add(
+          ChatMessage(
+            message: message,
+            imageUrl: imageUrl,
+            isMe: true,
+            time: 'Now',
+            avatar: AppImages.dummy1,
+            isSending: true,
+          ),
+        );
+      });
+      _scrollToBottom();
+    }
+
+    final contents = <Map<String, String>>[];
+    if (message.trim().isNotEmpty)
+      contents.add({"type": "text", "value": message});
+    if (imageUrl != null) contents.add({"type": "image", "value": imageUrl});
+
+    final locationData = {
+      'bookingId': widget.bookingId,
+      'senderId': customerId,
+      'senderType': "customer",
+      'contents': contents,
+    };
+
+    socketService.emitWithAck("booking-message", locationData, (ack) {
+      int index = messages.lastIndexWhere((m) => m.isSending);
+      if (ack != null && ack['success'] == true && index != -1) {
+        setState(() {
+          messages[index] = ChatMessage(
+            message: message,
+            imageUrl: imageUrl,
+            isMe: true,
+            time: DateTime.now().toString(),
+            avatar: AppImages.dummy1,
+            isSending: false, // remove loading
+          );
+        });
+        _textController.clear();
+        _scrollToBottom();
+      } else {
+        AppLogger.log.e("Message send failed: $ack");
+        // Optionally, show error UI or retry
+      }
+    });
+  }
+  /*  Future<void> _sendMessage(String message) async {
     if (message.trim().isEmpty) return;
 
     final locationData = {
@@ -80,52 +178,7 @@ class _ChatScreenState extends State<ChatScreen> {
         AppLogger.log.e("Message send failed: $ack");
       }
     });
-  }
-
-  /*
-  Future<void> _sendMessage(String message) async {
-    if (message.isEmpty) return;
-
-    _textController.clear();
-
-    if (message.isNotEmpty) {
-      setState(() {
-        messages.add(
-          ChatMessage(
-            message: message,
-            isMe: true,
-
-            time: 'Now',
-            avatar: AppImages.dummy1,
-          ),
-        );
-      });
-    }
-
-    _scrollToBottom();
-    final locationData = {
-      'bookingId': '565176',
-      'senderId': customerId,
-      'senderType': 'customer',
-      'message': message,
-    };
-    socketService.emit('booking-message', locationData);
-    // await Future.delayed(Duration(seconds: 1));
-    //
-    // setState(() {
-    //   messages.add(
-    //     ChatMessage(
-    //       message: "Auto-reply: $message",
-    //       isMe: false,
-    //       time: 'Now',
-    //       avatar: AppImages.dummy,
-    //     ),
-    //   );
-    // });
-    //
-    // _scrollToBottom();
-  }
-*/
+  }*/
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -178,9 +231,41 @@ class _ChatScreenState extends State<ChatScreen> {
     socketService.on('registered', (data) {
       AppLogger.log.i("✅ Registered → $data");
     });
+    socketService.on("typing", (data) {
+      if (!mounted) return;
 
+      final senderId = data["senderId"];
+      final senderType = data["senderType"];
+      if (senderType == 'customer') return;
+
+      setState(() {
+        messages.removeWhere(
+          (m) => m.isTyping && m.message.isEmpty && m.isMe == false,
+        );
+
+        // add a "fake" typing message
+        messages.add(
+          ChatMessage(
+            message: "",
+            isMe: false,
+            avatar: AppImages.dummy,
+            time: "",
+            isTyping: true,
+          ),
+        );
+      });
+
+      // auto-remove after 3 seconds if no stop event
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            messages.removeWhere((m) => m.isTyping);
+          });
+        }
+      });
+    });
     // --- store handler in a variable so we can remove it in dispose ---
-    _bookingMessageHandler = (data) {
+    /*_bookingMessageHandler = (data) {
       AppLogger.log.i("📩 booking-message: $data");
       final senderId = data['senderId'] ?? '';
       if (senderId == customerId) return;
@@ -218,6 +303,48 @@ class _ChatScreenState extends State<ChatScreen> {
           );
         }
       });
+    };*/
+    _bookingMessageHandler = (data) {
+      final senderId = data['senderId'] ?? '';
+      if (senderId == customerId) return;
+
+      final List<dynamic> contents = data['contents'] ?? [];
+      if (contents.isEmpty) return;
+      if (!mounted) return;
+
+      for (var c in contents) {
+        if (c['type'] == 'text' &&
+            c['value'] != null &&
+            c['value'].toString().isNotEmpty) {
+          setState(() {
+            messages.add(
+              ChatMessage(
+                message: c['value'], // ✅ keep text here
+                imageUrl: '', // no image
+                isMe: false,
+                time: DateTime.now().toString().substring(11, 16),
+                avatar: AppImages.dummy,
+              ),
+            );
+          });
+        } else if (c['type'] == 'image' &&
+            c['value'] != null &&
+            c['value'].toString().isNotEmpty) {
+          setState(() {
+            messages.add(
+              ChatMessage(
+                message: '', // no text
+                imageUrl: c['value'], // ✅ keep image here
+                isMe: false,
+                time: DateTime.now().toString().substring(11, 16),
+                avatar: AppImages.dummy,
+              ),
+            );
+          });
+        }
+      }
+
+      _scrollToBottom();
     };
 
     socketService.on('booking-message', _bookingMessageHandler);
@@ -511,28 +638,28 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () async {
-                      final ImagePicker picker = ImagePicker();
-                      final XFile? image = await picker.pickImage(
-                        source: ImageSource.camera,
-                      );
-
-                      if (image != null) {
-                        setState(() {
-                          messages.add(
-                            ChatMessage(
-                              isMe: true,
-                              imageUrl: image.path,
-                              message: '',
-                              time: 'Now',
-                              avatar: AppImages.dummy1,
-                            ),
-                          );
-                        });
-                        _scrollToBottom();
-                      }
-                    },
-
+                    // onTap: () async {
+                    //   final ImagePicker picker = ImagePicker();
+                    //   final XFile? image = await picker.pickImage(
+                    //     source: ImageSource.camera,
+                    //   );
+                    //
+                    //   if (image != null) {
+                    //     setState(() {
+                    //       messages.add(
+                    //         ChatMessage(
+                    //           isMe: true,
+                    //           imageUrl: image.path,
+                    //           message: '',
+                    //           time: 'Now',
+                    //           avatar: AppImages.dummy1,
+                    //         ),
+                    //       );
+                    //     });
+                    //     _scrollToBottom();
+                    //   }
+                    // },
+                    onTap: _pickAndSendImage,
                     child: Image.asset(AppImages.camera, height: 26, width: 26),
                   ),
 
@@ -550,6 +677,14 @@ class _ChatScreenState extends State<ChatScreen> {
                           // Text Field
                           Expanded(
                             child: TextField(
+                              onChanged: (val) async {
+                                final data = {
+                                  'bookingId': widget.bookingId,
+                                  'senderId': customerId,
+                                  'senderType': 'customer',
+                                };
+                                socketService.emit('typing', data);
+                              },
                               controller: _textController,
                               decoration: const InputDecoration(
                                 hintText: 'Type a message...',
@@ -646,6 +781,230 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget buildMessage(ChatMessage msg, bool showAvatar, bool showTime) {
+    return Row(
+      mainAxisAlignment:
+          msg.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 👤 Show avatar for other users
+        if (!msg.isMe && showAvatar) buildAvatar(msg.avatar),
+        if (!msg.isMe && !showAvatar) const SizedBox(width: 46),
+
+        const SizedBox(width: 6),
+
+        Column(
+          crossAxisAlignment:
+              msg.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            // 💬 Typing Indicator Bubble
+            if (msg.isTyping)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const SmoothTypingIndicator(), // 👈 animated dots
+              ),
+
+            // ✅ Text message
+            if (msg.message.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.adminChatContainerColor),
+                  color:
+                      msg.isMe
+                          ? AppColors.userChatContainerColor
+                          : AppColors.commonWhite,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                constraints: const BoxConstraints(maxWidth: 250),
+                child: Text(
+                  msg.message,
+                  style: TextStyle(
+                    color: msg.isMe ? Colors.white : const Color(0xff262626),
+                  ),
+                ),
+              ),
+
+            // ✅ Audio message
+            if (msg.audioUrl != null && msg.audioUrl!.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.adminChatContainerColor),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        _playingStates[msg.audioUrl] == true
+                            ? Icons.pause
+                            : Icons.play_arrow,
+                        color: Colors.blue,
+                      ),
+                      onPressed: () async {
+                        bool isCurrentlyPlaying =
+                            _playingStates[msg.audioUrl] == true;
+                        if (isCurrentlyPlaying) {
+                          await _player.stopPlayer();
+                          setState(() {
+                            _playingStates[msg.audioUrl!] = false;
+                          });
+                        } else {
+                          await _player.stopPlayer();
+                          setState(() {
+                            _playingStates.updateAll((key, value) => false);
+                            _playingStates[msg.audioUrl!] = true;
+                          });
+                          await _player.startPlayer(
+                            fromURI: msg.audioUrl,
+                            codec: Codec.aacADTS,
+                            whenFinished: () {
+                              setState(() {
+                                _playingStates[msg.audioUrl!] = false;
+                              });
+                            },
+                          );
+                        }
+                      },
+                    ),
+                    const Text("Voice message"),
+                  ],
+                ),
+              ),
+
+            // ✅ Image message
+            if (msg.imageUrl != null && msg.imageUrl!.isNotEmpty)
+              Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    margin: const EdgeInsets.symmetric(vertical: 2),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: AppColors.adminChatContainerColor,
+                      ),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: buildChatImage(msg.imageUrl!),
+                  ),
+                  if (msg.isSending)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.3),
+                        child: Center(child: AppLoader.circularLoader()),
+                      ),
+                    ),
+                ],
+              ),
+
+            // ✅ Time
+            if (showTime && !msg.isTyping)
+              Text(
+                msg.time,
+                style: const TextStyle(fontSize: 10, color: Colors.grey),
+              ),
+          ],
+        ),
+
+        const SizedBox(width: 6),
+
+        // 👤 Show avatar for current user
+        if (msg.isMe && showAvatar) buildAvatar(msg.avatar),
+        if (msg.isMe && !showAvatar) const SizedBox(width: 46),
+      ],
+    );
+  }
+
+  Widget buildChatImage(String imagePath) {
+    if (imagePath.startsWith('http')) {
+      return Image.network(
+        imagePath,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 50),
+      );
+    } else {
+      final cleanPath = imagePath.replaceFirst('file://', '');
+      if (File(cleanPath).existsSync()) {
+        return Image.file(
+          File(cleanPath),
+          width: 100,
+          height: 100,
+          fit: BoxFit.cover,
+        );
+      } else {
+        return const Icon(Icons.broken_image, size: 50);
+      }
+    }
+  }
+
+  Widget buildAvatar(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) {
+      return CircleAvatar(
+        radius: 20,
+        backgroundColor: AppColors.lowLightBlue,
+        child: const Icon(Icons.person, color: Colors.white),
+      );
+    }
+
+    Widget avatar;
+    if (imagePath.startsWith('http')) {
+      avatar = Image.network(
+        imagePath,
+        width: 40,
+        height: 40,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Icon(Icons.person),
+      );
+    } else if (imagePath.startsWith('/data') ||
+        imagePath.startsWith('file:/')) {
+      final cleanPath = imagePath.replaceFirst('file://', '');
+      avatar =
+          File(cleanPath).existsSync()
+              ? Image.file(
+                File(cleanPath),
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+              )
+              : const Icon(Icons.person);
+    } else {
+      avatar = Image.asset(imagePath, width: 40, height: 40, fit: BoxFit.cover);
+    }
+
+    return Stack(
+      children: [
+        ClipOval(child: avatar),
+        Positioned(
+          right: 0,
+          top: 0,
+          child: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 1.5),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /*  Widget buildMessage(ChatMessage msg, bool showAvatar, bool showTime) {
     return Row(
       mainAxisAlignment:
           msg.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -761,9 +1120,9 @@ class _ChatScreenState extends State<ChatScreen> {
         if (msg.isMe && !showAvatar) const SizedBox(width: 46),
       ],
     );
-  }
+  }*/
 
-  Widget buildAvatar(String imagePath) {
+  /*  Widget buildAvatar(String imagePath) {
     return Stack(
       children: [
         ClipPath(
@@ -799,7 +1158,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ],
     );
-  }
+  }*/
 }
 
 class CutOutCircleClipper extends CustomClipper<Path> {

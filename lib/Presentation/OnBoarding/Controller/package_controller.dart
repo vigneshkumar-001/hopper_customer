@@ -7,6 +7,8 @@ import 'package:hopper/Presentation/OnBoarding/models/confrom_package_response.d
 import 'package:hopper/Presentation/OnBoarding/models/package_details_response.dart';
 import 'package:hopper/api/dataSource/apiDataSource.dart';
 
+import '../Screens/package_map_confrim_screen.dart';
+
 class PackageController extends GetxController {
   final ApiDataSource apiDataSource = ApiDataSource();
   final RxBool isLoading = false.obs;
@@ -50,6 +52,8 @@ class PackageController extends GetxController {
 
   Future<String?> confirmPackageAddressDetails({
     required String bookingId,
+    required AddressModel senderData,
+    required AddressModel receiverData,
   }) async {
     try {
       isConfirmLoading.value = true;
@@ -68,12 +72,55 @@ class PackageController extends GetxController {
           final double amount = response.data.amount;
           final String bookingId = response.data.bookingId;
           AppLogger.log.i(' ${amount},${bookingId}');
-          Get.to(PaymentScreen(amount: amount.toInt(), bookingId: bookingId));
+          Get.to(
+            PaymentScreen(
+              amount: amount.toInt(),
+              bookingId: bookingId,
+              sender: senderData,
+              receiver: receiverData,
+            ),
+          );
           // Navigator.push(
           //   context,
           //   MaterialPageRoute(builder: (context) => PaymentScreen()),
           // );
           AppLogger.log.i('confirm = ${confirmPackageDetails.value?.toJson()}');
+
+          return response.data.toString();
+        },
+      );
+    } catch (e) {
+      isConfirmLoading.value = false;
+      AppLogger.log.e(e);
+    }
+    return null;
+  }
+
+  Future<String?> sendPackageDriverRequest({
+    required String bookingId,
+    required AddressModel senderData,
+    required AddressModel receiverData,
+  }) async {
+    try {
+      isConfirmLoading.value = true;
+      final results = await apiDataSource.sendPackageDriverRequest(
+        bookingId: bookingId,
+        receiverData: receiverData,
+        senderData: senderData,
+      );
+      return results.fold(
+        (failure) {
+          isConfirmLoading.value = false;
+          AppLogger.log.e("Failure: $failure");
+          return '';
+        },
+        (response) {
+          Get.to(PackageMapConfirmScreen());
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => PaymentScreen()),
+          // );
+          AppLogger.log.i('${response.data}');
 
           return response.data.toString();
         },

@@ -147,9 +147,11 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
           ),
 
           DraggableScrollableSheet(
-            initialChildSize: 0.55,
-            minChildSize: 0.55,
-            maxChildSize: 0.90,
+            key: ValueKey(_isDriverConfirmed),
+
+            initialChildSize: _isDriverConfirmed ? 0.55 : 0.5,
+            minChildSize: 0.5,
+            maxChildSize: _isDriverConfirmed ? 0.90 : 0.5,
             builder: (context, scrollController) {
               return Container(
                 decoration: BoxDecoration(color: Colors.white),
@@ -159,624 +161,742 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                     controller: scrollController,
                     padding: EdgeInsets.only(top: 15),
                     children: [
-                      Center(
-                        child: CustomTextFields.textWithImage(
-                          imageColors: AppColors.walletCurrencyColor,
-                          imagePath:
-                              _isDriverConfirmed ? null : AppImages.clrTick,
-                          colors: AppColors.commonBlack,
-                          imageSize: 24,
-                          fontWeight: FontWeight.w700,
-                          text:
-                              _isDriverConfirmed
-                                  ? 'Pickup in Progress'
-                                  : '  Your order is confirmed',
-                          fontSize: 16,
+                      SizedBox(height: 20),
+                      if (!_isDriverConfirmed) ...[
+                        Text(
+                          textAlign: TextAlign.center,
+                          'Looking for the best drivers for you',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-
-                      Divider(thickness: 2, color: AppColors.dividerColor1),
-                      SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Column(
-                                  spacing: 5,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    CustomTextFields.textWithStylesSmall(
-                                      'PKG - 2025-7481',
-                                      colors: AppColors.commonBlack,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-
-                                    Row(
-                                      children: [
-                                        ClipOval(
-                                          child: Image.asset(
-                                            AppImages.dummy,
-                                            height: 26,
-                                          ),
-                                        ),
-                                        SizedBox(width: 10),
-                                        CustomTextFields.textWithStylesSmall(
-                                          fontSize: 15,
-                                          'Oluwaseun Michael ',
-                                          colors: AppColors.commonBlack,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        SizedBox(width: 5),
-                                        Image.asset(
-                                          AppImages.star,
-                                          width: 13,
-                                          height: 13,
-                                        ),
-                                        SizedBox(width: 5),
-                                        CustomTextFields.textWithStyles600(
-                                          '4.5',
-                                        ),
-                                      ],
-                                    ),
-                                    CustomTextFields.textWithStylesSmall(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 14,
-                                      'Vehicle: Bike (TN 01 AB 1234)',
-                                      colors:
-                                          AppColors.rideShareContainerColor2,
-                                    ),
-                                  ],
-                                ),
-                                Spacer(),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(50),
-                                    color: AppColors.chatCallContainerColor,
-                                  ),
-
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: InkWell(
-                                      onTap: () async {
-                                        const phoneNumber = 'tel:8248191110';
-                                        AppLogger.log.i(phoneNumber);
-                                        final Uri url = Uri.parse(phoneNumber);
-                                        if (await canLaunchUrl(url)) {
-                                          await launchUrl(url);
-                                        } else {
-                                          print('Could not launch dialer');
-                                        }
-                                      },
-                                      child: Image.asset(
-                                        AppImages.chatCall,
-                                        height: 20,
-                                        width: 20,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 20),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(50),
-                                    color: AppColors.chatBlueColor,
-                                  ),
-
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: InkWell(
-                                      onTap: () async {
-                                        Get.to(ChatScreen(bookingId: ''));
-                                      },
-                                      child: Image.asset(
-                                        AppImages.chat,
-                                        height: 20,
-                                        width: 20,
-                                      ),
-                                    ),
-                                  ),
+                        SizedBox(height: 12),
+                        LinearProgressIndicator(
+                          borderRadius: BorderRadius.circular(10),
+                          minHeight: 7,
+                          backgroundColor: AppColors.linearIndicatorColor
+                              .withOpacity(0.2),
+                          color: AppColors.linearIndicatorColor,
+                        ),
+                        SizedBox(height: 20),
+                        Image.asset(
+                          AppImages.confirmCar,
+                          height: 100,
+                          width: 100,
+                          fit: BoxFit.contain,
+                        ),
+                        SizedBox(height: 20),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 20),
+                            child: Column(
+                              children: [
+                                CustomTextFields.plainTextField(
+                                  readOnly: true,
+                                  Style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.commonBlack.withOpacity(
+                                      0.6,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
 
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _isDriverConfirmed = !_isDriverConfirmed;
-                                });
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: AppColors.chatBlueColor.withOpacity(
-                                    0.5,
-                                  ),
+                                  containerColor: AppColors.commonWhite,
+                                  leadingImage: AppImages.circleStart,
+                                  title: 'Search for an address or landmark',
+                                  hintStyle: TextStyle(fontSize: 11),
+                                  imgHeight: 17,
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 17,
+                                const Divider(
+                                  height: 0,
+                                  color: AppColors.containerColor,
+                                ),
+                                CustomTextFields.plainTextField(
+                                  readOnly: true,
+                                  Style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.commonBlack.withOpacity(
+                                      0.6,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  child: Column(
+
+                                  containerColor: AppColors.commonWhite,
+                                  leadingImage: AppImages.rectangleDest,
+                                  title: 'Enter destination',
+                                  hintStyle: TextStyle(fontSize: 11),
+                                  imgHeight: 17,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: AppButtons.button(
+                            hasBorder: true,
+                            borderColor: AppColors.commonBlack.withOpacity(0.2),
+                            buttonColor: AppColors.commonWhite,
+                            textColor: AppColors.cancelRideColor,
+                            onTap: () {
+                              // setState(() {
+                              //   isDriverConfirmed = !isDriverConfirmed;
+                              // });
+                              AppButtons.showCancelRideBottomSheet(
+                                context,
+                                onConfirmCancel: (String selectedReason) {
+                                  // driverSearchController.cancelRide(
+                                  //   bookingId:
+                                  //   driverSearchController
+                                  //       .carBooking
+                                  //       .value!
+                                  //       .bookingId,
+                                  //   selectedReason: selectedReason,
+                                  //   context: context,
+                                  // );
+                                },
+                              );
+                            },
+                            text: 'Cancel Ride',
+                          ),
+                        ),
+                      ] else ...[
+                        Center(
+                          child: CustomTextFields.textWithImage(
+                            imageColors: AppColors.walletCurrencyColor,
+                            imagePath:
+                                _isDriverConfirmed ? null : AppImages.clrTick,
+                            colors: AppColors.commonBlack,
+                            imageSize: 24,
+                            fontWeight: FontWeight.w700,
+                            text:
+                                _isDriverConfirmed
+                                    ? 'Pickup in Progress'
+                                    : '  Your order is confirmed',
+                            fontSize: 16,
+                          ),
+                        ),
+
+                        Divider(thickness: 2, color: AppColors.dividerColor1),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Column(
+                                    spacing: 5,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
+                                      CustomTextFields.textWithStylesSmall(
+                                        'PKG - 2025-7481',
+                                        colors: AppColors.commonBlack,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+
                                       Row(
                                         children: [
-                                          Image.asset(
-                                            AppImages.direction,
-                                            height: 20,
-                                            width: 20,
+                                          ClipOval(
+                                            child: Image.asset(
+                                              AppImages.dummy,
+                                              height: 26,
+                                            ),
                                           ),
                                           SizedBox(width: 10),
+                                          CustomTextFields.textWithStylesSmall(
+                                            fontSize: 15,
+                                            'Oluwaseun Michael ',
+                                            colors: AppColors.commonBlack,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          SizedBox(width: 5),
+                                          Image.asset(
+                                            AppImages.star,
+                                            width: 13,
+                                            height: 13,
+                                          ),
+                                          SizedBox(width: 5),
                                           CustomTextFields.textWithStyles600(
-                                            _isDriverConfirmed
-                                                ? 'Attempting delivery now'
-                                                : 'Estimated Pickup Time',
+                                            '4.5',
                                           ),
                                         ],
                                       ),
-                                      Row(
-                                        children: [
-                                          Text(''),
-                                          SizedBox(width: 30),
-                                          CustomTextFields.textWithStylesSmall(
-                                            fontWeight: FontWeight.w500,
-                                            colors:
-                                                _isDriverConfirmed
-                                                    ? AppColors
-                                                        .changeButtonColor
-                                                    : AppColors.greyDark,
-                                            _isDriverConfirmed
-                                                ? "Delivering now• Distance remaining: 0.0 km"
-                                                : 'Expected pickup: 3:45 PM - 4:15 PM',
-                                            fontSize: 12,
-                                          ),
-                                        ],
+                                      CustomTextFields.textWithStylesSmall(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
+                                        'Vehicle: Bike (TN 01 AB 1234)',
+                                        colors:
+                                            AppColors.rideShareContainerColor2,
                                       ),
                                     ],
                                   ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 25),
-                            if (_isDriverConfirmed) ...[
-                              CustomTextFields.textWithStyles700(
-                                'Pickup Progress',
-                                fontSize: 16,
-                              ),
-                              SizedBox(height: 10),
+                                  Spacer(),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(50),
+                                      color: AppColors.chatCallContainerColor,
+                                    ),
 
-                              PackageContainer.pickUpFields(
-                                imagePath: AppImages.clrTick1,
-                                title: 'Order Confirmed',
-                                subTitle: 'Courier En Route',
-                              ),
-                              SizedBox(height: 15),
-
-                              PackageContainer.pickUpFields(
-                                imagePath: AppImages.clrDirection,
-                                title: 'Courier En Route',
-                                subTitle: 'Completed',
-                              ),
-                              SizedBox(height: 15),
-
-                              PackageContainer.pickUpFields(
-                                title1: 'Ready',
-                                imagePath: AppImages.box,
-                                title: 'Package Pickup',
-                                subTitle: 'Ready for Pickup',
-                              ),
-                            ] else ...[
-                              CustomTextFields.textWithStyles700(
-                                'Delivery Time',
-                                fontSize: 16,
-                              ),
-                              SizedBox(height: 10),
-
-                              PackageContainer.pickUpFields(
-                                imagePath: AppImages.clrTick1,
-                                title: 'Package Collected',
-                                subTitle: '3:45 PM • From Madurai, TN',
-                              ),
-                              SizedBox(height: 15),
-
-                              PackageContainer.pickUpFields(
-                                imagePath: AppImages.clrBox1,
-                                title: 'In Transit',
-                                subTitle: 'Completed • To Chennai, TN',
-                              ),
-                              SizedBox(height: 15),
-
-                              PackageContainer.pickUpFields(
-                                title1: 'Ready',
-                                imagePath: AppImages.clrHome,
-                                title: 'Out for Delivery',
-                                subTitle: 'Attempting delivery',
-                              ),
-                            ],
-
-                            SizedBox(height: 15),
-                            Divider(color: AppColors.dividerColor1),
-
-                            Row(
-                              children: [
-                                CustomTextFields.textWithStylesSmall(
-                                  'Order ID',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 15,
-                                  colors: AppColors.commonBlack,
-                                ),
-                                Spacer(),
-                                CustomTextFields.textWithStylesSmall(
-                                  'PKG-2025-7481',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 12,
-                                  colors: AppColors.commonBlack,
-                                ),
-                                SizedBox(width: 10),
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () {
-                                      // Handle tap
-                                    },
-                                    borderRadius: BorderRadius.circular(
-                                      8,
-                                    ), // Match with Material
-                                    splashColor: Colors.blue.withOpacity(
-                                      0.3,
-                                    ), // Splash effect color
-                                    highlightColor: Colors.blue.withOpacity(
-                                      0.1,
-                                    ), // Highlight color on tap down
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
-                                      child: Image.asset(
-                                        AppImages.paste,
-                                        height: 15,
-                                        width: 15,
+                                      child: InkWell(
+                                        onTap: () async {
+                                          const phoneNumber = 'tel:8248191110';
+                                          AppLogger.log.i(phoneNumber);
+                                          final Uri url = Uri.parse(
+                                            phoneNumber,
+                                          );
+                                          if (await canLaunchUrl(url)) {
+                                            await launchUrl(url);
+                                          } else {
+                                            print('Could not launch dialer');
+                                          }
+                                        },
+                                        child: Image.asset(
+                                          AppImages.chatCall,
+                                          height: 20,
+                                          width: 20,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 5),
-                            Row(
-                              children: [
-                                CustomTextFields.textWithStylesSmall(
-                                  'Package Weight',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 15,
-                                  colors: AppColors.commonBlack,
-                                ),
-                                Spacer(),
-                                CustomTextFields.textWithStylesSmall(
-                                  '2.5 kg',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 12,
-                                  colors: AppColors.commonBlack,
-                                ),
-                              ],
-                            ),
-                            Divider(color: AppColors.dividerColor1),
-                            SizedBox(height: 10),
+                                  SizedBox(width: 20),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(50),
+                                      color: AppColors.chatBlueColor,
+                                    ),
 
-                            const SizedBox(height: 12),
-                            Stack(
-                              children: [
-                                Card(
-                                  elevation: 5,
-                                  color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: InkWell(
+                                        onTap: () async {
+                                          Get.to(ChatScreen(bookingId: ''));
+                                        },
+                                        child: Image.asset(
+                                          AppImages.chat,
+                                          height: 20,
+                                          width: 20,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                  child: Column(
-                                    children: [
-                                      // Pickup Address
-                                      Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                ],
+                              ),
+                              SizedBox(height: 20),
+
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _isDriverConfirmed = !_isDriverConfirmed;
+                                  });
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: AppColors.chatBlueColor.withOpacity(
+                                      0.5,
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 17,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Row(
                                           children: [
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 2,
-                                              ),
-                                              child: Icon(
-                                                Icons.circle,
-                                                color: Colors.green,
-                                                size: 12,
-                                              ),
+                                            Image.asset(
+                                              AppImages.direction,
+                                              height: 20,
+                                              width: 20,
                                             ),
-                                            const SizedBox(width: 10),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: const [
-                                                  Text(
-                                                    'Pickup Address',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 14,
-                                                    ),
-                                                  ),
-                                                  SizedBox(height: 4),
-                                                  Text(
-                                                    '123 Main Street, Apt 4B\nMadurai, Tamil Nadu 625001',
-                                                    style: TextStyle(
-                                                      color: Colors.black54,
-                                                      fontSize: 13,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                            SizedBox(width: 10),
+                                            CustomTextFields.textWithStyles600(
+                                              _isDriverConfirmed
+                                                  ? 'Attempting delivery now'
+                                                  : 'Estimated Pickup Time',
                                             ),
                                           ],
                                         ),
-                                      ),
-
-                                      Divider(
-                                        height: 0,
-                                        color: Colors.grey[200],
-                                      ),
-
-                                      // Delivery Address
-                                      Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                        Row(
                                           children: [
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 5,
-                                              ),
-                                              child: Icon(
-                                                Icons.circle,
-                                                color: Colors.orange,
-                                                size: 12,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: const [
-                                                  Text(
-                                                    'Delivery Address',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 14,
-                                                    ),
-                                                  ),
-                                                  SizedBox(height: 4),
-                                                  Text(
-                                                    '56 Oak Avenue, Floor 2\nChennai, Tamil Nadu 600001',
-                                                    style: TextStyle(
-                                                      color: Colors.black54,
-                                                      fontSize: 13,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                            Text(''),
+                                            SizedBox(width: 30),
+                                            CustomTextFields.textWithStylesSmall(
+                                              fontWeight: FontWeight.w500,
+                                              colors:
+                                                  _isDriverConfirmed
+                                                      ? AppColors
+                                                          .changeButtonColor
+                                                      : AppColors.greyDark,
+                                              _isDriverConfirmed
+                                                  ? "Delivering now• Distance remaining: 0.0 km"
+                                                  : 'Expected pickup: 3:45 PM - 4:15 PM',
+                                              fontSize: 12,
                                             ),
                                           ],
                                         ),
-                                      ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 25),
+                              if (_isDriverConfirmed) ...[
+                                CustomTextFields.textWithStyles700(
+                                  'Pickup Progress',
+                                  fontSize: 16,
+                                ),
+                                SizedBox(height: 10),
 
-                                      Divider(
-                                        height: 0,
-                                        color: Colors.grey[300],
-                                      ),
+                                PackageContainer.pickUpFields(
+                                  imagePath: AppImages.clrTick1,
+                                  title: 'Order Confirmed',
+                                  subTitle: 'Courier En Route',
+                                ),
+                                SizedBox(height: 15),
 
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 35,
-                                          vertical: 10,
+                                PackageContainer.pickUpFields(
+                                  imagePath: AppImages.clrDirection,
+                                  title: 'Courier En Route',
+                                  subTitle: 'Completed',
+                                ),
+                                SizedBox(height: 15),
+
+                                PackageContainer.pickUpFields(
+                                  title1: 'Ready',
+                                  imagePath: AppImages.box,
+                                  title: 'Package Pickup',
+                                  subTitle: 'Ready for Pickup',
+                                ),
+                              ] else ...[
+                                CustomTextFields.textWithStyles700(
+                                  'Delivery Time',
+                                  fontSize: 16,
+                                ),
+                                SizedBox(height: 10),
+
+                                PackageContainer.pickUpFields(
+                                  imagePath: AppImages.clrTick1,
+                                  title: 'Package Collected',
+                                  subTitle: '3:45 PM • From Madurai, TN',
+                                ),
+                                SizedBox(height: 15),
+
+                                PackageContainer.pickUpFields(
+                                  imagePath: AppImages.clrBox1,
+                                  title: 'In Transit',
+                                  subTitle: 'Completed • To Chennai, TN',
+                                ),
+                                SizedBox(height: 15),
+
+                                PackageContainer.pickUpFields(
+                                  title1: 'Ready',
+                                  imagePath: AppImages.clrHome,
+                                  title: 'Out for Delivery',
+                                  subTitle: 'Attempting delivery',
+                                ),
+                              ],
+
+                              SizedBox(height: 15),
+                              Divider(color: AppColors.dividerColor1),
+
+                              Row(
+                                children: [
+                                  CustomTextFields.textWithStylesSmall(
+                                    'Order ID',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 15,
+                                    colors: AppColors.commonBlack,
+                                  ),
+                                  Spacer(),
+                                  CustomTextFields.textWithStylesSmall(
+                                    'PKG-2025-7481',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 12,
+                                    colors: AppColors.commonBlack,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        // Handle tap
+                                      },
+                                      borderRadius: BorderRadius.circular(
+                                        8,
+                                      ), // Match with Material
+                                      splashColor: Colors.blue.withOpacity(
+                                        0.3,
+                                      ), // Splash effect color
+                                      highlightColor: Colors.blue.withOpacity(
+                                        0.1,
+                                      ), // Highlight color on tap down
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Image.asset(
+                                          AppImages.paste,
+                                          height: 15,
+                                          width: 15,
                                         ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            GestureDetector(
-                                              onTap: () {
-                                                AppButtons.showPackageCancelBottomSheet(
-                                                  context,
-                                                );
-                                              },
-                                              child: Row(
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  CustomTextFields.textWithStylesSmall(
+                                    'Package Weight',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 15,
+                                    colors: AppColors.commonBlack,
+                                  ),
+                                  Spacer(),
+                                  CustomTextFields.textWithStylesSmall(
+                                    '2.5 kg',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 12,
+                                    colors: AppColors.commonBlack,
+                                  ),
+                                ],
+                              ),
+                              Divider(color: AppColors.dividerColor1),
+                              SizedBox(height: 10),
+
+                              const SizedBox(height: 12),
+                              Stack(
+                                children: [
+                                  Card(
+                                    elevation: 5,
+                                    color: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        // Pickup Address
+                                        Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  top: 2,
+                                                ),
+                                                child: Icon(
+                                                  Icons.circle,
+                                                  color: Colors.green,
+                                                  size: 12,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: const [
+                                                    Text(
+                                                      'Pickup Address',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                    SizedBox(height: 4),
+                                                    Text(
+                                                      '123 Main Street, Apt 4B\nMadurai, Tamil Nadu 625001',
+                                                      style: TextStyle(
+                                                        color: Colors.black54,
+                                                        fontSize: 13,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        Divider(
+                                          height: 0,
+                                          color: Colors.grey[200],
+                                        ),
+
+                                        // Delivery Address
+                                        Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  top: 5,
+                                                ),
+                                                child: Icon(
+                                                  Icons.circle,
+                                                  color: Colors.orange,
+                                                  size: 12,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: const [
+                                                    Text(
+                                                      'Delivery Address',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                    SizedBox(height: 4),
+                                                    Text(
+                                                      '56 Oak Avenue, Floor 2\nChennai, Tamil Nadu 600001',
+                                                      style: TextStyle(
+                                                        color: Colors.black54,
+                                                        fontSize: 13,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        Divider(
+                                          height: 0,
+                                          color: Colors.grey[300],
+                                        ),
+
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 35,
+                                            vertical: 10,
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () {
+                                                  AppButtons.showPackageCancelBottomSheet(
+                                                    context,
+                                                  );
+                                                },
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.close,
+                                                      color: Colors.red,
+                                                      size: 16,
+                                                    ),
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      'Cancel Courier',
+                                                      style: TextStyle(
+                                                        color: Colors.red,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Container(
+                                                  height:
+                                                      24, // Set the height you need
+                                                  child: VerticalDivider(
+                                                    color: Colors.grey,
+                                                    thickness: 1,
+                                                  ),
+                                                ),
+                                              ),
+                                              Row(
                                                 children: [
-                                                  Icon(
-                                                    Icons.close,
-                                                    color: Colors.red,
-                                                    size: 16,
+                                                  Image.asset(
+                                                    AppImages.support,
+                                                    height: 15,
+                                                    width: 15,
                                                   ),
                                                   const SizedBox(width: 5),
                                                   Text(
-                                                    'Cancel Courier',
+                                                    ' Support',
                                                     style: TextStyle(
-                                                      color: Colors.red,
+                                                      color: Colors.black,
                                                       fontWeight:
                                                           FontWeight.w500,
                                                     ),
                                                   ),
                                                 ],
                                               ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  Positioned(
+                                    top: 37,
+                                    left: 25,
+                                    child: DottedLine(
+                                      direction: Axis.vertical,
+                                      lineLength: 80,
+                                      dashLength: 4,
+                                      dashColor: AppColors.dotLineColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Card(
+                                elevation: 5,
+                                color: AppColors.commonWhite,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 20),
+                                  child: Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            CustomTextFields.textWithImage(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 16,
+                                              colors: AppColors.commonBlack,
+                                              text: 'Total Fare',
+                                              rightImagePath:
+                                                  AppImages.nBlackCurrency,
+                                              rightImagePathText: ' 73',
                                             ),
-                                            Expanded(
-                                              child: Container(
-                                                height:
-                                                    24, // Set the height you need
-                                                child: VerticalDivider(
-                                                  color: Colors.grey,
-                                                  thickness: 1,
-                                                ),
+
+                                            Spacer(),
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 10,
+                                                vertical: 6,
                                               ),
-                                            ),
-                                            Row(
-                                              children: [
-                                                Image.asset(
-                                                  AppImages.support,
-                                                  height: 15,
-                                                  width: 15,
-                                                ),
-                                                const SizedBox(width: 5),
-                                                Text(
-                                                  ' Support',
-                                                  style: TextStyle(
-                                                    color: Colors.black,
-                                                    fontWeight: FontWeight.w500,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                color: AppColors.commonBlack,
+                                              ),
+                                              child:
+                                                  CustomTextFields.textWithStyles600(
+                                                    'PKG - 2025-7481',
+                                                    color:
+                                                        AppColors.commonWhite,
                                                   ),
-                                                ),
-                                              ],
                                             ),
                                           ],
                                         ),
                                       ),
+                                      Divider(color: AppColors.dividerColor1),
+
+                                      ListTile(
+                                        leading: Image.asset(
+                                          AppImages.cash,
+                                          height: 24,
+                                          width: 24,
+                                        ),
+                                        title:
+                                            CustomTextFields.textWithStylesSmall(
+                                              "Cash Payment",
+                                              fontSize: 15,
+                                              colors: AppColors.commonBlack,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+
+                                        trailing: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              5,
+                                            ),
+                                            color: AppColors.resendBlue
+                                                .withOpacity(0.1),
+                                          ),
+                                          child:
+                                              CustomTextFields.textWithStyles600(
+                                                fontSize: 10,
+                                                color:
+                                                    AppColors.changeButtonColor,
+                                                'Change',
+                                              ),
+                                        ),
+                                        onTap: () {},
+                                      ),
+                                      ListTile(
+                                        leading: Image.asset(
+                                          AppImages.digiPay,
+                                          height: 32,
+                                          width: 32,
+                                        ),
+                                        title:
+                                            CustomTextFields.textWithStylesSmall(
+                                              "Pay using card, UPI & more",
+                                              fontSize: 15,
+                                              colors: AppColors.commonBlack,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+
+                                        subtitle:
+                                            CustomTextFields.textWithStylesSmall(
+                                              'Pay during the ride to avoid cash payments',
+                                              fontSize: 10,
+                                            ),
+                                        trailing: Image.asset(
+                                          AppImages.rightArrow,
+                                          height: 20,
+                                          color: AppColors.commonBlack,
+                                          width: 20,
+                                        ),
+                                        onTap: () {
+                                          // Get.to(() => PaymentScreen());
+                                        },
+                                      ),
                                     ],
                                   ),
                                 ),
-
-                                Positioned(
-                                  top: 37,
-                                  left: 25,
-                                  child: DottedLine(
-                                    direction: Axis.vertical,
-                                    lineLength: 80,
-                                    dashLength: 4,
-                                    dashColor: AppColors.dotLineColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Card(
-                              elevation: 5,
-                              color: AppColors.commonWhite,
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 20),
-                                child: Column(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          CustomTextFields.textWithImage(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 16,
-                                            colors: AppColors.commonBlack,
-                                            text: 'Total Fare',
-                                            rightImagePath:
-                                                AppImages.nBlackCurrency,
-                                            rightImagePathText: ' 73',
-                                          ),
-
-                                          Spacer(),
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 6,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                              color: AppColors.commonBlack,
-                                            ),
-                                            child:
-                                                CustomTextFields.textWithStyles600(
-                                                  'PKG - 2025-7481',
-                                                  color: AppColors.commonWhite,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Divider(color: AppColors.dividerColor1),
-
-                                    ListTile(
-                                      leading: Image.asset(
-                                        AppImages.cash,
-                                        height: 24,
-                                        width: 24,
-                                      ),
-                                      title:
-                                          CustomTextFields.textWithStylesSmall(
-                                            "Cash Payment",
-                                            fontSize: 15,
-                                            colors: AppColors.commonBlack,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-
-                                      trailing: Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 5,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            5,
-                                          ),
-                                          color: AppColors.resendBlue
-                                              .withOpacity(0.1),
-                                        ),
-                                        child:
-                                            CustomTextFields.textWithStyles600(
-                                              fontSize: 10,
-                                              color:
-                                                  AppColors.changeButtonColor,
-                                              'Change',
-                                            ),
-                                      ),
-                                      onTap: () {},
-                                    ),
-                                    ListTile(
-                                      leading: Image.asset(
-                                        AppImages.digiPay,
-                                        height: 32,
-                                        width: 32,
-                                      ),
-                                      title:
-                                          CustomTextFields.textWithStylesSmall(
-                                            "Pay using card, UPI & more",
-                                            fontSize: 15,
-                                            colors: AppColors.commonBlack,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-
-                                      subtitle:
-                                          CustomTextFields.textWithStylesSmall(
-                                            'Pay during the ride to avoid cash payments',
-                                            fontSize: 10,
-                                          ),
-                                      trailing: Image.asset(
-                                        AppImages.rightArrow,
-                                        height: 20,
-                                        color: AppColors.commonBlack,
-                                        width: 20,
-                                      ),
-                                      onTap: () {
-                                        Get.to(() => PaymentScreen());
-                                      },
-                                    ),
-                                  ],
-                                ),
                               ),
-                            ),
-                            SizedBox(height: 20),
-                          ],
+                              SizedBox(height: 20),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
