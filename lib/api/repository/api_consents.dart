@@ -7,7 +7,7 @@ class ApiConsents {
   static String signIn = '$baseUrl/api/customer/sign-in';
   static String verifyOtp = '$baseUrl/api/customer/verify-otp';
   static String resendOtp = '$baseUrl/api/customer/resend-otp';
-
+  static String userImageUpload = 'https://next.fenizotechnologies.com/Adrox/api/image-save';
   static String driverSearch({
     required double pickupLat,
     required double pickupLng,

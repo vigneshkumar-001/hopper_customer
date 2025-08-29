@@ -24,6 +24,6 @@ class BookingDriverData {
   BookingDriverData({required this.driversNotified});
 
   factory BookingDriverData.fromJson(Map<String, dynamic> json) {
-    return BookingDriverData(driversNotified: json['driversNotified']);
+    return BookingDriverData(driversNotified: json['totalDrivers']);
   }
 }

@@ -56,7 +56,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   bool destinationReached = false;
   bool _autoFollowEnabled = false;
   Timer? _autoFollowTimer;
-    String bookingId= ' ';
+  String bookingId = ' ';
   bool _userInteractingWithMap = false;
   final socketService = SocketService();
   GoogleMapController? _mapController;
@@ -252,13 +252,6 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         });
         Future.delayed(const Duration(seconds: 2), () {
           if (!mounted) return;
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder:
-                  (context) =>
-                      PaymentScreen(bookingId: bookingId, amount: Amount),
-            ),
-          );
         });
 
         AppLogger.log.i("driver_reached,$data");
@@ -757,17 +750,15 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                           Expanded(
                             child: InkWell(
                               onTap: () {
-                                final String bookingId =
-                                    driverSearchController
-                                        .carBooking
-                                        .value!
-                                        .bookingId;
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder:
                                         (context) =>
-                                            ChatScreen(bookingId: bookingId),
+                                            ChatScreen(bookingId: driverSearchController
+                                                .carBooking
+                                                .value!
+                                                .bookingId,),
                                   ),
                                 );
                               },
@@ -919,12 +910,12 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                           .carBooking
                                           .value!
                                           .bookingId;
-                                  Get.to(
-                                    () => PaymentScreen(
-                                      bookingId: bookingId,
-                                      amount: Amount,
-                                    ),
-                                  );
+                                  // Get.to(
+                                  //   () => PaymentScreen(
+                                  //     bookingId: bookingId,
+                                  //     amount: Amount,
+                                  //   ),
+                                  // );
                                 },
                               ),
                             ],

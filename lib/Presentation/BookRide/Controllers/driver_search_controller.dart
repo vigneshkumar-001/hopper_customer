@@ -58,7 +58,7 @@ class DriverSearchController extends GetxController {
           markerAdded.value = false;
           update();
           AppLogger.log.i(serviceType.length);
-          AppLogger.log.i(response.data);
+          AppLogger.log.i(response.data.toString());
           return response;
         },
       );
