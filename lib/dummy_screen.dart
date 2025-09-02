@@ -26,19 +26,19 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
-import '../../BookRide/Controllers/driver_search_controller.dart';
+import 'Presentation/BookRide/Controllers/driver_search_controller.dart';
 
-class PackageMapConfirmScreen extends StatefulWidget {
-  const PackageMapConfirmScreen({super.key});
+class DummyScreen extends StatefulWidget {
+  const DummyScreen({super.key});
 
   @override
-  State<PackageMapConfirmScreen> createState() =>
-      _PackageMapConfirmScreenState();
+  State<DummyScreen> createState() => _DummyScreenState();
 }
 
-class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
+class _DummyScreenState extends State<DummyScreen> {
   GoogleMapController? _mapController;
   final socketService = SocketService();
+  LatLng? _lastDriverPosition;
   LatLng? _currentPosition;
   Set<Polyline> _polylines = {};
   BitmapDescriptor? _carIcon;
@@ -49,6 +49,15 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
   bool destinationReached = false;
   bool _autoFollowEnabled = false;
   bool _isDrawingPolyline = false;
+  bool _isOrderConfirmed = false;
+  bool _isEnRoute = false;
+  bool _isPackagePickup = false;
+  bool _isPackageCollected = false;
+  bool _isInTransit = false;
+  bool _isOutForDelivery = false;
+  String _estimateStt1 = '';
+  String _estimateStt2 = '';
+
   LatLng? _customerLatLng;
   LatLng? _customerToLatLang;
   String plateNumber = '';
@@ -118,6 +127,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
     _goToCurrentLocation();
     _loadCustomMarker();
     initSocket();
+
     WidgetsBinding.instance.addPostFrameCallback((_) => _calculateLineHeight());
   }
 
@@ -182,7 +192,6 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
         socketService.emit('track-driver', {'driverId': driverId.trim()});
       }
     });
-
     socketService.on('driver-location', (data) {
       AppLogger.log.i('📦 driver-location-updated: $data');
 
@@ -194,8 +203,53 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
         return;
       }
 
+      _animateCarTo(_currentDriverLatLng!);
+
+      if (!driverStartedRide && _customerLatLng != null) {
+        _drawPolylineFromDriverToCustomer(
+          driverLatLng: newDriverLatLng,
+          customerLatLng: _customerLatLng!,
+        );
+      }
+
+      if (driverStartedRide && _customerToLatLang != null) {
+        _drawPolylineFromDriverToCustomer(
+          driverLatLng: newDriverLatLng,
+          customerLatLng: _customerToLatLang!,
+        );
+      }
+
+      _currentDriverLatLng = newDriverLatLng;
+
+      // 📦 Extract flags
+      final basePayload = data['basePayload'] ?? {};
+      final estimate = basePayload['getEstimateTime'] ?? {};
+
+      setState(() {
+        _isOrderConfirmed = basePayload['orderConfirmationStatus'] ?? false;
+        _isEnRoute = basePayload['enRoute'] ?? false;
+        _isPackagePickup = basePayload['packagePickup'] ?? false;
+        _isPackageCollected = basePayload['packageCollected'] ?? false;
+        _isInTransit = basePayload['inTransit'] ?? false;
+        _isOutForDelivery = basePayload['outForDelivery'] ?? false;
+        _estimateStt1 = estimate['stt1'] ?? '';
+        _estimateStt2 = estimate['stt2'] ?? '';
+      });
+    });
+
+    /*   socketService.on('driver-location', (data) {
+      AppLogger.log.i('📦 driver-location-updated: $data');
+
+      final newDriverLatLng = LatLng(data['latitude'], data['longitude']);
+
+      if (_currentDriverLatLng == null) {
+        _currentDriverLatLng = newDriverLatLng;
+        _updateDriverMarker(newDriverLatLng, 0);
+        return;
+      }
+
       // ✅ Animate movement
-      _animateCarTo(_currentDriverLatLng!, newDriverLatLng);
+      _animateCarTo(_currentDriverLatLng!);
 
       if (!driverStartedRide && _customerLatLng != null) {
         _drawPolylineFromDriverToCustomer(
@@ -214,7 +268,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
 
       // ✅ Update current driver position
       _currentDriverLatLng = newDriverLatLng;
-    });
+    });*/
 
     socketService.on('driver-arrived', (data) {
       AppLogger.log.i("driver-arrived: $data");
@@ -296,7 +350,67 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
     });
   }
 
-  double _getBearing(LatLng start, LatLng end) {
+  double getRotation(LatLng start, LatLng end) {
+    final lat1 = start.latitude * math.pi / 180;
+    final lon1 = start.longitude * math.pi / 180;
+    final lat2 = end.latitude * math.pi / 180;
+    final lon2 = end.longitude * math.pi / 180;
+
+    final dLon = lon2 - lon1;
+
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x =
+        math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+
+    final bearing = math.atan2(y, x);
+    return (bearing * 180 / math.pi + 360) % 360;
+  }
+
+  Future<void> _animateCarTo(LatLng newPosition) async {
+    if (_carIcon == null) return;
+
+    if (_lastDriverPosition == null) {
+      _lastDriverPosition = newPosition;
+      _updateDriverMarker(newPosition, 0);
+      return;
+    }
+
+    final distance = Geolocator.distanceBetween(
+      _lastDriverPosition!.latitude,
+      _lastDriverPosition!.longitude,
+      newPosition.latitude,
+      newPosition.longitude,
+    );
+
+    if (distance < 2) return; // ignore jitter
+
+    final rotation = getRotation(_lastDriverPosition!, newPosition);
+
+    // Animate marker position
+    const steps = 25;
+    final latStep =
+        (newPosition.latitude - _lastDriverPosition!.latitude) / steps;
+    final lngStep =
+        (newPosition.longitude - _lastDriverPosition!.longitude) / steps;
+
+    for (int i = 0; i <= steps; i++) {
+      await Future.delayed(const Duration(milliseconds: 50), () {
+        final lat = _lastDriverPosition!.latitude + (latStep * i);
+        final lng = _lastDriverPosition!.longitude + (lngStep * i);
+
+        final pos = LatLng(lat, lng);
+        _updateDriverMarker(pos, rotation);
+
+        if (_autoFollowEnabled) {
+          _mapController?.animateCamera(CameraUpdate.newLatLng(pos));
+        }
+      });
+    }
+
+    _lastDriverPosition = newPosition;
+  }
+  /*  double _getBearing(LatLng start, LatLng end) {
     final lat1 = start.latitude * math.pi / 180;
     final lon1 = start.longitude * math.pi / 180;
     final lat2 = end.latitude * math.pi / 180;
@@ -378,7 +492,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
         customerLatLng: _customerLatLng!,
       );
     }
-  }
+  }*/
 
   void _updateDriverMarker(LatLng position, double bearing) {
     _driverMarker = Marker(
@@ -405,8 +519,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
   Future<void> _drawPolylineFromDriverToCustomer({
     required LatLng driverLatLng,
     required LatLng customerLatLng,
-  }) async
-  {
+  }) async {
     if (_isDrawingPolyline) return; // prevent multiple calls
     _isDrawingPolyline = true;
 
@@ -823,7 +936,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                               ),
                               SizedBox(height: 20),
 
-                              GestureDetector(
+                              /* GestureDetector(
                                 onTap: () {
                                   setState(() {
                                     _isDriverConfirmed = !_isDriverConfirmed;
@@ -880,9 +993,101 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                     ),
                                   ),
                                 ),
+                              ),*/
+                              GestureDetector(
+                                onTap: () {},
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: AppColors.chatBlueColor.withOpacity(
+                                      0.5,
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 17,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Image.asset(
+                                              AppImages.direction,
+                                              height: 20,
+                                              width: 20,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            CustomTextFields.textWithStyles600(
+                                              _estimateStt1,
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            const SizedBox(width: 30),
+                                            Expanded(
+                                              child:
+                                                  CustomTextFields.textWithStylesSmall(maxLines: 2,
+                                                    fontWeight: FontWeight.w500,
+                                                    colors:
+                                                        _isDriverConfirmed
+                                                            ? AppColors
+                                                                .changeButtonColor
+                                                            : AppColors
+                                                                .greyDark,
+                                                    _estimateStt2,
+                                                    fontSize: 12,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
+
                               SizedBox(height: 25),
-                              if (_isDriverConfirmed) ...[
+                              _isOrderConfirmed && !_isPackageCollected
+                                  ? PackageContainer.pickUpFields(
+                                    imagePath: AppImages.clrTick1,
+                                    title: 'Order Confirmed',
+                                    subTitle: 'Courier En Route',
+                                  )
+                                  : PackageContainer.pickUpFields(
+                                    imagePath: AppImages.clrTick1,
+                                    title: 'Package Collected',
+                                    subTitle: '3:45 PM • From Madurai, TN',
+                                  ),
+                              const SizedBox(height: 10),
+                              _isEnRoute && !_isInTransit
+                                  ? PackageContainer.pickUpFields(
+                                    imagePath: AppImages.clrDirection,
+                                    title: 'Courier En Route',
+                                    subTitle: 'Completed',
+                                  )
+                                  : PackageContainer.pickUpFields(
+                                    imagePath: AppImages.clrBox1,
+                                    title: 'In Transit',
+                                    subTitle: 'Completed • To Chennai, TN',
+                                  ),
+                              const SizedBox(height: 10),
+                              _isPackagePickup && !_isOutForDelivery
+                                  ? PackageContainer.pickUpFields(
+                                    title1: 'Ready',
+                                    imagePath: AppImages.box,
+                                    title: 'Package Pickup',
+                                    subTitle: 'Ready for Pickup',
+                                  )
+                                  : PackageContainer.pickUpFields(
+                                    title1: 'Ready',
+                                    imagePath: AppImages.clrHome,
+                                    title: 'Out for Delivery',
+                                    subTitle: 'Attempting delivery',
+                                  ),
+
+                              /*    if (_isDriverConfirmed) ...[
                                 CustomTextFields.textWithStyles700(
                                   'Pickup Progress',
                                   fontSize: 16,
@@ -909,7 +1114,8 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                   title: 'Package Pickup',
                                   subTitle: 'Ready for Pickup',
                                 ),
-                              ] else ...[
+                              ]
+                              else ...[
                                 CustomTextFields.textWithStyles700(
                                   'Delivery Time',
                                   fontSize: 16,
@@ -936,8 +1142,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                   title: 'Out for Delivery',
                                   subTitle: 'Attempting delivery',
                                 ),
-                              ],
-
+                              ],*/
                               SizedBox(height: 15),
                               Divider(color: AppColors.dividerColor1),
 

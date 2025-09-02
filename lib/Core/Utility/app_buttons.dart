@@ -261,7 +261,10 @@ class AppButtons {
     );
   }
 
-  static void showPackageCancelBottomSheet(BuildContext context) {
+  static void showPackageCancelBottomSheet(
+    BuildContext context, {
+    required Function(String selectedReason) onConfirmCancel,
+  }) {
     String? selectedReason;
     showModalBottomSheet(
       context: context,
@@ -494,7 +497,15 @@ class AppButtons {
                               buttonColor: AppColors.cancelRideColor,
                               size: 210,
                               onTap: () {
-                                Get.back();
+                                if (selectedReason != null) {
+                                  onConfirmCancel(selectedReason!);
+                                  Get.back();
+                                } else {
+                                  Get.snackbar(
+                                    'Info',
+                                    'Please Select a reason before proceeding',
+                                  );
+                                }
                               },
                               text: "Confirm Cancellation",
                             ),

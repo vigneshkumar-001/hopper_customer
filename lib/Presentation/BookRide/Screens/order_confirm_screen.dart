@@ -409,7 +409,8 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   Future<void> _drawPolylineFromDriverToCustomer({
     required LatLng driverLatLng,
     required LatLng customerLatLng,
-  }) async {
+  }) async
+  {
     if (_isDrawingPolyline) return; // prevent multiple calls
     _isDrawingPolyline = true;
 
