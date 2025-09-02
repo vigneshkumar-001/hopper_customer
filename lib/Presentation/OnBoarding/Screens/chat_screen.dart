@@ -243,7 +243,6 @@ class _ChatScreenState extends State<ChatScreen> {
           (m) => m.isTyping && m.message.isEmpty && m.isMe == false,
         );
 
-        // add a "fake" typing message
         messages.add(
           ChatMessage(
             message: "",

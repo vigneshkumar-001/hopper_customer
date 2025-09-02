@@ -72,6 +72,8 @@ class AppImages {
   static String send = "assets/images/send.png";
   static String carHop = "assets/images/car-hop.png";
   static String stripe = "assets/images/stripe.png";
+  static String packageBike = "assets/images/packageBike.png";
+
 
   static String star1 = "assets/images/star1.png";
   static String starFill = "assets/images/starFill.png";
