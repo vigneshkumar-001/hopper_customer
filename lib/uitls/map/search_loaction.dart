@@ -5,6 +5,7 @@ import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/api/repository/api_consents.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -33,7 +34,7 @@ class CommonLocationSearch extends StatefulWidget {
 
 class _CommonLocationSearchState extends State<CommonLocationSearch> {
   final TextEditingController _searchController = TextEditingController();
-  final String _apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+
   bool _showInfoMessage = false;
   @override
   void initState() {
@@ -77,7 +78,7 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
   void _searchPlaces(String query) async {
     final position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.medium,
-    );
+    );     String _apiKey =  ApiConsents.googleMapApiKey;
 
     final url =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query'
@@ -123,7 +124,7 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
 
       final detailedResults = await Future.wait(futures);
       final filteredResults = detailedResults.whereType<Map>().toList();
-
+      if (!mounted) return;
       setState(() {
         _searchResults = filteredResults;
       });
@@ -135,6 +136,7 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
     String placeName,
     String distance,
   ) async {
+    String _apiKey =  ApiConsents.googleMapApiKey;
     final url =
         'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$_apiKey';
     final response = await http.get(Uri.parse(url));
@@ -166,6 +168,7 @@ class _CommonLocationSearchState extends State<CommonLocationSearch> {
   }
 
   Future<void> _locateOnMap() async {
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(

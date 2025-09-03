@@ -24,6 +24,7 @@ import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.d
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
+import 'package:hopper/api/repository/api_consents.dart';
 import 'package:hopper/driver_detail_controller.dart';
 import 'package:hopper/uitls/netWorkHandling/network_handling_screen.dart';
 import 'package:http/http.dart' as http;
@@ -204,7 +205,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
   }
 
   Future<void> _drawPolyline() async {
-    final String apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    String apiKey =  ApiConsents.googleMapApiKey;
     final String url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${_pickupPosition!.latitude},${_pickupPosition!.longitude}&destination=${_destinationPosition!.latitude},${_destinationPosition!.longitude}&key=$apiKey';
 

@@ -11,6 +11,7 @@ import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/api/repository/api_consents.dart';
 import 'package:hopper/uitls/map/search_loaction.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
@@ -88,7 +89,7 @@ class _LocateOnMapScreenState extends State<LocateOnMapScreen>
   }
 
   Future<void> _getLocationFromQuery(String query) async {
-    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    String apiKey =  ApiConsents.googleMapApiKey;
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?address=$query&key=$apiKey';
 
