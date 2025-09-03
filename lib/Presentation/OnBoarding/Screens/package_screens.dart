@@ -774,6 +774,7 @@ class _PackageScreensState extends State<PackageScreens> {
                         AppLogger.log.i("Sender Data: ${senderData?.latitude}");
                         AppLogger.log.i("Receiver Data: $receiverData");
                         AppLogger.log.i("Selected Parcel: $selectedParcel");
+                        AppLogger.log.i("  results: $results");
                         results != null
                             ? Navigator.push(
                               context,

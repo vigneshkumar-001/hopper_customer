@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
+import 'package:hopper/api/repository/api_consents.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 
@@ -414,7 +415,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     if (_isDrawingPolyline) return; // prevent multiple calls
     _isDrawingPolyline = true;
 
-    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    String apiKey =  ApiConsents.googleMapApiKey;
 
     final url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${driverLatLng.latitude},${driverLatLng.longitude}&destination=${customerLatLng.latitude},${customerLatLng.longitude}&key=$apiKey';

@@ -1,5 +1,6 @@
 class ApiConsents {
   static String baseUrl = 'https://hoppr-face-two-dbe557472d7f.herokuapp.com';
+  static String googleMapApiKey = 'AIzaSyDZ0T-ObERFV38YA0F2AVdZtrt1qUO-1D8';
 
   static String createBooking = '$baseUrl/api/customer/create-booking';
   static String confirmBooking = '$baseUrl/api/customer/parcel/confirm-booking';
@@ -26,5 +27,6 @@ class ApiConsents {
   static String rateDriver({required String bookingId}) {
     return '$baseUrl/api/customer/rate-driver/$bookingId';
   }
+
   // https://hoppr-backend-3d2b7f783917.herokuapp.com/api/users/districts?state=$state
 }

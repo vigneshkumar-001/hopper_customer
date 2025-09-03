@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
@@ -11,6 +12,7 @@ import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/api/repository/api_consents.dart';
 import 'package:hopper/uitls/map/search_loaction.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
@@ -72,7 +74,7 @@ class _MapScreenState extends State<MapScreen>
   void initState() {
     super.initState();
     _searchController.text = widget.searchQuery;
-
+/*
     if (widget.location != null) {
       _updateLocation(
         widget.location!,
@@ -84,7 +86,18 @@ class _MapScreenState extends State<MapScreen>
       _getLocationFromQuery(widget.searchQuery);
     } else {
       _initLocation();
-    }
+    }*/
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.location != null) {
+        _updateLocation(widget.location!, widget.searchQuery.isNotEmpty
+            ? widget.searchQuery
+            : "Selected Location");
+      } else if (widget.searchQuery.isNotEmpty) {
+        _getLocationFromQuery(widget.searchQuery);
+      } else {
+        _initLocation();
+      }
+    });
     addressController.text = widget.initialAddress ?? '';
     landmarkController.text = widget.initialLandmark ?? '';
     nameController.text = widget.initialName ?? '';
@@ -92,7 +105,7 @@ class _MapScreenState extends State<MapScreen>
   }
 
   Future<void> _getLocationFromQuery(String query) async {
-    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    String apiKey =  ApiConsents.googleMapApiKey;
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?address=$query&key=$apiKey';
 
@@ -117,35 +130,65 @@ class _MapScreenState extends State<MapScreen>
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
+
       final latLng = LatLng(position.latitude, position.longitude);
+
+      // 👇 show the map immediately
+      setState(() {
+        _targetLocation = latLng;
+      });
+
+      // fetch address in background
       _getAddressFromLatLng(latLng);
+
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed to get location: $e")));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to get location: $e")),
+        );
+      }
     }
   }
+
+
+  Timer? _debounce;
 
   Future<void> _searchPlaces(String query) async {
-    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
-    final url =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey&components=country:in';
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-    final response = await http.get(Uri.parse(url));
-    final data = json.decode(response.body);
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      if (query.isEmpty) {
+        if (!mounted) return;
+        setState(() => _searchResults.clear());
+        return;
+      }
 
-    if (response.statusCode == 200) {
-      setState(() {
-        _searchResults = data['predictions'];
-      });
-    }
+      String apiKey = ApiConsents.googleMapApiKey;
+      final url =
+          'https://maps.googleapis.com/maps/api/place/autocomplete/json'
+          '?input=$query&key=$apiKey&components=country:in';
+
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          if (!mounted) return;
+          setState(() {
+            _searchResults = data['predictions'];
+          });
+        }
+      } catch (e) {
+        debugPrint("❌ Place API error: $e");
+      }
+    });
   }
+
 
   Future<void> _getAddressFromLatLng(LatLng latLng) async {
     setState(() {
       _isFetchingAddress = true;
     });
-    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    String apiKey =  ApiConsents.googleMapApiKey;
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}&key=$apiKey';
 
@@ -161,8 +204,10 @@ class _MapScreenState extends State<MapScreen>
     });
   }
 
+
+
   Future<void> _getPlaceDetails(String placeId) async {
-    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    String apiKey =  ApiConsents.googleMapApiKey;
     final url =
         'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$apiKey';
 
@@ -185,7 +230,8 @@ class _MapScreenState extends State<MapScreen>
     LatLng latLng,
     String address, {
     bool shouldMoveCamera = false,
-  }) {
+  })
+  {
     if (!mounted) return;
     final markerId = const MarkerId("selected");
 

@@ -1,10 +1,12 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:hopper/api/repository/api_consents.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LocationHelper {
   static const String _apiKey =
-      'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic'; // Replace this
+      'AIzaSyDZ0T-ObERFV38YA0F2AVdZtrt1qUO-1D8'; // Replace this
+  // String apiKey =  ApiConsents.googleMapApiKey;
 
   static Future<List<Map<String, dynamic>>> searchPlaces(String query) async {
     final position = await Geolocator.getCurrentPosition(

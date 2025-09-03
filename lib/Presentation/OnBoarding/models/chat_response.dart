@@ -5,8 +5,10 @@ class ChatMessage {
   final String time;
   final String avatar;
   final String? imageUrl;
+  final bool isUploading; // 👈 add this
   bool isSending;
   final bool isTyping;
+
 
   ChatMessage({
     required this.message,
@@ -15,6 +17,7 @@ class ChatMessage {
     required this.time,
     required this.avatar,
       this.imageUrl,
+    this.isUploading = false, // default false
       this. isSending = false,
       this. isTyping = false,
   });
