@@ -22,6 +22,8 @@ import 'package:hopper/uitls/map/google_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hopper/uitls/map/search_loaction.dart';
 
+import '../../../uitls/websocket/socket_io_client.dart' show SocketService;
+
 class PackageScreens extends StatefulWidget {
   const PackageScreens({super.key});
 

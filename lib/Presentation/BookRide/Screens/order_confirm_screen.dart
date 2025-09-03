@@ -253,13 +253,6 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         });
         Future.delayed(const Duration(seconds: 2), () {
           if (!mounted) return;
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder:
-                  (context) =>
-                      PaymentScreen(bookingId: bookingId, amount: Amount),
-            ),
-          );
         });
 
         AppLogger.log.i("driver_reached,$data");
@@ -417,7 +410,8 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   Future<void> _drawPolylineFromDriverToCustomer({
     required LatLng driverLatLng,
     required LatLng customerLatLng,
-  }) async {
+  }) async
+  {
     if (_isDrawingPolyline) return; // prevent multiple calls
     _isDrawingPolyline = true;
 
@@ -763,7 +757,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                   MaterialPageRoute(
                                     builder:
                                         (context) =>
-                                            ChatScreen(bookingId: bookingId),
+                                            ChatScreen(bookingId: driverSearchController
+                                                .carBooking
+                                                .value!
+                                                .bookingId,),
                                   ),
                                 );
                               },
@@ -915,12 +912,12 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                           .carBooking
                                           .value!
                                           .bookingId;
-                                  Get.to(
-                                    () => PaymentScreen(
-                                      bookingId: bookingId,
-                                      amount: Amount,
-                                    ),
-                                  );
+                                  // Get.to(
+                                  //   () => PaymentScreen(
+                                  //     bookingId: bookingId,
+                                  //     amount: Amount,
+                                  //   ),
+                                  // );
                                 },
                               ),
                             ],

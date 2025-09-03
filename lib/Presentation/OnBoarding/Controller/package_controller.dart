@@ -6,10 +6,15 @@ import 'package:hopper/Presentation/OnBoarding/models/address_models.dart';
 import 'package:hopper/Presentation/OnBoarding/models/confrom_package_response.dart';
 import 'package:hopper/Presentation/OnBoarding/models/package_details_response.dart';
 import 'package:hopper/api/dataSource/apiDataSource.dart';
+import 'package:hopper/dummy_screen.dart';
+
+import '../../../uitls/websocket/socket_io_client.dart';
+import '../Screens/package_map_confrim_screen.dart';
 
 class PackageController extends GetxController {
   final ApiDataSource apiDataSource = ApiDataSource();
   final RxBool isLoading = false.obs;
+  final socketService = SocketService();
   final RxBool isConfirmLoading = false.obs;
   var packageDetails = Rxn<PackageDetailsResponse>();
   var confirmPackageDetails = Rxn<ConfirmPackageResponse>();
@@ -36,6 +41,34 @@ class PackageController extends GetxController {
         },
         (response) {
           isLoading.value = false;
+          final bookingData = {
+            'bookingId': response.data.bookingId,
+            'userId': response.data.customerId,
+          };
+
+          // Log the data
+          AppLogger.log.i("📤 Join booking data: $bookingData");
+
+          if (socketService.connected) {
+            socketService.emit('join-booking', bookingData);
+            AppLogger.log.i("✅ Socket already connected, emitted join-booking");
+          } else {
+            socketService.onConnect(() {
+              AppLogger.log.i("✅ Socket connected, emitting join-booking");
+              socketService.emit('join-booking', bookingData);
+            });
+          }
+
+          if (socketService.connected) {
+            socketService.emit('join-booking', bookingData);
+            AppLogger.log.i("✅ Socket already connected, emitted join-booking");
+          } else {
+            socketService.onConnect(() {
+              AppLogger.log.i("✅ Socket connected, emitting join-booking");
+              socketService.emit('join-booking', bookingData);
+            });
+          }
+          isLoading.value = false;
           packageDetails.value = response;
           AppLogger.log.i("Package Details  == ${packageDetails.value}");
           return response.data.toString();
@@ -50,6 +83,8 @@ class PackageController extends GetxController {
 
   Future<String?> confirmPackageAddressDetails({
     required String bookingId,
+    required AddressModel senderData,
+    required AddressModel receiverData,
   }) async {
     try {
       isConfirmLoading.value = true;
@@ -68,12 +103,55 @@ class PackageController extends GetxController {
           final double amount = response.data.amount;
           final String bookingId = response.data.bookingId;
           AppLogger.log.i(' ${amount},${bookingId}');
-          Get.to(PaymentScreen(amount: amount.toInt(), bookingId: bookingId));
+          Get.to(
+            PaymentScreen(
+              amount: amount.toInt(),
+              bookingId: bookingId,
+              sender: senderData,
+              receiver: receiverData,
+            ),
+          );
           // Navigator.push(
           //   context,
           //   MaterialPageRoute(builder: (context) => PaymentScreen()),
           // );
           AppLogger.log.i('confirm = ${confirmPackageDetails.value?.toJson()}');
+
+          return response.data.toString();
+        },
+      );
+    } catch (e) {
+      isConfirmLoading.value = false;
+      AppLogger.log.e(e);
+    }
+    return null;
+  }
+
+  Future<String?> sendPackageDriverRequest({
+    required String bookingId,
+    required AddressModel senderData,
+    required AddressModel receiverData,
+  }) async {
+    try {
+      isConfirmLoading.value = true;
+      final results = await apiDataSource.sendPackageDriverRequest(
+        bookingId: bookingId,
+        receiverData: receiverData,
+        senderData: senderData,
+      );
+      return results.fold(
+        (failure) {
+          isConfirmLoading.value = false;
+          AppLogger.log.e("Failure: $failure");
+          return '';
+        },
+        (response) {
+          Get.to(DummyScreen());
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => PaymentScreen()),
+          // );
+          AppLogger.log.i('${response.data}');
 
           return response.data.toString();
         },

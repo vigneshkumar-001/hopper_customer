@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Presentation/Authentication/models/login_response.dart';
 import 'package:hopper/Presentation/Authentication/models/otp_response.dart';
@@ -12,6 +15,8 @@ import 'package:hopper/api/repository/api_consents.dart';
 
 import 'package:hopper/api/repository/request.dart';
 
+import '../../Presentation/OnBoarding/models/send_package_driver_response.dart';
+import '../../Presentation/OnBoarding/models/user_image_models.dart';
 import '../repository/failure.dart';
 import 'package:dio/dio.dart';
 import 'package:dartz/dartz.dart';
@@ -379,4 +384,80 @@ class ApiDataSource extends BaseApiDataSource {
       return Left(ServerFailure('Something went wrong'));
     }
   }
+
+  Future<Either<Failure, SendPackageDriverResponse>> sendPackageDriverRequest({
+    required String bookingId,
+    required AddressModel senderData,
+    required AddressModel receiverData,
+  }) async {
+    try {
+      final url = ApiConsents.sendDriverRequest;
+      final data = {
+        "bookingId": bookingId,
+        "pickupLatitude": senderData.latitude,
+        "pickupLongitude": senderData.longitude,
+        "dropLatitude": receiverData.latitude,
+        "dropLongitude": receiverData.longitude,
+      };
+
+      AppLogger.log.i(url);
+      dynamic response = await Request.sendRequest(url, data, 'Post', false);
+      if (response.statusCode == 200) {
+        return Right(SendPackageDriverResponse.fromJson(response.data));
+        // if (response.data['success'] == 200) {
+        //   return Right(SendDriverRequestModels.fromJson(response.data));
+        // } else {
+        //   return Left(ServerFailure(response.data['message'] ?? " "));
+        // }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
+  Future<Either<Failure, UserImageModels>> userProfileUpload({
+    required File imageFile,
+  }) async {
+    try {
+      if (!await imageFile.exists()) {
+        return Left(ServerFailure('Image file does not exist.'));
+      }
+
+      String url = ApiConsents.userImageUpload;
+      FormData formData = FormData.fromMap({
+        'images': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
+      });
+
+      final response = await Request.formData(url, formData, 'POST', true);
+      Map<String, dynamic> responseData =
+      jsonDecode(response.data) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        if (responseData['status'] == true) {
+          return Right(UserImageModels.fromJson(responseData));
+        } else {
+          return Left(ServerFailure(responseData['message']));
+        }
+      } else if (response is Response && response.statusCode == 409) {
+        return Left(ServerFailure(responseData['message']));
+      } else if (response is Response) {
+        return Left(ServerFailure(responseData['message'] ?? "Unknown error"));
+      } else {
+        return Left(ServerFailure("Unexpected error"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
 }

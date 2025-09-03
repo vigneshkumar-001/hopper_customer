@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hopper/Presentation/OnBoarding/Controller/package_controller.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/pay_pall_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
@@ -16,11 +18,22 @@ import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:get/get.dart';
+
+import '../models/address_models.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String? bookingId;
   final int? amount;
-  const PaymentScreen({super.key, this.bookingId, this.amount});
+  final AddressModel sender;
+  final AddressModel receiver;
+  const PaymentScreen({
+    super.key,
+    this.bookingId,
+    this.amount,
+    required this.sender,
+    required this.receiver,
+  });
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -29,6 +42,7 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   final DriverSearchController driverSearchController =
       DriverSearchController();
+  final PackageController packageController = Get.put(PackageController());
   bool _isLoading = false;
   bool payPalLoading = false;
   void _showRatingBottomSheet(BuildContext context) {
@@ -213,22 +227,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Future<void> payPall() async {
-    try {
-      final Uri url = Uri.parse(
-        "https://hoppr-face-two-dbe557472d7f.herokuapp.com/api/paypal?amount=10&userBookingId=0001",
-      );
-
-      if (await canLaunchUrl(url)) {
-        await launchUrl(
-          url,
-          mode: LaunchMode. inAppWebView , // Opens in browser / PayPal app
-        );
-      } else {
-        AppLogger.log.e("❌ Could not launch PayPal link");
-      }
-    } catch (e) {
-      AppLogger.log.e('💡 : $e');
-    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => PaypalWebviewPage(
+              amount: widget.amount.toString() ?? '',
+              bookingId: widget.bookingId ?? '',
+            ),
+      ),
+    );
   }
 
   // displayPaymentSheet() async {
@@ -614,7 +622,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 Expanded(
                   child: AppButtons.button(
                     onTap: () {
-                      _showRatingBottomSheet(context);
+                      packageController.sendPackageDriverRequest(
+                        bookingId: widget.bookingId ?? '',
+                        senderData: widget.sender,
+                        receiverData: widget.receiver,
+                      );
+                      //  _showRatingBottomSheet(context);
+
                       // Navigator.push(
                       //   context,
                       //   MaterialPageRoute(
