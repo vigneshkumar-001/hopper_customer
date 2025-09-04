@@ -30,6 +30,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../api/repository/api_consents.dart';
+
 class HomeScreens extends StatefulWidget {
   const HomeScreens({super.key});
 
@@ -172,7 +174,7 @@ class _HomeScreensState extends State<HomeScreens>
     // train_station
     // subway_station
     // transit_station
-    const String apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    String apiKey =  ApiConsents.googleMapApiKey;
 
     final types = ['bus_station', 'train_station']; // Add more if needed
     final url =

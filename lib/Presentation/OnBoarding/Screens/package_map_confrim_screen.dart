@@ -26,6 +26,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
+import '../../../api/repository/api_consents.dart';
 import '../../BookRide/Controllers/driver_search_controller.dart';
 
 class PackageMapConfirmScreen extends StatefulWidget {
@@ -410,7 +411,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
     if (_isDrawingPolyline) return; // prevent multiple calls
     _isDrawingPolyline = true;
 
-    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    String apiKey =  ApiConsents.googleMapApiKey;
 
     final url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${driverLatLng.latitude},${driverLatLng.longitude}&destination=${customerLatLng.latitude},${customerLatLng.longitude}&key=$apiKey';
