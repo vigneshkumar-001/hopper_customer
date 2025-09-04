@@ -27,6 +27,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
 import 'Presentation/BookRide/Controllers/driver_search_controller.dart';
+import 'api/repository/api_consents.dart';
 
 class DummyScreen extends StatefulWidget {
   const DummyScreen({super.key});
@@ -522,8 +523,8 @@ class _DummyScreenState extends State<DummyScreen> {
   }) async {
     if (_isDrawingPolyline) return; // prevent multiple calls
     _isDrawingPolyline = true;
-
-    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    /*AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic*/
+    String apiKey = ApiConsents.googleMapApiKey;
 
     final url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${driverLatLng.latitude},${driverLatLng.longitude}&destination=${customerLatLng.latitude},${customerLatLng.longitude}&key=$apiKey';
@@ -879,6 +880,7 @@ class _DummyScreenState extends State<DummyScreen> {
                                         colors:
                                             AppColors.rideShareContainerColor2,
                                       ),
+
                                     ],
                                   ),
                                   Spacer(),
@@ -930,6 +932,36 @@ class _DummyScreenState extends State<DummyScreen> {
                                           width: 20,
                                         ),
                                       ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(''),
+
+                                  otp == ''
+                                      ? SizedBox.shrink()
+                                      : Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      borderRadius:
+                                      BorderRadius.circular(6),
+                                      color:
+                                      AppColors
+                                          .userChatContainerColor,
+                                    ),
+                                    child:
+                                    CustomTextFields.textWithStyles600(
+                                      'OTP - $otp',
+                                      fontSize: 12,
+                                      color:
+                                      AppColors.commonWhite,
                                     ),
                                   ),
                                 ],
@@ -1028,7 +1060,8 @@ class _DummyScreenState extends State<DummyScreen> {
                                             const SizedBox(width: 30),
                                             Expanded(
                                               child:
-                                                  CustomTextFields.textWithStylesSmall(maxLines: 2,
+                                                  CustomTextFields.textWithStylesSmall(
+                                                    maxLines: 2,
                                                     fontWeight: FontWeight.w500,
                                                     colors:
                                                         _isDriverConfirmed
