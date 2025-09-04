@@ -622,11 +622,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 Expanded(
                   child: AppButtons.button(
                     onTap: () {
-                      packageController.sendPackageDriverRequest(
-                        bookingId: widget.bookingId ?? '',
-                        senderData: widget.sender,
-                        receiverData: widget.receiver,
-                      );
+                      // packageController.sendPackageDriverRequest(
+                      //   bookingId: widget.bookingId ?? '',
+                      //   senderData: widget.sender,
+                      //   receiverData: widget.receiver,
+                      // );
                       //  _showRatingBottomSheet(context);
 
                       // Navigator.push(
