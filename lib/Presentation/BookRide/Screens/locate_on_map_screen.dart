@@ -124,7 +124,8 @@ class _LocateOnMapScreenState extends State<LocateOnMapScreen>
   }
 
   Future<void> _searchPlaces(String query) async {
-    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    String apiKey =  ApiConsents.googleMapApiKey;
+
     final url =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey&components=country:in';
 
@@ -142,7 +143,7 @@ class _LocateOnMapScreenState extends State<LocateOnMapScreen>
     setState(() {
       _isFetchingAddress = true;
     });
-    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    String apiKey =  ApiConsents.googleMapApiKey;
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}&key=$apiKey';
 
@@ -159,7 +160,7 @@ class _LocateOnMapScreenState extends State<LocateOnMapScreen>
   }
 
   Future<void> _getPlaceDetails(String placeId) async {
-    const apiKey = 'AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic';
+    String apiKey =  ApiConsents.googleMapApiKey;
     final url =
         'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$apiKey';
 
