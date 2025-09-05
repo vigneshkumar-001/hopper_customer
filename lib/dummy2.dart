@@ -14,8 +14,7 @@ import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/api/repository/api_consents.dart';
 import 'package:hopper/uitls/websocket/socket_io_client.dart';
 
-
-class  Dummy2  extends StatefulWidget {
+class Dummy2 extends StatefulWidget {
   const Dummy2({super.key});
 
   @override
@@ -102,11 +101,7 @@ class _Dummy2State extends State<Dummy2> {
       if (_mapController != null) {
         _mapController!.animateCamera(
           CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: newLatLng,
-              zoom: 16,
-              tilt: 60,
-            ),
+            CameraPosition(target: newLatLng, zoom: 16, tilt: 60),
           ),
         );
       }
@@ -164,9 +159,10 @@ class _Dummy2State extends State<Dummy2> {
   // ===== Dummy movement helper =====
   LatLng _getNextDummyPoint() {
     final t = _currentStep / _totalSteps;
-    final lat = _startPoint.latitude +
-        t * (_endPoint.latitude - _startPoint.latitude);
-    final lng = _startPoint.longitude +
+    final lat =
+        _startPoint.latitude + t * (_endPoint.latitude - _startPoint.latitude);
+    final lng =
+        _startPoint.longitude +
         t * (_endPoint.longitude - _startPoint.longitude);
     return LatLng(lat, lng);
   }
@@ -204,7 +200,7 @@ class _Dummy2State extends State<Dummy2> {
             },
             gestureRecognizers: {
               Factory<OneSequenceGestureRecognizer>(
-                    () => EagerGestureRecognizer(),
+                () => EagerGestureRecognizer(),
               ),
             },
           ),
