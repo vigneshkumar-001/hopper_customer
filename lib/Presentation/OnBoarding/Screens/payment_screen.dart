@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hopper/Presentation/OnBoarding/Controller/package_controller.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/pay_pall_screen.dart';
+import 'package:hopper/Presentation/OnBoarding/models/address_models.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
@@ -12,15 +13,12 @@ import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
-import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
-import 'package:hopper/Presentation/OnBoarding/Screens/package_map_confrim_screen.dart';
+
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:get/get.dart';
-
-import '../models/address_models.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String? bookingId;
@@ -622,11 +620,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 Expanded(
                   child: AppButtons.button(
                     onTap: () {
-                      // packageController.sendPackageDriverRequest(
-                      //   bookingId: widget.bookingId ?? '',
-                      //   senderData: widget.sender,
-                      //   receiverData: widget.receiver,
-                      // );
+                      packageController.sendPackageDriverRequest(
+                        bookingId: widget.bookingId ?? '',
+                        senderData: widget.sender,
+                        receiverData: widget.receiver,
+                      );
                       //  _showRatingBottomSheet(context);
 
                       // Navigator.push(

@@ -25,7 +25,7 @@ import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-
+import 'dart:math';
 import 'Presentation/BookRide/Controllers/driver_search_controller.dart';
 import 'api/repository/api_consents.dart';
 
@@ -35,8 +35,312 @@ class DummyScreen extends StatefulWidget {
   @override
   State<DummyScreen> createState() => _DummyScreenState();
 }
-
 class _DummyScreenState extends State<DummyScreen> {
+  GoogleMapController? _mapController;
+  final socketService = SocketService();
+
+  LatLng? _currentDriverLatLng;
+  LatLng? _customerLatLng;
+  LatLng? _customerToLatLng;
+
+  BitmapDescriptor? _carIcon;
+  Marker? _driverMarker;
+
+  Set<Polyline> _polylines = {};
+  Set<Marker> _markers = {};
+
+  bool driverStartedRide = false;
+  bool _isDrawingPolyline = false;
+  bool _autoFollowEnabled = true; // Map will follow driver by default
+
+  Timer? _autoFollowTimer;
+  bool _userInteractingWithMap = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomMarker();
+    initSocket();
+  }
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    _autoFollowTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadCustomMarker() async {
+    _carIcon = await BitmapDescriptor.asset(
+      height: 70,
+      ImageConfiguration(size: const Size(60, 60)),
+      AppImages.packageBike, // your car/bike asset
+    );
+  }
+
+  void initSocket() {
+    socketService.onConnect(() {
+      AppLogger.log.i("✅ Socket connected on booking screen");
+    });
+
+    socketService.on('joined-booking', (data) {
+      AppLogger.log.i("📦 Joined booking: $data");
+
+      final customerLoc = data['customerLocation'];
+      _customerLatLng = LatLng(customerLoc['fromLatitude'], customerLoc['fromLongitude']);
+      _customerToLatLng = LatLng(customerLoc['toLatitude'], customerLoc['toLongitude']);
+
+      // Start driver tracking
+      if (data['driverId'] != null) {
+        socketService.emit('track-driver', {'driverId': data['driverId']});
+      }
+    });
+
+    socketService.on('driver-location', (data) {
+      AppLogger.log.i("🚖 driver-location: $data");
+
+      final newDriverLatLng = LatLng(data['latitude'], data['longitude']);
+
+      if (_currentDriverLatLng == null) {
+        _currentDriverLatLng = newDriverLatLng;
+        _updateDriverMarker(newDriverLatLng, 0);
+        return;
+      }
+
+      _animateCarTo(newDriverLatLng);
+
+      if (!driverStartedRide && _customerLatLng != null) {
+        _drawPolylineFromDriverToCustomer(
+          driverLatLng: newDriverLatLng,
+          customerLatLng: _customerLatLng!,
+        );
+      }
+
+      if (driverStartedRide && _customerToLatLng != null) {
+        _drawPolylineFromDriverToCustomer(
+          driverLatLng: newDriverLatLng,
+          customerLatLng: _customerToLatLng!,
+        );
+      }
+    });
+
+    socketService.on('ride-started', (data) {
+      driverStartedRide = data['status'] == true;
+    });
+
+    socketService.on('driver-reached-destination', (data) {
+      AppLogger.log.i("✅ Driver reached destination: $data");
+    });
+  }
+
+  // ================================
+  // 🚖 DRIVER MARKER UPDATES
+  // ================================
+  Future<void> _animateCarTo(LatLng newLatLng) async {
+    final oldLatLng = _currentDriverLatLng!;
+    final bearing = _getBearing(oldLatLng, newLatLng);
+
+    // Animate marker
+    final marker = Marker(
+      markerId: const MarkerId("driver"),
+      position: newLatLng,
+      rotation: bearing,
+      anchor: const Offset(0.5, 0.5),
+      flat: true,
+      icon: _carIcon ?? BitmapDescriptor.defaultMarker,
+    );
+
+    setState(() {
+      _markers.removeWhere((m) => m.markerId.value == "driver");
+      _markers.add(marker);
+      _driverMarker = marker;
+    });
+
+    // Animate camera with car if auto-follow enabled
+    if (_autoFollowEnabled && _mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: newLatLng,
+            zoom: 16,
+            tilt: 60,
+            bearing: bearing,
+          ),
+        ),
+      );
+    }
+
+    _currentDriverLatLng = newLatLng;
+  }
+
+  void _updateDriverMarker(LatLng latLng, double bearing) {
+    final marker = Marker(
+      markerId: const MarkerId("driver"),
+      position: latLng,
+      rotation: bearing,
+      anchor: const Offset(0.5, 0.5),
+      flat: true,
+      icon: _carIcon ?? BitmapDescriptor.defaultMarker,
+    );
+
+    setState(() {
+      _markers.removeWhere((m) => m.markerId.value == "driver");
+      _markers.add(marker);
+      _driverMarker = marker;
+    });
+  }
+
+  double _getBearing(LatLng start, LatLng end) {
+    double lat1 = start.latitude * (pi / 180.0);
+    double lon1 = start.longitude * (pi / 180.0);
+    double lat2 = end.latitude * (pi / 180.0);
+    double lon2 = end.longitude * (pi / 180.0);
+
+    double dLon = lon2 - lon1;
+    double y = sin(dLon) * cos(lat2);
+    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
+    double bearing = atan2(y, x);
+    bearing = bearing * (180 / pi);
+    return (bearing + 360) % 360;
+  }
+
+  // ================================
+  // 🚏 POLYLINE DRAWING
+  // ================================
+  Future<void> _drawPolylineFromDriverToCustomer({
+    required LatLng driverLatLng,
+    required LatLng customerLatLng,
+  }) async {
+    if (_isDrawingPolyline) return;
+    _isDrawingPolyline = true;
+
+    final url =
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${driverLatLng.latitude},${driverLatLng.longitude}&destination=${customerLatLng.latitude},${customerLatLng.longitude}&key=${ApiConsents.googleMapApiKey}';
+
+    final response = await http.get(Uri.parse(url));
+    final data = json.decode(response.body);
+
+    if (data['status'] == 'OK') {
+      final encoded = data['routes'][0]['overview_polyline']['points'];
+      final points = _decodePolyline(encoded);
+
+      setState(() {
+        _polylines = {
+          Polyline(
+            polylineId: PolylineId(
+              driverStartedRide ? "driver_to_drop" : "driver_to_pickup",
+            ),
+            points: points,
+            color: Colors.black,
+            width: 4,
+          ),
+        };
+      });
+    } else {
+      debugPrint("❌ Error fetching directions: ${data['status']}");
+    }
+
+    _isDrawingPolyline = false;
+  }
+
+  List<LatLng> _decodePolyline(String encoded) {
+    List<LatLng> points = [];
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
+
+    while (index < len) {
+      int b, shift = 0, result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+      lng += dlng;
+
+      points.add(LatLng(lat / 1E5, lng / 1E5));
+    }
+
+    return points;
+  }
+
+  // ================================
+  // 📍 UI
+  // ================================
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          SizedBox(
+            height: 550,
+            width: double.infinity,
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _currentDriverLatLng ?? const LatLng(9.9144908, 78.0970899),
+                zoom: 16,
+              ),
+              markers: _markers,
+              polylines: _polylines,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: true,
+              onMapCreated: (controller) async {
+                _mapController = controller;
+              },
+              onCameraMoveStarted: () {
+                _userInteractingWithMap = true;
+                _autoFollowEnabled = false;
+
+                _autoFollowTimer?.cancel();
+                _autoFollowTimer = Timer(const Duration(seconds: 10), () {
+                  _autoFollowEnabled = true;
+                  _userInteractingWithMap = false;
+                });
+              },
+              gestureRecognizers: {
+                Factory<OneSequenceGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                ),
+              },
+            ),
+          ),
+          Positioned(
+            top: 330,
+            right: 10,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: Colors.white,
+                boxShadow: [BoxShadow(blurRadius: 3, color: Colors.black26)],
+              ),
+              child: Column(
+                children: const [
+                  Text("10:39",
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text("minutes remaining",
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+/*class _DummyScreenState extends State<DummyScreen> {
   GoogleMapController? _mapController;
   final socketService = SocketService();
   LatLng? _lastDriverPosition;
@@ -238,7 +542,7 @@ class _DummyScreenState extends State<DummyScreen> {
       });
     });
 
-    /*   socketService.on('driver-location', (data) {
+    *//*   socketService.on('driver-location', (data) {
       AppLogger.log.i('📦 driver-location-updated: $data');
 
       final newDriverLatLng = LatLng(data['latitude'], data['longitude']);
@@ -269,7 +573,7 @@ class _DummyScreenState extends State<DummyScreen> {
 
       // ✅ Update current driver position
       _currentDriverLatLng = newDriverLatLng;
-    });*/
+    });*//*
 
     socketService.on('driver-arrived', (data) {
       AppLogger.log.i("driver-arrived: $data");
@@ -411,7 +715,7 @@ class _DummyScreenState extends State<DummyScreen> {
 
     _lastDriverPosition = newPosition;
   }
-  /*  double _getBearing(LatLng start, LatLng end) {
+  *//*  double _getBearing(LatLng start, LatLng end) {
     final lat1 = start.latitude * math.pi / 180;
     final lon1 = start.longitude * math.pi / 180;
     final lat2 = end.latitude * math.pi / 180;
@@ -493,7 +797,7 @@ class _DummyScreenState extends State<DummyScreen> {
         customerLatLng: _customerLatLng!,
       );
     }
-  }*/
+  }*//*
 
   void _updateDriverMarker(LatLng position, double bearing) {
     _driverMarker = Marker(
@@ -520,10 +824,11 @@ class _DummyScreenState extends State<DummyScreen> {
   Future<void> _drawPolylineFromDriverToCustomer({
     required LatLng driverLatLng,
     required LatLng customerLatLng,
-  }) async {
-    if (_isDrawingPolyline) return; // prevent multiple calls
+  }) async
+  {
+    if (_isDrawingPolyline) return;
     _isDrawingPolyline = true;
-    /*AIzaSyDgGqDOMvgHFLSF8okQYOEiWSe7RIgbEic*/
+
     String apiKey = ApiConsents.googleMapApiKey;
 
     final url =
@@ -595,7 +900,7 @@ class _DummyScreenState extends State<DummyScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          /* SizedBox(
+          *//* SizedBox(
             height: 550,
             width: double.infinity,
             child: GoogleMap(
@@ -621,7 +926,7 @@ class _DummyScreenState extends State<DummyScreen> {
                 ),
               },
             ),
-          ),*/
+          ),*//*
           SizedBox(
             height: 550,
             width: double.infinity,
@@ -880,7 +1185,6 @@ class _DummyScreenState extends State<DummyScreen> {
                                         colors:
                                             AppColors.rideShareContainerColor2,
                                       ),
-
                                     ],
                                   ),
                                   Spacer(),
@@ -938,37 +1242,36 @@ class _DummyScreenState extends State<DummyScreen> {
                               ),
                               Row(
                                 mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(''),
 
                                   otp == ''
                                       ? SizedBox.shrink()
                                       : Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      borderRadius:
-                                      BorderRadius.circular(6),
-                                      color:
-                                      AppColors
-                                          .userChatContainerColor,
-                                    ),
-                                    child:
-                                    CustomTextFields.textWithStyles600(
-                                      'OTP - $otp',
-                                      fontSize: 12,
-                                      color:
-                                      AppColors.commonWhite,
-                                    ),
-                                  ),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          color:
+                                              AppColors.userChatContainerColor,
+                                        ),
+                                        child:
+                                            CustomTextFields.textWithStyles600(
+                                              'OTP - $otp',
+                                              fontSize: 12,
+                                              color: AppColors.commonWhite,
+                                            ),
+                                      ),
                                 ],
                               ),
                               SizedBox(height: 20),
 
-                              /* GestureDetector(
+                              *//* GestureDetector(
                                 onTap: () {
                                   setState(() {
                                     _isDriverConfirmed = !_isDriverConfirmed;
@@ -1025,7 +1328,7 @@ class _DummyScreenState extends State<DummyScreen> {
                                     ),
                                   ),
                                 ),
-                              ),*/
+                              ),*//*
                               GestureDetector(
                                 onTap: () {},
                                 child: Container(
@@ -1120,7 +1423,7 @@ class _DummyScreenState extends State<DummyScreen> {
                                     subTitle: 'Attempting delivery',
                                   ),
 
-                              /*    if (_isDriverConfirmed) ...[
+                              *//*    if (_isDriverConfirmed) ...[
                                 CustomTextFields.textWithStyles700(
                                   'Pickup Progress',
                                   fontSize: 16,
@@ -1175,7 +1478,7 @@ class _DummyScreenState extends State<DummyScreen> {
                                   title: 'Out for Delivery',
                                   subTitle: 'Attempting delivery',
                                 ),
-                              ],*/
+                              ],*//*
                               SizedBox(height: 15),
                               Divider(color: AppColors.dividerColor1),
 
@@ -1582,4 +1885,4 @@ class _DummyScreenState extends State<DummyScreen> {
       ),
     );
   }
-}
+}*/
