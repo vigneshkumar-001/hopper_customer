@@ -1,3 +1,4 @@
+/*
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -472,4 +473,231 @@ class _UberStyleMapScreenState extends State<UberStyleMapScreen> {
       ),
     );
   }
+}
+*/
+
+import 'dart:async';
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:hopper/Core/Utility/app_images.dart';
+import 'package:hopper/api/repository/api_consents.dart';
+
+class CarRoutePage extends StatefulWidget {
+  const CarRoutePage({super.key});
+
+  @override
+  State<CarRoutePage> createState() => _CarRoutePageState();
+}
+
+class _CarRoutePageState extends State<CarRoutePage>
+    with TickerProviderStateMixin {
+  GoogleMapController? _mapController;
+  BitmapDescriptor? _carIcon;
+
+  // Route points (Kalavasal → Othakkadai)
+  LatLng kalavasal = const LatLng(9.9196, 78.0959);
+  LatLng othakkadai = const LatLng(9.9583, 78.1472);
+
+  final Set<Polyline> _polylines = {};
+  final List<LatLng> _polylineCoordinates = [];
+  final Set<Marker> _markers = {};
+
+  int _carIndex = 0;
+  LatLng? _carPosition;
+  double _carRotation = 0;
+
+  AnimationController? _movementController;
+  Animation<LatLng>? _movementAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomMarker();
+    _getRoute();
+  }
+  Future<void> _loadCustomMarker() async {
+    _carIcon = await BitmapDescriptor.asset(
+      height: 60,
+      ImageConfiguration(size: Size(52, 52)),
+      AppImages.packageBike,
+    );
+  }
+
+  /// Fetch route using Google Directions API
+  Future<void> _getRoute() async {
+    PolylinePoints polylinePoints = PolylinePoints();
+    String apiKey = ApiConsents.googleMapApiKey;
+
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      apiKey,
+      PointLatLng(kalavasal.latitude, kalavasal.longitude),
+      PointLatLng(othakkadai.latitude, othakkadai.longitude),
+      travelMode: TravelMode.driving,
+    );
+
+    if (result.points.isNotEmpty) {
+      _polylineCoordinates.clear();
+      for (var point in result.points) {
+        _polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+      }
+
+      setState(() {
+        _polylines.add(
+          Polyline(
+            polylineId: const PolylineId("route"),
+            color: Colors.blue,
+            width: 6,
+            points: _polylineCoordinates,
+          ),
+        );
+
+        if (_polylineCoordinates.isNotEmpty) {
+          _carPosition = _polylineCoordinates.first;
+          _setCarMarker(_carPosition!, 0);
+        }
+      });
+    }
+  }
+
+  /// Place car marker
+  void _setCarMarker(LatLng position, double rotation) {
+    setState(() {
+      _carPosition = position;
+      _carRotation = rotation;
+      _markers.clear();
+      _markers.add(
+        Marker(
+          markerId: const MarkerId("car"),
+          position: position,
+          icon: _carIcon ?? BitmapDescriptor.defaultMarker,
+          rotation: rotation,
+          anchor: const Offset(0.5, 0.5),
+          flat: true,
+        ),
+      );
+    });
+  }
+
+  /// Start car movement smoothly
+  void _startCarMovement() {
+    if (_polylineCoordinates.isEmpty) return;
+
+    _carIndex = 0;
+    _moveToNextPoint();
+  }
+
+  void _moveToNextPoint() {
+    if (_carIndex >= _polylineCoordinates.length - 1) return;
+
+    LatLng from = _polylineCoordinates[_carIndex];
+    LatLng to = _polylineCoordinates[_carIndex + 1];
+
+    double bearing = _getBearing(from, to);
+
+    _movementController?.dispose();
+    _movementController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _movementAnimation = LatLngTween(begin: from, end: to).animate(
+      CurvedAnimation(parent: _movementController!, curve: Curves.linear),
+    );
+
+    _movementController!.addListener(() {
+      LatLng newPos = _movementAnimation!.value;
+      _setCarMarker(newPos, bearing);
+
+      // 🔥 keep map aligned with car movement
+      _mapController?.moveCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: newPos,
+            zoom: 17,
+            tilt: 45,
+            bearing: bearing, // now map turns with car
+          ),
+        ),
+      );
+    });
+
+    _movementController!.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _carIndex++;
+        _moveToNextPoint();
+      }
+    });
+
+    _movementController!.forward();
+  }
+
+  /// Bearing calculation for rotation
+  double _getBearing(LatLng from, LatLng to) {
+    double lat1 = from.latitude * pi / 180.0;
+    double lon1 = from.longitude * pi / 180.0;
+    double lat2 = to.latitude * pi / 180.0;
+    double lon2 = to.longitude * pi / 180.0;
+
+    double dLon = lon2 - lon1;
+    double y = sin(dLon) * cos(lat2);
+    double x = cos(lat1) * sin(lat2) -
+        sin(lat1) * cos(lat2) * cos(dLon);
+    double brng = atan2(y, x);
+
+    return (brng * 180 / pi + 360) % 360;
+  }
+
+  @override
+  void dispose() {
+    _movementController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Uber/Ola Smooth Car Movement")),
+      body: Stack(
+        children: [
+          GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: kalavasal,
+              zoom: 14,
+            ),
+            polylines: _polylines,
+            markers: _markers,
+            myLocationEnabled: false,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
+            onMapCreated: (controller) {
+              _mapController = controller;
+            },
+          ),
+
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: ElevatedButton(
+              onPressed: _startCarMovement,
+              child: const Text("Start Journey"),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tween for LatLng interpolation
+class LatLngTween extends Tween<LatLng> {
+  LatLngTween({LatLng? begin, LatLng? end}) : super(begin: begin, end: end);
+
+  @override
+  LatLng lerp(double t) => LatLng(
+    begin!.latitude + (end!.latitude - begin!.latitude) * t,
+    begin!.longitude + (end!.longitude - begin!.longitude) * t,
+  );
 }

@@ -9,8 +9,10 @@ import 'package:hopper/Core/Utility/app_loader.dart';
 import 'package:hopper/Presentation/Authentication/controller/otp_controller.dart';
 import 'package:hopper/Presentation/Authentication/screens/permission_screens.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:get/get.dart';
+import 'package:geolocator/geolocator.dart';
 
 class OtpScreens extends StatefulWidget {
   final String? countyCode;
@@ -113,12 +115,47 @@ class _OtpScreensState extends State<OtpScreens> {
                                     onCompleted: (value) async {
                                       FocusScope.of(context).unfocus();
                                       await Future.delayed(
-                                        Duration(milliseconds: 100),
+                                        Duration(milliseconds: 150),
                                       );
                                       otpController.otpVerify(
                                         otp: otp.text,
-                                        onSuccess: () {
+                                        onSuccess: () async {
                                           if (mounted) {
+                                            LocationPermission permission =
+                                                await Geolocator.checkPermission();
+                                            bool serviceEnabled =
+                                                await Geolocator.isLocationServiceEnabled();
+
+                                            if (serviceEnabled &&
+                                                (permission ==
+                                                        LocationPermission
+                                                            .always ||
+                                                    permission ==
+                                                        LocationPermission
+                                                            .whileInUse)) {
+                                              // ✅ Already granted → go home
+                                              Navigator.pushReplacement(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (context) =>
+                                                          CommonBottomNavigation(),
+                                                ),
+                                              );
+                                            } else {
+                                              // 🚪 Not granted → show permission screen
+                                              Navigator.pushReplacement(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (context) =>
+                                                          PermissionScreens(),
+                                                ),
+                                              );
+                                            }
+                                          }
+
+                                          /*      if (mounted) {
                                             Navigator.pushReplacement(
                                               context,
                                               MaterialPageRoute(
@@ -127,7 +164,7 @@ class _OtpScreensState extends State<OtpScreens> {
                                                         PermissionScreens(),
                                               ),
                                             );
-                                          }
+                                          }*/
                                         },
                                         onError: (error) {
                                           setState(() {
@@ -138,6 +175,7 @@ class _OtpScreensState extends State<OtpScreens> {
                                         context: context,
                                         countryCode: widget.countyCode ?? '',
                                       );
+                                      otp.text = '';
                                     },
 
                                     autoFocus: otp.text.isEmpty,

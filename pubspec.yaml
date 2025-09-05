@@ -64,6 +64,7 @@ dev_dependencies:
   flutter_stripe: any
   share_plus: any
   flutter_inappwebview: ^6.1.5
+  flutter_polyline_points: any
 
 
 
