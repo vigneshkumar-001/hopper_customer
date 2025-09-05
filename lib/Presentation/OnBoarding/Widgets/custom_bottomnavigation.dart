@@ -43,11 +43,11 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
       case 1:
         return BookRideSearchScreen();
       case 2:
-        return Dummy2();
+        return DummyScreen();
       case 3:
         return PackageScreens();
       case 4:
-        return ChatScreen(bookingId: '',);
+        return ChatScreen(bookingId: '');
       default:
         return HomeScreens();
     }
