@@ -174,7 +174,7 @@ class _HomeScreensState extends State<HomeScreens>
     // train_station
     // subway_station
     // transit_station
-    String apiKey =  ApiConsents.googleMapApiKey;
+    String apiKey = ApiConsents.googleMapApiKey;
 
     final types = ['bus_station', 'train_station']; // Add more if needed
     final url =

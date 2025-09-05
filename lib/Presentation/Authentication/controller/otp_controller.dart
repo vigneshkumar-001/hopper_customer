@@ -49,7 +49,7 @@ class OtpController extends GetxController {
         (response) async {
           AppLogger.log.i(response.data.toString());
           onSuccess();
-          isLoading.value = false;
+
           accessToken = response.data.token;
           accessToken = response.data.customer.id;
 
@@ -61,6 +61,7 @@ class OtpController extends GetxController {
           String? customerId = prefs.getString('customer_Id');
           AppLogger.log.i('token = $token');
           AppLogger.log.i('token = $customerId');
+          isLoading.value = false;
           // Navigator.push(
           //   context,
           //   MaterialPageRoute(
