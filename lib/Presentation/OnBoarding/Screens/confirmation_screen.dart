@@ -24,12 +24,14 @@ class ConfirmationScreen extends StatefulWidget {
   final AddressModel sender;
   final AddressModel receiver;
   final String? parcelType;
+  final String? weight;
 
   const ConfirmationScreen({
     Key? key,
     required this.sender,
     required this.receiver,
     this.parcelType,
+    this.weight,
   }) : super(key: key);
 
   @override
@@ -660,6 +662,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                 final String? bookingId =
                     packageController.packageDetails.value?.data.bookingId;
                 packageController.confirmPackageAddressDetails(
+                  weight: widget.weight??'',
                   bookingId: bookingId ?? '',
                   receiverData: receiverData!,
                   senderData: senderData!,

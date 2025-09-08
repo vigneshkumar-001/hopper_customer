@@ -309,6 +309,8 @@ class ApiDataSource extends BaseApiDataSource {
   Future<Either<Failure, PackageDetailsResponse>> packageAddressDetails({
     required AddressModel senderData,
     required AddressModel receiverData,
+    required String weight,
+    required String selectedParcel,
   }) async {
     try {
       final url = ApiConsents.createBooking;
@@ -324,13 +326,13 @@ class ApiDataSource extends BaseApiDataSource {
         "dropAddress": receiverData.address,
         "toContact_name": receiverData.name,
         "toContact_phone": receiverData.phone,
-        "parcel_type": "Documents",
+        "parcel_type": selectedParcel,
         "description": "Important legal papers",
         "delivery_instruction": "Deliver at reception desk",
         "address_type": "Work",
         "rideType": "Bike",
         "bookingType": "Parcel",
-        "maxWeight": "50",
+        "maxWeight": weight,
       };
 
       dynamic response = await Request.sendRequest(url, data, 'Post', false);
@@ -440,7 +442,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       final response = await Request.formData(url, formData, 'POST', true);
       Map<String, dynamic> responseData =
-      jsonDecode(response.data) as Map<String, dynamic>;
+          jsonDecode(response.data) as Map<String, dynamic>;
       if (response.statusCode == 200) {
         if (responseData['status'] == true) {
           return Right(UserImageModels.fromJson(responseData));
@@ -459,5 +461,4 @@ class ApiDataSource extends BaseApiDataSource {
       return Left(ServerFailure('Something went wrong'));
     }
   }
-
 }

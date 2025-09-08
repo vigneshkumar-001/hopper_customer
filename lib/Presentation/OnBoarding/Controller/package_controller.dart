@@ -27,12 +27,16 @@ class PackageController extends GetxController {
   Future<String?> packageAddressDetails({
     required AddressModel senderData,
     required AddressModel receiverData,
+    required String weight,
+    required String selectedParcel,
   }) async {
     try {
       isLoading.value = true;
       final results = await apiDataSource.packageAddressDetails(
         receiverData: receiverData,
         senderData: senderData,
+        weight: weight,
+          selectedParcel:selectedParcel
       );
       return results.fold(
         (failure) {
@@ -83,6 +87,7 @@ class PackageController extends GetxController {
 
   Future<String?> confirmPackageAddressDetails({
     required String bookingId,
+    required String weight,
     required AddressModel senderData,
     required AddressModel receiverData,
   }) async {
@@ -146,7 +151,7 @@ class PackageController extends GetxController {
           return '';
         },
         (response) {
-          Get.to(DummyScreen());
+          Get.to(PackageMapConfirmScreen());
           // Navigator.push(
           //   context,
           //   MaterialPageRoute(builder: (context) => PaymentScreen()),

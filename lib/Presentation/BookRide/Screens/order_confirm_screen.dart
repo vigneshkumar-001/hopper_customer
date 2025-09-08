@@ -410,12 +410,11 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   Future<void> _drawPolylineFromDriverToCustomer({
     required LatLng driverLatLng,
     required LatLng customerLatLng,
-  }) async
-  {
+  }) async {
     if (_isDrawingPolyline) return; // prevent multiple calls
     _isDrawingPolyline = true;
 
-    String apiKey =  ApiConsents.googleMapApiKey;
+    String apiKey = ApiConsents.googleMapApiKey;
 
     final url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${driverLatLng.latitude},${driverLatLng.longitude}&destination=${customerLatLng.latitude},${customerLatLng.longitude}&key=$apiKey';
@@ -756,11 +755,13 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                   context,
                                   MaterialPageRoute(
                                     builder:
-                                        (context) =>
-                                            ChatScreen(bookingId: driverSearchController
-                                                .carBooking
-                                                .value!
-                                                .bookingId,),
+                                        (context) => ChatScreen(
+                                          bookingId:
+                                              driverSearchController
+                                                  .carBooking
+                                                  .value!
+                                                  .bookingId,
+                                        ),
                                   ),
                                 );
                               },
