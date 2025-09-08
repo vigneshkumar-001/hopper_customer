@@ -400,7 +400,8 @@ class _DummyScreenState extends State<DummyScreen> {
   Future<void> _drawPolylineFromDriverToCustomer({
     required LatLng driverLatLng,
     required LatLng customerLatLng,
-  }) async {
+  }) async
+  {
     if (_isDrawingPolyline) return;
     _isDrawingPolyline = true;
 
