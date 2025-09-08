@@ -33,6 +33,7 @@ class PackageScreens extends StatefulWidget {
 
 class _PackageScreensState extends State<PackageScreens> {
   final PackageController packageController = Get.put(PackageController());
+  final TextEditingController packageWeightController = TextEditingController();
   bool isSendSelected = true;
   String selectedAddress = 'Collect from';
   bool senderSelected = false;
@@ -575,6 +576,12 @@ class _PackageScreensState extends State<PackageScreens> {
 
                     const SizedBox(height: 16),
 
+                    CustomTextFields.textAndField(type: TextInputType.number,
+                      controller: packageWeightController,
+                      tittle: 'Package weight',
+                      hintText: 'Eg., 10kg , 20kg',
+                    ),
+                    const SizedBox(height: 12),
                     CustomTextFields.textAndField(
                       tittle: 'Descriptional (Optional)',
                       hintText: 'Eg., Glass Item',
@@ -766,8 +773,14 @@ class _PackageScreensState extends State<PackageScreens> {
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: AppButtons.button(
                       onTap: () async {
+                        AppLogger.log.i(
+                          "Selected Parcel: $packageWeightController",
+                        );
+                        final String weight = packageWeightController.text;
                         final results = await packageController
                             .packageAddressDetails(
+                              weight: weight,
+                              selectedParcel: selectedParcel!,
                               senderData: senderData!,
                               receiverData: receiverData!,
                             );
