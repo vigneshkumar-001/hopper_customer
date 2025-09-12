@@ -128,12 +128,12 @@ class _DummyScreenState extends State<DummyScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _calculateLineHeight());
   }
 
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    _autoFollowTimer?.cancel();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   _mapController?.dispose();
+  //   _autoFollowTimer?.cancel();
+  //   super.dispose();
+  // }
 
   Future<void> _loadCustomMarker() async {
     _carIcon = await BitmapDescriptor.asset(
@@ -200,7 +200,7 @@ class _DummyScreenState extends State<DummyScreen> {
       }
     });
 
-    socketService.on('driver-location', (data) {
+    /*    socketService.on('driver-location', (data) {
       AppLogger.log.i("🚖 driver-location: $data");
 
       final newDriverLatLng = LatLng(data['latitude'], data['longitude']);
@@ -226,6 +226,51 @@ class _DummyScreenState extends State<DummyScreen> {
           customerLatLng: _customerToLatLng!,
         );
       }
+      final basePayload = data['basePayload'] ?? {};
+      final estimate = basePayload['getEstimateTime'] ?? {};
+
+      setState(() {
+        _isOrderConfirmed = basePayload['orderConfirmationStatus'] ?? false;
+        _isEnRoute = basePayload['enRoute'] ?? false;
+        _isPackagePickup = basePayload['packagePickup'] ?? false;
+        _isPackageCollected = basePayload['packageCollected'] ?? false;
+        _isInTransit = basePayload['inTransit'] ?? false;
+        _isOutForDelivery = basePayload['outForDelivery'] ?? false;
+        _estimateStt1 = estimate['stt1'] ?? '';
+        _estimateStt2 = estimate['stt2'] ?? '';
+      });
+    });*/
+
+    socketService.on('driver-location', (data) {
+      AppLogger.log.i('📦 driver-location-updated: $data');
+
+      final newDriverLatLng = LatLng(data['latitude'], data['longitude']);
+
+      if (_currentDriverLatLng == null) {
+        _currentDriverLatLng = newDriverLatLng;
+        _updateDriverMarker(newDriverLatLng, 0);
+        return;
+      }
+
+      _animateCarTo(_currentDriverLatLng!);
+
+      if (!driverStartedRide && _customerLatLng != null) {
+        _drawPolylineFromDriverToCustomer(
+          driverLatLng: newDriverLatLng,
+          customerLatLng: _customerLatLng!,
+        );
+      }
+
+      if (driverStartedRide && _customerToLatLang != null) {
+        _drawPolylineFromDriverToCustomer(
+          driverLatLng: newDriverLatLng,
+          customerLatLng: _customerToLatLang!,
+        );
+      }
+
+      _currentDriverLatLng = newDriverLatLng;
+
+      // 📦 Extract flags
       final basePayload = data['basePayload'] ?? {};
       final estimate = basePayload['getEstimateTime'] ?? {};
 
@@ -363,22 +408,44 @@ class _DummyScreenState extends State<DummyScreen> {
     _currentDriverLatLng = newLatLng;
   }
 
-  void _updateDriverMarker(LatLng latLng, double bearing) {
-    final marker = Marker(
-      markerId: const MarkerId("driver"),
-      position: latLng,
+  void _updateDriverMarker(LatLng position, double bearing) {
+    _driverMarker = Marker(
+      markerId: const MarkerId("driver_marker"),
+      position: position,
       rotation: bearing,
+      icon:
+          _carIcon ??
+          BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
       anchor: const Offset(0.5, 0.5),
       flat: true,
-      icon: _carIcon ?? BitmapDescriptor.defaultMarker,
     );
 
+    if (!mounted) return;
     setState(() {
-      _markers.removeWhere((m) => m.markerId.value == "driver");
-      _markers.add(marker);
-      _driverMarker = marker;
+      // 🟢 Remove old marker and add updated one
+      _markers = {
+        ..._markers.where((m) => m.markerId != const MarkerId("driver_marker")),
+        _driverMarker!,
+      };
     });
   }
+
+  // void _updateDriverMarker(LatLng latLng, double bearing) {
+  //   final marker = Marker(
+  //     markerId: const MarkerId("driver"),
+  //     position: latLng,
+  //     rotation: bearing,
+  //     anchor: const Offset(0.5, 0.5),
+  //     flat: true,
+  //     icon: _carIcon ?? BitmapDescriptor.defaultMarker,
+  //   );
+  //
+  //   setState(() {
+  //     _markers.removeWhere((m) => m.markerId.value == "driver");
+  //     _markers.add(marker);
+  //     _driverMarker = marker;
+  //   });
+  // }
 
   double _getBearing(LatLng start, LatLng end) {
     double lat1 = start.latitude * (pi / 180.0);
@@ -405,16 +472,18 @@ class _DummyScreenState extends State<DummyScreen> {
     if (_isDrawingPolyline) return;
     _isDrawingPolyline = true;
 
+    String apiKey = ApiConsents.googleMapApiKey;
+
     final url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${driverLatLng.latitude},${driverLatLng.longitude}&destination=${customerLatLng.latitude},${customerLatLng.longitude}&key=${ApiConsents.googleMapApiKey}';
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${driverLatLng.latitude},${driverLatLng.longitude}&destination=${customerLatLng.latitude},${customerLatLng.longitude}&key=$apiKey';
 
     final response = await http.get(Uri.parse(url));
     final data = json.decode(response.body);
-
+    if (!mounted) return;
     if (data['status'] == 'OK') {
       final encoded = data['routes'][0]['overview_polyline']['points'];
       final points = _decodePolyline(encoded);
-
+      if (!mounted) return;
       setState(() {
         _polylines = {
           Polyline(
@@ -428,9 +497,8 @@ class _DummyScreenState extends State<DummyScreen> {
         };
       });
     } else {
-      debugPrint("❌ Error fetching directions: ${data['status']}");
+      print("❗ Error fetching directions: ${data['status']}");
     }
-
     _isDrawingPolyline = false;
   }
 
@@ -484,7 +552,7 @@ class _DummyScreenState extends State<DummyScreen> {
               ),
               markers: _markers,
               polylines: _polylines,
-              myLocationEnabled: true,
+              myLocationEnabled: false,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: true,
 
@@ -539,8 +607,8 @@ class _DummyScreenState extends State<DummyScreen> {
           DraggableScrollableSheet(
             key: ValueKey(_isDriverConfirmed),
 
-            initialChildSize: _isDriverConfirmed ? 0.55 : 0.5,
-            minChildSize: 0.5,
+            initialChildSize: _isDriverConfirmed ? 0.55 : 0.4,
+            minChildSize: 0.3,
             maxChildSize: _isDriverConfirmed ? 0.90 : 0.5,
             builder: (context, scrollController) {
               return Container(
@@ -561,7 +629,7 @@ class _DummyScreenState extends State<DummyScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: 20),
                         LinearProgressIndicator(
                           borderRadius: BorderRadius.circular(10),
                           minHeight: 7,
@@ -571,69 +639,69 @@ class _DummyScreenState extends State<DummyScreen> {
                         ),
                         SizedBox(height: 20),
                         Image.asset(
-                          AppImages.confirmCar,
+                          AppImages.packageLoading,
                           height: 100,
                           width: 100,
                           fit: BoxFit.contain,
                         ),
                         SizedBox(height: 20),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 8,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              children: [
-                                CustomTextFields.plainTextField(
-                                  readOnly: true,
-                                  Style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.commonBlack.withOpacity(
-                                      0.6,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-
-                                  containerColor: AppColors.commonWhite,
-                                  leadingImage: AppImages.circleStart,
-                                  title: 'Search for an address or landmark',
-                                  hintStyle: TextStyle(fontSize: 11),
-                                  imgHeight: 17,
-                                ),
-                                const Divider(
-                                  height: 0,
-                                  color: AppColors.containerColor,
-                                ),
-                                CustomTextFields.plainTextField(
-                                  readOnly: true,
-                                  Style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.commonBlack.withOpacity(
-                                      0.6,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-
-                                  containerColor: AppColors.commonWhite,
-                                  leadingImage: AppImages.rectangleDest,
-                                  title: 'Enter destination',
-                                  hintStyle: TextStyle(fontSize: 11),
-                                  imgHeight: 17,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 20),
+                        // Padding(
+                        //   padding: const EdgeInsets.symmetric(horizontal: 10),
+                        //   child: Container(
+                        //     decoration: BoxDecoration(
+                        //       color: Colors.white,
+                        //       borderRadius: BorderRadius.circular(12),
+                        //       boxShadow: [
+                        //         BoxShadow(
+                        //           color: Colors.black12,
+                        //           blurRadius: 8,
+                        //           offset: Offset(0, 4),
+                        //         ),
+                        //       ],
+                        //     ),
+                        //     child: Column(
+                        //       children: [
+                        //         CustomTextFields.plainTextField(
+                        //           readOnly: true,
+                        //           Style: TextStyle(
+                        //             fontSize: 12,
+                        //             color: AppColors.commonBlack.withOpacity(
+                        //               0.6,
+                        //             ),
+                        //             overflow: TextOverflow.ellipsis,
+                        //           ),
+                        //
+                        //           containerColor: AppColors.commonWhite,
+                        //           leadingImage: AppImages.circleStart,
+                        //           title: 'Search for an address or landmark',
+                        //           hintStyle: TextStyle(fontSize: 11),
+                        //           imgHeight: 17,
+                        //         ),
+                        //         const Divider(
+                        //           height: 0,
+                        //           color: AppColors.containerColor,
+                        //         ),
+                        //         CustomTextFields.plainTextField(
+                        //           readOnly: true,
+                        //           Style: TextStyle(
+                        //             fontSize: 12,
+                        //             color: AppColors.commonBlack.withOpacity(
+                        //               0.6,
+                        //             ),
+                        //             overflow: TextOverflow.ellipsis,
+                        //           ),
+                        //
+                        //           containerColor: AppColors.commonWhite,
+                        //           leadingImage: AppImages.rectangleDest,
+                        //           title: 'Enter destination',
+                        //           hintStyle: TextStyle(fontSize: 11),
+                        //           imgHeight: 17,
+                        //         ),
+                        //       ],
+                        //     ),
+                        //   ),
+                        // ),
+                        // SizedBox(height: 20),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 10),
                           child: AppButtons.button(
@@ -656,26 +724,41 @@ class _DummyScreenState extends State<DummyScreen> {
                                 },
                               );
                             },
-                            text: 'Cancel Ride',
+                            text: 'Cancel Booking',
                           ),
                         ),
                       ] else ...[
                         Center(
                           child: CustomTextFields.textWithImage(
-                            imageColors: AppColors.walletCurrencyColor,
-                            imagePath:
-                                _isDriverConfirmed ? null : AppImages.clrTick,
-                            colors: AppColors.commonBlack,
+                            fontSize: 20,
                             imageSize: 24,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                             text:
-                                _isDriverConfirmed
-                                    ? 'Pickup in Progress'
-                                    : '  Your order is confirmed',
-                            fontSize: 16,
+                                destinationReached
+                                    ? 'Ride Completed'
+                                    : driverStartedRide
+                                    ? 'Ride in Progress'
+                                    : 'Your ride is confirmed',
+                            colors: AppColors.commonBlack,
+                            rightImagePath: AppImages.clrTick,
                           ),
                         ),
 
+                        // Center(
+                        //   child: CustomTextFields.textWithImage(
+                        //     imageColors: AppColors.walletCurrencyColor,
+                        //     imagePath:
+                        //         _isDriverConfirmed ? null : AppImages.clrTick,
+                        //     colors: AppColors.commonBlack,
+                        //     imageSize: 24,
+                        //     fontWeight: FontWeight.w700,
+                        //     text:
+                        //         _isDriverConfirmed
+                        //             ? 'Pickup in Progress'
+                        //             : '  Your order is confirmed',
+                        //     fontSize: 16,
+                        //   ),
+                        // ),
                         Divider(thickness: 2, color: AppColors.dividerColor1),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -894,7 +977,7 @@ class _DummyScreenState extends State<DummyScreen> {
                                   : PackageContainer.pickUpFields(
                                     imagePath: AppImages.clrBox1,
                                     title: 'In Transit',
-                                    subTitle: 'Completed • To Chennai, TN',
+                                    subTitle: 'Completed • To Kalavasal, TN',
                                   ),
                               const SizedBox(height: 10),
                               _isPackagePickup && !_isOutForDelivery

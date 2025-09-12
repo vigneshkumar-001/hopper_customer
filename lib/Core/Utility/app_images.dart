@@ -77,4 +77,5 @@ class AppImages {
 
   static String star1 = "assets/images/star1.png";
   static String starFill = "assets/images/starFill.png";
+  static String packageLoading = "assets/images/packageLoading.png";
 }
