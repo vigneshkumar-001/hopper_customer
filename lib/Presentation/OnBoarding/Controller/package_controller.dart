@@ -36,7 +36,7 @@ class PackageController extends GetxController {
         receiverData: receiverData,
         senderData: senderData,
         weight: weight,
-          selectedParcel:selectedParcel
+        selectedParcel: selectedParcel,
       );
       return results.fold(
         (failure) {
