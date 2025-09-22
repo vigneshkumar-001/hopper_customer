@@ -30,6 +30,7 @@ class AppImages {
   static String nBlackCurrency = "assets/images/nBlackCurrency.png";
   static String payPall = "assets/images/payPall.png";
   static String applePay = "assets/images/applePay.png";
+  static String close = "assets/images/close.png";
   static String cash = "assets/images/cash.png";
   static String wallet = "assets/images/wallet.png";
   static String borderAdd = "assets/images/borderAdd.png";
@@ -78,4 +79,6 @@ class AppImages {
   static String star1 = "assets/images/star1.png";
   static String starFill = "assets/images/starFill.png";
   static String packageLoading = "assets/images/packageLoading.png";
+  static String hopprWallet = "assets/images/hopprWallet.png";
+  static String trans = "assets/images/trans.png";
 }

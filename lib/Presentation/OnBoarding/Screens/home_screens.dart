@@ -936,6 +936,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:hopper/Presentation/BookRide/Screens/book_map_screen.dart';
+import 'package:hopper/Presentation/Drawer/screens/drawer_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/models/recent_location_model.dart';
 import 'package:http/http.dart' as http;
 
@@ -1517,35 +1518,40 @@ class _HomeScreensState extends State<HomeScreens>
                         top: 50,
                         left: 16,
                         right: 16,
-                        child: GestureDetector(
-                          onTap: () {
-                            Get.to(BookRideSearchScreen());
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: const [
-                                BoxShadow(color: Colors.black12, blurRadius: 4),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.menu, size: 20),
-                                Padding(
-                                  padding: const EdgeInsets.all(10),
-                                  child: Image.asset(
-                                    AppImages.dart,
-                                    height: 10,
-                                    width: 10,
-                                    color: AppColors.walletCurrencyColor,
-                                  ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black12, blurRadius: 4),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  Get.to(DrawerScreen());
+                                },
+                                child: Icon(Icons.menu, size: 20),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: Image.asset(
+                                  AppImages.dart,
+                                  height: 10,
+                                  width: 10,
+                                  color: AppColors.walletCurrencyColor,
                                 ),
-                                Expanded(
+                              ),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    Get.to(BookRideSearchScreen());
+                                  },
                                   child: Text(
                                     _address,
                                     maxLines: 1,
@@ -1556,9 +1562,9 @@ class _HomeScreensState extends State<HomeScreens>
                                     ),
                                   ),
                                 ),
-                                const Icon(Icons.favorite_border, size: 20),
-                              ],
-                            ),
+                              ),
+                              const Icon(Icons.favorite_border, size: 20),
+                            ],
                           ),
                         ),
                       ),

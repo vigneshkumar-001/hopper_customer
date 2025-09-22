@@ -7,12 +7,15 @@ import 'package:hopper/Presentation/Authentication/controller/authController.dar
 import 'package:country_picker/country_picker.dart';
 import 'package:hopper/Presentation/Authentication/screens/otp_screens.dart';
 import 'package:hopper/Presentation/Authentication/screens/permission_screens.dart';
+import 'package:hopper/Presentation/Drawer/controller/ride_history_controller.dart';
 
 import 'package:hopper/api/dataSource/apiDataSource.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 var getMobileNumber = '';
 var countryCodes = '';
 String selectedCountryFlag = '';
+final RideHistoryController controller = Get.put(RideHistoryController());
 
 class OtpController extends GetxController {
   ApiDataSource apiDataSource = ApiDataSource();
@@ -40,7 +43,7 @@ class OtpController extends GetxController {
     isLoading.value = true;
     try {
       final mbl = countryCode + mobileNumber;
-      final results = await apiDataSource.otpVerify(mbl,  otp);
+      final results = await apiDataSource.otpVerify(mbl, otp);
       results.fold(
         (failure) {
           isLoading.value = false;
@@ -61,6 +64,7 @@ class OtpController extends GetxController {
           String? customerId = prefs.getString('customer_Id');
           AppLogger.log.i('token = $token');
           AppLogger.log.i('token = $customerId');
+       await    controller.getRideHistory();
           isLoading.value = false;
           // Navigator.push(
           //   context,

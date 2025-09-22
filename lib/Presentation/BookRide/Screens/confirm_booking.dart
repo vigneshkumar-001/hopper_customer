@@ -12,6 +12,7 @@ import 'package:hopper/Presentation/BookRide/Screens/order_confirm_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:get/get.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/payment_screen.dart';
+import 'package:hopper/dummy_screen.dart';
 
 class ConfirmBooking extends StatefulWidget {
   final String? selectedCarType;
@@ -56,6 +57,7 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
       widget.destinationData['lng'],
     );
   }
+
   String formatDistance(double meters) {
     double kilometers = meters / 1000;
     return '${kilometers.toStringAsFixed(1)} Km';
@@ -68,6 +70,7 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
         ? '$hours hr $remainingMinutes min'
         : '$remainingMinutes min';
   }
+
   @override
   Widget build(BuildContext context) {
     _startController.text = widget.pickupAddress;
@@ -231,18 +234,18 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                               Row(
                                 children: [
                                   Expanded(child: Text(AppTexts.serviceFare)),
-                                    CustomTextFields.textWithImage(
-                                      text:   driverController
-                                          .carBooking
-                                          .value
-                                          ?.serviceFare
-                                          .toString() ??
-                                          "",
+                                  CustomTextFields.textWithImage(
+                                    text:
+                                        driverController
+                                            .carBooking
+                                            .value
+                                            ?.serviceFare
+                                            .toString() ??
+                                        "",
 
-
-                                      imagePath: AppImages.nCurrency,
-                                      fontWeight: FontWeight.w900,
-                                 ),
+                                    imagePath: AppImages.nCurrency,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                                 ],
                               ),
                               SizedBox(height: 3),
@@ -261,11 +264,13 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                                 children: [
                                   Expanded(child: Text(AppTexts.estTime)),
                                   CustomTextFields.textWithImage(
-                                    text:formatDuration(  driverController
-                                        .carBooking
-                                        .value
-                                        ?. duration ??0),
-
+                                    text: formatDuration(
+                                      driverController
+                                              .carBooking
+                                              .value
+                                              ?.duration ??
+                                          0,
+                                    ),
 
                                     fontWeight: FontWeight.w900,
                                   ),
@@ -276,8 +281,14 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                                 children: [
                                   Expanded(child: Text(AppTexts.totalKm)),
                                   CustomTextFields.textWithImage(
-
-                                  text: formatDistance((driverController.carBooking.value?.distance ?? 0).toDouble()),
+                                    text: formatDistance(
+                                      (driverController
+                                                  .carBooking
+                                                  .value
+                                                  ?.distance ??
+                                              0)
+                                          .toDouble(),
+                                    ),
 
                                     fontWeight: FontWeight.w900,
                                   ),
@@ -371,7 +382,7 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                         context,
                         MaterialPageRoute(
                           builder:
-                              (context) => OrderConfirmScreen(
+                              (context) => DummyScreen(
                                 pickupData: {
                                   'description': widget.pickupAddress,
                                   'lat': _pickupPosition?.latitude ?? 0.0,
@@ -387,11 +398,32 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                               ),
                         ),
                       );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder:
+                      //         (context) => OrderConfirmScreen(
+                      //           pickupData: {
+                      //             'description': widget.pickupAddress,
+                      //             'lat': _pickupPosition?.latitude ?? 0.0,
+                      //             'lng': _pickupPosition?.longitude ?? 0.0,
+                      //           },
+                      //           destinationData: {
+                      //             'description': widget.destinationAddress,
+                      //             'lat': _destinationPosition?.latitude ?? 0.0,
+                      //             'lng': _destinationPosition?.longitude ?? 0.0,
+                      //           },
+                      //           pickupAddress: widget.pickupAddress,
+                      //           destinationAddress: widget.destinationAddress,
+                      //         ),
+                      //   ),
+                      // );
                     }
                   },
                   text: 'Confirm',
                   rightImagePath: AppImages.nBlackCurrency,
-                  rightImagePathText: driverController.carBooking.value?.amount ?? 0,
+                  rightImagePathText:
+                      driverController.carBooking.value?.amount ?? 0,
                 ),
               ),
             );

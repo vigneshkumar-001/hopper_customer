@@ -6,6 +6,7 @@ import 'package:hopper/Presentation/BookRide/Screens/search_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
+import 'package:hopper/Presentation/wallet/screens/wallet_screens.dart';
 import 'package:hopper/dummy2.dart';
 import 'package:hopper/dummy_screen.dart';
 import 'package:hopper/uber_screen.dart';
@@ -43,7 +44,8 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
       case 1:
         return BookRideSearchScreen();
       case 2:
-        return DummyScreen();
+        return WalletScreens();
+
       case 3:
         return PackageScreens();
       case 4:

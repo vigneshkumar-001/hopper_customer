@@ -5,9 +5,13 @@ class ApiConsents {
   static String createBooking = '$baseUrl/api/customer/create-booking';
   static String confirmBooking = '$baseUrl/api/customer/parcel/confirm-booking';
   static String sendDriverRequest = '$baseUrl/api/customer/send-driver-request';
+  static String rideHistory = '$baseUrl/api/customer/ride-history';
+  static String addToWallet = '$baseUrl/api/customer/add-to-wallet';
+  static String getwalletBalance = '$baseUrl/api/customer/getwalletBalance';
   static String signIn = '$baseUrl/api/customer/sign-in';
   static String verifyOtp = '$baseUrl/api/customer/verify-otp';
   static String resendOtp = '$baseUrl/api/customer/resend-otp';
+  static String addToWalletResponse = '$baseUrl/api/customer/add-to-wallet-reponse';
   static String userImageUpload = 'https://next.fenizotechnologies.com/Adrox/api/image-save';
   static String driverSearch({
     required double pickupLat,

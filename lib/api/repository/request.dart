@@ -12,8 +12,7 @@ class Request {
     Map<String, dynamic> body,
     String? method,
     bool isTokenRequired,
-  ) async
-  {
+  ) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     String? userId = prefs.getString('userId');
@@ -178,7 +177,6 @@ class Request {
     String method,
     bool isTokenRequired,
   ) async {
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     String? userId = prefs.getString('userId');
@@ -195,7 +193,7 @@ class Request {
           ResponseInterceptorHandler handler,
         ) {
           AppLogger.log.i(
-            "GET Request \n API: $url \n RESPONSE: ${response.toString()}",
+            "GET Request \n API: $url \n Token: $token \n RESPONSE: ${response.toString()}",
           );
           return handler.next(response);
         },
@@ -220,12 +218,12 @@ class Request {
         url,
         queryParameters: queryParams,
         options: Options(
-            headers: {
-              "Authorization":
-                  token != null
-                      ? "Bearer $token"
-                      : "", // Only the token in the header
-            },
+          headers: {
+            "Authorization":
+                token != null
+                    ? "Bearer $token"
+                    : "", // Only the token in the header
+          },
           validateStatus: (status) {
             return status != null && status < 500;
           },

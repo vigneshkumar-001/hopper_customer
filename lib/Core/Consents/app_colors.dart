@@ -43,5 +43,8 @@ class AppColors {
   static final greyDark = Color(0xff898A8D);
   static final buttonBorder = Color(0xffA9A8A8);
   static final blueLight = Color(0xFF2563EB);
+  static final drawerT = Color(0xFF262626);
+  static final addMoney = Color(0xFFE1EBFF);
+
 
 }
