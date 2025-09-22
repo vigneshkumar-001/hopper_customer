@@ -45,7 +45,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
         return BookRideSearchScreen();
       case 2:
         return WalletScreens();
-        return DummyScreen();
+
       case 3:
         return PackageScreens();
       case 4:

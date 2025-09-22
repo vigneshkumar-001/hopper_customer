@@ -26,7 +26,7 @@ class AppButtons {
 
     String? imagePath,
     String? rightImagePath,
-    int? rightImagePathText,
+    num? rightImagePathText,
   }) {
     return SizedBox(
       width: size,
