@@ -2,17 +2,15 @@ class RideHistoryResponse {
   final bool success;
   final List<RideHistoryData> remappedBookings;
 
-  RideHistoryResponse({
-    required this.success,
-    required this.remappedBookings,
-  });
+  RideHistoryResponse({required this.success, required this.remappedBookings});
 
   factory RideHistoryResponse.fromJson(Map<String, dynamic> json) {
     return RideHistoryResponse(
       success: json['success'] ?? false,
-      remappedBookings: (json['remappedBookings'] as List? ?? [])
-          .map((e) => RideHistoryData.fromJson(e))
-          .toList(),
+      remappedBookings:
+          (json['remappedBookings'] as List? ?? [])
+              .map((e) => RideHistoryData.fromJson(e))
+              .toList(),
     );
   }
 }
@@ -132,21 +130,28 @@ class RideHistoryData {
       id: json['_id'],
       bookingType: json['bookingType'] ?? json[' bookingType'], // handle typo
       bookingId: json['bookingId'],
-      fromLatitude: (json['fromLatitude'] != null)
-          ? double.tryParse(json['fromLatitude'].toString())
-          : null,
-      fromLongitude: (json['fromLongitude'] != null)
-          ? double.tryParse(json['fromLongitude'].toString())
-          : null,
-      toLatitude: (json['toLatitude'] != null)
-          ? double.tryParse(json['toLatitude'].toString())
-          : null,
-      toLongitude: (json['toLongitude'] != null)
-          ? double.tryParse(json['toLongitude'].toString())
-          : null,
+      fromLatitude:
+          (json['fromLatitude'] != null)
+              ? double.tryParse(json['fromLatitude'].toString())
+              : null,
+      fromLongitude:
+          (json['fromLongitude'] != null)
+              ? double.tryParse(json['fromLongitude'].toString())
+              : null,
+      toLatitude:
+          (json['toLatitude'] != null)
+              ? double.tryParse(json['toLatitude'].toString())
+              : null,
+      toLongitude:
+          (json['toLongitude'] != null)
+              ? double.tryParse(json['toLongitude'].toString())
+              : null,
       customer:
-      json['customerId'] != null ? Customer.fromJson(json['customerId']) : null,
-      driver: json['driverId'] != null ? Driver.fromJson(json['driverId']) : null,
+          json['customerId'] != null
+              ? Customer.fromJson(json['customerId'])
+              : null,
+      driver:
+          json['driverId'] != null ? Driver.fromJson(json['driverId']) : null,
       sharedBooking: json['sharedBooking'] ?? false,
       sharedCount: json['sharedCount'] ?? 0,
       amount: json['amount'],
@@ -182,15 +187,18 @@ class RideHistoryData {
       createdAt: json['createdAt'],
       updatedAt: json['updatedAt'],
       completedAt: json['completedAt'],
-      rideStatusHistory: (json['rideStatusHistory'] as List? ?? [])
-          .map((e) => RideStatus.fromJson(e))
-          .toList(),
-      customerRating: json['customerRating'] != null
-          ? Rating.fromJson(json['customerRating'])
-          : null,
-      driverRating: json['driverRating'] != null
-          ? Rating.fromJson(json['driverRating'])
-          : null,
+      rideStatusHistory:
+          (json['rideStatusHistory'] as List? ?? [])
+              .map((e) => RideStatus.fromJson(e))
+              .toList(),
+      customerRating:
+          json['customerRating'] != null
+              ? Rating.fromJson(json['customerRating'])
+              : null,
+      driverRating:
+          json['driverRating'] != null
+              ? Rating.fromJson(json['driverRating'])
+              : null,
       rideDurationSeconds: json['rideDurationSeconds'],
       rideDurationFormatted: json['rideDurationFormatted'],
     );
@@ -285,10 +293,7 @@ class RideStatus {
   RideStatus({this.status, this.timestamp});
 
   factory RideStatus.fromJson(Map<String, dynamic> json) {
-    return RideStatus(
-      status: json['status'],
-      timestamp: json['timestamp'],
-    );
+    return RideStatus(status: json['status'], timestamp: json['timestamp']);
   }
 }
 
@@ -299,9 +304,6 @@ class Rating {
   Rating({this.rating, this.review});
 
   factory Rating.fromJson(Map<String, dynamic> json) {
-    return Rating(
-      rating: json['rating'],
-      review: json['review'],
-    );
+    return Rating(rating: json['rating'], review: json['review']);
   }
 }
