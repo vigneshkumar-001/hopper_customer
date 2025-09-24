@@ -16,21 +16,26 @@ class RideHistoryController extends GetxController {
     super.onInit();
     getRideHistory();
   }
+
   Future<void> getRideHistory() async {
     isLoading.value = true;
     try {
       final results = await apiDataSource.getRideHistory();
       results.fold(
-            (failure) {
+        (failure) {
           AppLogger.log.e("❌ Ride history fetch failed: $failure");
         },
-            (response) {
+        (response) {
           rideHistoryList.assignAll(
-            response. remappedBookings .where((e) => e.bookingType == 'Ride').toList(),
+            response.remappedBookings
+                .where((e) => e.bookingType == 'Ride')
+                .toList(),
           );
 
           parcelHistoryList.assignAll(
-            response. remappedBookings .where((e) => e.bookingType == 'Parcel').toList(),
+            response.remappedBookings
+                .where((e) => e.bookingType == 'Parcel')
+                .toList(),
           );
 
           AppLogger.log.i(
@@ -44,6 +49,7 @@ class RideHistoryController extends GetxController {
       isLoading.value = false;
     }
   }
+
   // Future<void> getRideHistory() async {
   //   isLoading.value = true;
   //   try {
