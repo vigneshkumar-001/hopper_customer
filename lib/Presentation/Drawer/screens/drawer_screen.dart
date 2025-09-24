@@ -4,6 +4,7 @@ import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:get/get.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:hopper/Presentation/Drawer/screens/ride_and_package_history_screen.dart';
+import 'package:hopper/Presentation/Drawer/screens/settings_screen.dart';
 
 class DrawerScreen extends StatefulWidget {
   const DrawerScreen({super.key});
@@ -95,7 +96,12 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           thickness: 1.5,
                         ),
                         const SizedBox(height: 30),
-                        CustomTextFields.textWithStyles700('Settings'),
+                        InkWell(
+                          onTap: () {
+                            Get.to(() => SettingsScreen());
+                          },
+                          child: CustomTextFields.textWithStyles700('Settings'),
+                        ),
                       ],
                     ),
                   ),
