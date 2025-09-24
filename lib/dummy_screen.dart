@@ -581,6 +581,8 @@ class _DummyScreenState extends State<DummyScreen>
               Text(carDetails),
               Text('Plate Number: $plateNumber'),
               Text('Car Type: $CARTYPE'),
+              Text('OTP: $otp'),
+
             ],
           ),
         ],
