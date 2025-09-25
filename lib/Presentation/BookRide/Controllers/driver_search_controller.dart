@@ -200,7 +200,7 @@ class DriverSearchController extends GetxController {
           return failure.message;
         },
         (response) {
-          AppToasts.customToast(context, response.message);
+          // AppToasts.customToast(context, response.message);
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(

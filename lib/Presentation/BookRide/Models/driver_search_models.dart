@@ -64,9 +64,10 @@ class DriverData {
       onlineStatus: json['onlineStatus'] ?? false,
       sharedBooking: json['sharedBooking'] ?? false,
       updatedAt: DateTime.parse(json['updatedAt']),
-      requestDateAndTime: json['requestDateAndTime'] != null
-          ? DateTime.tryParse(json['requestDateAndTime'])
-          : null,
+      requestDateAndTime:
+          json['requestDateAndTime'] != null
+              ? DateTime.tryParse(json['requestDateAndTime'])
+              : null,
       requestStatus: json['requestStatus'],
       distance: (json['distance'] as num).toDouble(),
       estimatedPrice: (json['estimatedPrice'] as num).toDouble(),
@@ -74,7 +75,6 @@ class DriverData {
     );
   }
 }
-
 
 class DriverDetails {
   final String id;
