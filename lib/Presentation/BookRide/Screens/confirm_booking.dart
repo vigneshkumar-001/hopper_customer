@@ -378,31 +378,11 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                     AppLogger.log.i(result);
                     if (result != null) {
                       driverController.selectedCarType.value = '';
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => DummyScreen(
-                                pickupData: {
-                                  'description': widget.pickupAddress,
-                                  'lat': _pickupPosition?.latitude ?? 0.0,
-                                  'lng': _pickupPosition?.longitude ?? 0.0,
-                                },
-                                destinationData: {
-                                  'description': widget.destinationAddress,
-                                  'lat': _destinationPosition?.latitude ?? 0.0,
-                                  'lng': _destinationPosition?.longitude ?? 0.0,
-                                },
-                                pickupAddress: widget.pickupAddress,
-                                destinationAddress: widget.destinationAddress,
-                              ),
-                        ),
-                      );
                       // Navigator.push(
                       //   context,
                       //   MaterialPageRoute(
                       //     builder:
-                      //         (context) => OrderConfirmScreen(
+                      //         (context) => DummyScreen(
                       //           pickupData: {
                       //             'description': widget.pickupAddress,
                       //             'lat': _pickupPosition?.latitude ?? 0.0,
@@ -418,6 +398,26 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                       //         ),
                       //   ),
                       // );
+                 Navigator.push(
+                   context,
+                   MaterialPageRoute(
+                     builder:
+                         (context) => OrderConfirmScreen(
+                           pickupData: {
+                             'description': widget.pickupAddress,
+                             'lat': _pickupPosition?.latitude ?? 0.0,
+                             'lng': _pickupPosition?.longitude ?? 0.0,
+                           },
+                           destinationData: {
+                             'description': widget.destinationAddress,
+                             'lat': _destinationPosition?.latitude ?? 0.0,
+                             'lng': _destinationPosition?.longitude ?? 0.0,
+                           },
+                           pickupAddress: widget.pickupAddress,
+                           destinationAddress: widget.destinationAddress,
+                         ),
+                   ),
+                 );
                     }
                   },
                   text: 'Confirm',

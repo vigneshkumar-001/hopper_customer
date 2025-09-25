@@ -23,14 +23,14 @@ import 'package:get/get.dart';
 class PaymentScreen extends StatefulWidget {
   final String? bookingId;
   final int? amount;
-  final AddressModel sender;
-  final AddressModel receiver;
+  final AddressModel? sender;
+  final AddressModel? receiver;
   const PaymentScreen({
     super.key,
     this.bookingId,
     this.amount,
-    required this.sender,
-    required this.receiver,
+      this.sender,
+      this.receiver,
   });
 
   @override
@@ -620,12 +620,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 Expanded(
                   child: AppButtons.button(
                     onTap: () {
-                      packageController.sendPackageDriverRequest(
-                        bookingId: widget.bookingId ?? '',
-                        senderData: widget.sender,
-                        receiverData: widget.receiver,
-                      );
-                      //  _showRatingBottomSheet(context);
+                      // packageController.sendPackageDriverRequest(
+                      //   bookingId: widget.bookingId ?? '',
+                      //   senderData: widget.sender,
+                      //   receiverData: widget.receiver,
+                      // );
+                        _showRatingBottomSheet(context);
 
                       // Navigator.push(
                       //   context,

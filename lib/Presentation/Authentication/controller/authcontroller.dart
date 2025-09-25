@@ -5,6 +5,8 @@ import 'package:country_picker/country_picker.dart';
 import 'package:hopper/Presentation/Authentication/screens/otp_screens.dart';
 import 'package:hopper/api/dataSource/apiDataSource.dart';
 
+import '../../../Core/Utility/app_toasts.dart';
+
 var getMobileNumber = '';
 var countryCodes = '';
 String selectedCountryFlag = '';
@@ -45,7 +47,16 @@ class AuthController extends GetxController {
       final results = await apiDataSource.mobileNumberLogin(mobileNumber,countryCode);
       results.fold(
         (failure) {
+          // Get.snackbar(
+          //   "Error",
+          //   failure.message,
+          //   snackPosition: SnackPosition.TOP,
+          //   backgroundColor: Get.theme.colorScheme.secondary,
+          //   colorText: Get.theme.colorScheme.onSecondary,
+          // );
           isLoading.value = false;
+
+
         },
         (response) {
           isLoading.value = false;
