@@ -914,12 +914,12 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                           .value!
                                           .bookingId;
                                   print(bookingId);
-                                   Get.to(
-                                     () => PaymentScreen(
-                                       bookingId: bookingId,
-                                       amount: 1000,
-                                     ),
-                                   );
+                                  Get.to(
+                                    () => PaymentScreen(
+                                      bookingId: bookingId,
+                                      amount: Amount,
+                                    ),
+                                  );
                                 },
                               ),
                             ],

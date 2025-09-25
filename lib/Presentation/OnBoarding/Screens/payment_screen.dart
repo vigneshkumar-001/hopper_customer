@@ -29,8 +29,8 @@ class PaymentScreen extends StatefulWidget {
     super.key,
     this.bookingId,
     this.amount,
-      this.sender,
-      this.receiver,
+    this.sender,
+    this.receiver,
   });
 
   @override
@@ -38,6 +38,8 @@ class PaymentScreen extends StatefulWidget {
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
+  int selectedIndex = 3;
+
   final DriverSearchController driverSearchController =
       DriverSearchController();
   final PackageController packageController = Get.put(PackageController());
@@ -285,7 +287,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
         AppLogger.log.i('Confirm Payment Response: ${response.body}');
         if (response.statusCode == 200) {
-          _showRatingBottomSheet(context);
+          // _showRatingBottomSheet(context);
           AppLogger.log.i('✅ Payment response confirmed successfully');
         } else {
           AppLogger.log.i('❌ Failed to confirm payment response');
@@ -397,6 +399,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 : () async {
                                   setState(() {
                                     payPalLoading = true;
+                                    selectedIndex = 0; // 0 for PayPal
                                   });
 
                                   await payPall();
@@ -411,7 +414,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           padding: EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: AppColors.commonWhite,
-                            border: Border.all(color: AppColors.containerColor),
+                            border: Border.all(
+                              color:
+                                  selectedIndex == 0
+                                      ? Colors.black
+                                      : AppColors.containerColor,
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child:
@@ -474,6 +482,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             : () async {
                               setState(() {
                                 _isLoading = true;
+                                selectedIndex = 2;
                               });
 
                               await makePayment();
@@ -488,7 +497,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       padding: EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: AppColors.commonWhite,
-                        border: Border.all(color: AppColors.containerColor),
+                        border: Border.all(
+                          color:
+                              selectedIndex == 2
+                                  ? Colors.black
+                                  : AppColors.containerColor,
+                        ),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child:
@@ -555,7 +569,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                   SizedBox(height: 15),
                   PackageContainer.customWalletContainer(
-                    onTap: () {},
+                    borderColor:
+                        selectedIndex == 3
+                            ? Colors.black
+                            : AppColors.containerColor,
+                    onTap: () {
+                      setState(() {
+                        selectedIndex = 3; // Select Cash Payment
+                      });
+                    },
                     title: 'Cash Payment',
                     leadingImagePath: AppImages.cash,
                     trailing: Container(
@@ -618,25 +640,42 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
                 const SizedBox(width: 40),
                 Expanded(
-                  child: AppButtons.button(
-                    onTap: () {
-                      // packageController.sendPackageDriverRequest(
-                      //   bookingId: widget.bookingId ?? '',
-                      //   senderData: widget.sender,
-                      //   receiverData: widget.receiver,
-                      // );
-                        _showRatingBottomSheet(context);
-
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => PackageMapConfirmScreen(),
-                      //   ),
-                      // );
-                    },
-                    text: 'Continue',
-                  ),
+                  child: Obx(() {
+                    return AppButtons.button(
+                      onTap: () {
+                        packageController.sendPackageDriverRequest(
+                          bookingId: widget.bookingId ?? '',
+                          senderData: widget.sender!,
+                          receiverData: widget.receiver!,
+                        );
+                      },
+                      isLoading: packageController.isConfirmLoading.value,
+                      text: 'Continue',
+                    );
+                  }),
                 ),
+
+                // Expanded(
+                //   child: AppButtons.button(
+                //     onTap: () {
+                //       packageController.sendPackageDriverRequest(
+                //         bookingId: widget.bookingId ?? '',
+                //         senderData: widget.sender!,
+                //         receiverData: widget.receiver!,
+                //       );
+                //       // _showRatingBottomSheet(context);
+                //
+                //       // Navigator.push(
+                //       //   context,
+                //       //   MaterialPageRoute(
+                //       //     builder: (context) => PackageMapConfirmScreen(),
+                //       //   ),
+                //       // );
+                //     },
+                //     isLoading: packageController.isConfirmLoading.value,
+                //     text: 'Continue',
+                //   ),
+                // ),
               ],
             ),
           ),

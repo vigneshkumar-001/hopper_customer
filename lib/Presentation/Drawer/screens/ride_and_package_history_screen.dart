@@ -800,7 +800,7 @@ class _RideAndPackageHistoryScreenState
   @override
   void initState() {
     super.initState();
-    controller.getRideHistory();
+
     _tabController = TabController(length: 2, vsync: this);
   }
 

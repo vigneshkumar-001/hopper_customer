@@ -9,6 +9,7 @@ import 'package:hopper/api/dataSource/apiDataSource.dart';
 import 'package:hopper/dummy_screen.dart';
 
 import '../../../uitls/websocket/socket_io_client.dart';
+import '../../Drawer/controller/ride_history_controller.dart';
 import '../Screens/package_map_confrim_screen.dart';
 
 class PackageController extends GetxController {
@@ -18,10 +19,11 @@ class PackageController extends GetxController {
   final RxBool isConfirmLoading = false.obs;
   var packageDetails = Rxn<PackageDetailsResponse>();
   var confirmPackageDetails = Rxn<ConfirmPackageResponse>();
-
+  final RideHistoryController controller = Get.put(RideHistoryController());
   @override
   void onInit() {
     super.onInit();
+    controller.getRideHistory();
   }
 
   Future<String?> packageAddressDetails({
@@ -108,6 +110,7 @@ class PackageController extends GetxController {
           final double amount = response.data.amount;
           final String bookingId = response.data.bookingId;
           AppLogger.log.i(' ${amount},${bookingId}');
+
           Get.to(
             PaymentScreen(
               amount: amount.toInt(),

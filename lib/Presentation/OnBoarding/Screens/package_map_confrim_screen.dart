@@ -61,6 +61,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
   String ProfilePic = '';
   String BookingId = '';
   int? MaxWeight;
+  double Amount = 0.0;
   String PickupAddress = '';
   String DropAddress = '';
   bool _isOrderConfirmed = false;
@@ -180,6 +181,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
         MaxWeight = maxWeight;
         PickupAddress = pickupAddress;
         DropAddress = dropAddress;
+        Amount = amount;
       });
 
       AppLogger.log.i("🚕 Joined booking data: $data");
@@ -226,7 +228,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
       // 📦 Extract flags
       final basePayload = data['basePayload'] ?? {};
       final estimate = basePayload['getEstimateTime'] ?? {};
-
+      if (!mounted) return;
       setState(() {
         _isOrderConfirmed = basePayload['orderConfirmationStatus'] ?? false;
         _isEnRoute = basePayload['enRoute'] ?? false;
@@ -569,30 +571,30 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
               },
             ),
           ),
-          Positioned(
-            top: 330,
-            right: 10,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                color: AppColors.commonWhite,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Column(
-                  children: [
-                    CustomTextFields.textWithStyles600(
-                      '10:39',
-                      fontSize: 18,
-                      color: AppColors.walletCurrencyColor,
-                    ),
-                    CustomTextFields.textWithStylesSmall('minutes remaining'),
-                  ],
-                ),
-              ),
-            ),
-          ),
 
+          // Positioned(
+          //   top: 330,
+          //   right: 10,
+          //   child: Container(
+          //     decoration: BoxDecoration(
+          //       borderRadius: BorderRadius.circular(5),
+          //       color: AppColors.commonWhite,
+          //     ),
+          //     child: Padding(
+          //       padding: const EdgeInsets.all(5),
+          //       child: Column(
+          //         children: [
+          //           CustomTextFields.textWithStyles600(
+          //             '10:39',
+          //             fontSize: 18,
+          //             color: AppColors.walletCurrencyColor,
+          //           ),
+          //           CustomTextFields.textWithStylesSmall('minutes remaining'),
+          //         ],
+          //       ),
+          //     ),
+          //   ),
+          // ),
           DraggableScrollableSheet(
             key: ValueKey(_isDriverConfirmed),
 
@@ -723,11 +725,11 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                             imageSize: 24,
                             fontWeight: FontWeight.w600,
                             text:
-                            destinationReached
-                                ? 'Ride Completed'
-                                : driverStartedRide
-                                ? 'Ride in Progress'
-                                : 'Your ride is confirmed',
+                                destinationReached
+                                    ? 'Ride Completed'
+                                    : driverStartedRide
+                                    ? 'Ride in Progress'
+                                    : 'Your ride is confirmed',
                             colors: AppColors.commonBlack,
                             rightImagePath: AppImages.clrTick,
                           ),
@@ -759,7 +761,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                   Column(
                                     spacing: 5,
                                     crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                        CrossAxisAlignment.start,
                                     children: [
                                       CustomTextFields.textWithStylesSmall(
                                         'PKG - ${BookingId}',
@@ -801,7 +803,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                         fontSize: 14,
                                         'Vehicle: Bike ($plateNumber)',
                                         colors:
-                                        AppColors.rideShareContainerColor2,
+                                            AppColors.rideShareContainerColor2,
                                       ),
                                     ],
                                   ),
@@ -860,31 +862,31 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                               ),
                               Row(
                                 mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(''),
 
                                   otp == ''
                                       ? SizedBox.shrink()
                                       : Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(
-                                        6,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          color:
+                                              AppColors.userChatContainerColor,
+                                        ),
+                                        child:
+                                            CustomTextFields.textWithStyles600(
+                                              'OTP - $otp',
+                                              fontSize: 12,
+                                              color: AppColors.commonWhite,
+                                            ),
                                       ),
-                                      color:
-                                      AppColors.userChatContainerColor,
-                                    ),
-                                    child:
-                                    CustomTextFields.textWithStyles600(
-                                      'OTP - $otp',
-                                      fontSize: 12,
-                                      color: AppColors.commonWhite,
-                                    ),
-                                  ),
                                 ],
                               ),
                               SizedBox(height: 20),
@@ -923,18 +925,18 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                             const SizedBox(width: 30),
                                             Expanded(
                                               child:
-                                              CustomTextFields.textWithStylesSmall(
-                                                maxLines: 2,
-                                                fontWeight: FontWeight.w500,
-                                                colors:
-                                                _isDriverConfirmed
-                                                    ? AppColors
-                                                    .changeButtonColor
-                                                    : AppColors
-                                                    .greyDark,
-                                                _estimateStt2,
-                                                fontSize: 12,
-                                              ),
+                                                  CustomTextFields.textWithStylesSmall(
+                                                    maxLines: 2,
+                                                    fontWeight: FontWeight.w500,
+                                                    colors:
+                                                        _isDriverConfirmed
+                                                            ? AppColors
+                                                                .changeButtonColor
+                                                            : AppColors
+                                                                .greyDark,
+                                                    _estimateStt2,
+                                                    fontSize: 12,
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -947,41 +949,41 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                               SizedBox(height: 25),
                               _isOrderConfirmed && !_isPackageCollected
                                   ? PackageContainer.pickUpFields(
-                                imagePath: AppImages.clrTick1,
-                                title: 'Order Confirmed',
-                                subTitle: 'Courier En Route',
-                              )
+                                    imagePath: AppImages.clrTick1,
+                                    title: 'Order Confirmed',
+                                    subTitle: 'Courier En Route',
+                                  )
                                   : PackageContainer.pickUpFields(
-                                imagePath: AppImages.clrTick1,
-                                title: 'Package Collected',
-                                subTitle: '3:45 PM • From Madurai, TN',
-                              ),
+                                    imagePath: AppImages.clrTick1,
+                                    title: 'Package Collected',
+                                    subTitle: '3:45 PM • From Madurai, TN',
+                                  ),
                               const SizedBox(height: 10),
                               _isEnRoute && !_isInTransit
                                   ? PackageContainer.pickUpFields(
-                                imagePath: AppImages.clrDirection,
-                                title: 'Courier En Route',
-                                subTitle: 'Completed',
-                              )
+                                    imagePath: AppImages.clrDirection,
+                                    title: 'Courier En Route',
+                                    subTitle: 'Completed',
+                                  )
                                   : PackageContainer.pickUpFields(
-                                imagePath: AppImages.clrBox1,
-                                title: 'In Transit',
-                                subTitle: 'Completed • To Kalavasal, TN',
-                              ),
+                                    imagePath: AppImages.clrBox1,
+                                    title: 'In Transit',
+                                    subTitle: 'Completed • To Kalavasal, TN',
+                                  ),
                               const SizedBox(height: 10),
                               _isPackagePickup && !_isOutForDelivery
                                   ? PackageContainer.pickUpFields(
-                                title1: 'Ready',
-                                imagePath: AppImages.box,
-                                title: 'Package Pickup',
-                                subTitle: 'Ready for Pickup',
-                              )
+                                    title1: 'Ready',
+                                    imagePath: AppImages.box,
+                                    title: 'Package Pickup',
+                                    subTitle: 'Ready for Pickup',
+                                  )
                                   : PackageContainer.pickUpFields(
-                                title1: 'Ready',
-                                imagePath: AppImages.clrHome,
-                                title: 'Out for Delivery',
-                                subTitle: 'Attempting delivery',
-                              ),
+                                    title1: 'Ready',
+                                    imagePath: AppImages.clrHome,
+                                    title: 'Out for Delivery',
+                                    subTitle: 'Attempting delivery',
+                                  ),
 
                               SizedBox(height: 15),
                               Divider(color: AppColors.dividerColor1),
@@ -1066,7 +1068,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                           padding: const EdgeInsets.all(16.0),
                                           child: Row(
                                             crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Padding(
                                                 padding: const EdgeInsets.only(
@@ -1082,13 +1084,13 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                               Expanded(
                                                 child: Column(
                                                   crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                                      CrossAxisAlignment.start,
                                                   children: [
                                                     Text(
                                                       'Pickup Address',
                                                       style: TextStyle(
                                                         fontWeight:
-                                                        FontWeight.bold,
+                                                            FontWeight.bold,
                                                         fontSize: 14,
                                                       ),
                                                     ),
@@ -1117,7 +1119,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                           padding: const EdgeInsets.all(16.0),
                                           child: Row(
                                             crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Padding(
                                                 padding: const EdgeInsets.only(
@@ -1133,13 +1135,13 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                               Expanded(
                                                 child: Column(
                                                   crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                                      CrossAxisAlignment.start,
                                                   children: [
                                                     Text(
                                                       'Delivery Address',
                                                       style: TextStyle(
                                                         fontWeight:
-                                                        FontWeight.bold,
+                                                            FontWeight.bold,
                                                         fontSize: 14,
                                                       ),
                                                     ),
@@ -1170,7 +1172,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                           ),
                                           child: Row(
                                             mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                                MainAxisAlignment.center,
                                             children: [
                                               GestureDetector(
                                                 onTap: () {
@@ -1179,16 +1181,16 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                                   AppButtons.showPackageCancelBottomSheet(
                                                     context,
                                                     onConfirmCancel: (
-                                                        String selectedReason,
-                                                        ) {
+                                                      String selectedReason,
+                                                    ) {
                                                       driverSearchController
                                                           .cancelRide(
-                                                        bookingId:
-                                                        BookingId.toString(),
-                                                        selectedReason:
-                                                        selectedReason,
-                                                        context: context,
-                                                      );
+                                                            bookingId:
+                                                                BookingId.toString(),
+                                                            selectedReason:
+                                                                selectedReason,
+                                                            context: context,
+                                                          );
                                                     },
                                                   );
                                                 },
@@ -1205,7 +1207,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                                       style: TextStyle(
                                                         color: Colors.red,
                                                         fontWeight:
-                                                        FontWeight.w500,
+                                                            FontWeight.w500,
                                                       ),
                                                     ),
                                                   ],
@@ -1214,7 +1216,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                               Expanded(
                                                 child: Container(
                                                   height:
-                                                  24, // Set the height you need
+                                                      24, // Set the height you need
                                                   child: VerticalDivider(
                                                     color: Colors.grey,
                                                     thickness: 1,
@@ -1234,7 +1236,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                                     style: TextStyle(
                                                       color: Colors.black,
                                                       fontWeight:
-                                                      FontWeight.w500,
+                                                          FontWeight.w500,
                                                     ),
                                                   ),
                                                 ],
@@ -1278,8 +1280,8 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                               colors: AppColors.commonBlack,
                                               text: 'Total Fare',
                                               rightImagePath:
-                                              AppImages.nBlackCurrency,
-                                              rightImagePathText: ' 73',
+                                                  AppImages.nBlackCurrency,
+                                              rightImagePathText: ' $Amount',
                                             ),
 
                                             Spacer(),
@@ -1290,15 +1292,15 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                               ),
                                               decoration: BoxDecoration(
                                                 borderRadius:
-                                                BorderRadius.circular(6),
+                                                    BorderRadius.circular(6),
                                                 color: AppColors.commonBlack,
                                               ),
                                               child:
-                                              CustomTextFields.textWithStyles600(
-                                                'PKG - ${BookingId}',
-                                                color:
-                                                AppColors.commonWhite,
-                                              ),
+                                                  CustomTextFields.textWithStyles600(
+                                                    'PKG - ${BookingId}',
+                                                    color:
+                                                        AppColors.commonWhite,
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -1312,12 +1314,12 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                           width: 24,
                                         ),
                                         title:
-                                        CustomTextFields.textWithStylesSmall(
-                                          "Cash Payment",
-                                          fontSize: 15,
-                                          colors: AppColors.commonBlack,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                            CustomTextFields.textWithStylesSmall(
+                                              "Cash Payment",
+                                              fontSize: 15,
+                                              colors: AppColors.commonBlack,
+                                              fontWeight: FontWeight.w500,
+                                            ),
 
                                         trailing: Container(
                                           padding: EdgeInsets.symmetric(
@@ -1332,12 +1334,12 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                                 .withOpacity(0.1),
                                           ),
                                           child:
-                                          CustomTextFields.textWithStyles600(
-                                            fontSize: 10,
-                                            color:
-                                            AppColors.changeButtonColor,
-                                            'Change',
-                                          ),
+                                              CustomTextFields.textWithStyles600(
+                                                fontSize: 10,
+                                                color:
+                                                    AppColors.changeButtonColor,
+                                                'Change',
+                                              ),
                                         ),
                                         onTap: () {},
                                       ),
@@ -1348,18 +1350,18 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                           width: 32,
                                         ),
                                         title:
-                                        CustomTextFields.textWithStylesSmall(
-                                          "Pay using card, UPI & more",
-                                          fontSize: 15,
-                                          colors: AppColors.commonBlack,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                            CustomTextFields.textWithStylesSmall(
+                                              "Pay using card, UPI & more",
+                                              fontSize: 15,
+                                              colors: AppColors.commonBlack,
+                                              fontWeight: FontWeight.w500,
+                                            ),
 
                                         subtitle:
-                                        CustomTextFields.textWithStylesSmall(
-                                          'Pay during the ride to avoid cash payments',
-                                          fontSize: 10,
-                                        ),
+                                            CustomTextFields.textWithStylesSmall(
+                                              'Pay during the ride to avoid cash payments',
+                                              fontSize: 10,
+                                            ),
                                         trailing: Image.asset(
                                           AppImages.rightArrow,
                                           height: 20,
