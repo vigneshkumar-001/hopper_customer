@@ -32,7 +32,7 @@ class AppButtons {
       width: size,
 
       child: ElevatedButton(
-        onPressed: onTap,
+        onPressed: isLoading == true ? null : onTap,
         style: ElevatedButton.styleFrom(
           shape:
               hasBorder
@@ -47,42 +47,54 @@ class AppButtons {
           fixedSize: Size(150.w, 40.h),
           backgroundColor: buttonColor,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child:
+            isLoading == true
+                ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      textColor ?? Colors.white,
+                    ),
+                  ),
+                )
+                : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
 
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (imagePath != null) ...[
-              Image.asset(imagePath, height: 24.sp, width: 24.sp),
-              SizedBox(width: 10.w),
-            ],
-            Text(
-              text,
-              style: TextStyle(
-                fontFamily: "Roboto-normal",
-                fontSize: fontSize,
-                color: textColor,
-              ),
-            ),
-            if (rightImagePath != null) ...[
-              SizedBox(width: 10.w),
-              Image.asset(
-                rightImagePath,
-                height: 24.sp,
-                width: 24.sp,
-                color: AppColors.commonWhite,
-              ),
-              Text(
-                rightImagePathText.toString() ?? '',
-                style: TextStyle(
-                  fontFamily: "Roboto-normal",
-                  fontSize: 20,
-                  color: textColor,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (imagePath != null) ...[
+                      Image.asset(imagePath, height: 24.sp, width: 24.sp),
+                      SizedBox(width: 10.w),
+                    ],
+                    Text(
+                      text,
+                      style: TextStyle(
+                        fontFamily: "Roboto-normal",
+                        fontSize: fontSize,
+                        color: textColor,
+                      ),
+                    ),
+                    if (rightImagePath != null) ...[
+                      SizedBox(width: 10.w),
+                      Image.asset(
+                        rightImagePath,
+                        height: 24.sp,
+                        width: 24.sp,
+                        color: AppColors.commonWhite,
+                      ),
+                      Text(
+                        rightImagePathText.toString() ?? '',
+                        style: TextStyle(
+                          fontFamily: "Roboto-normal",
+                          fontSize: 20,
+                          color: textColor,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }
