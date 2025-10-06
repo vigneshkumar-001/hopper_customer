@@ -32,12 +32,17 @@ class OrderConfirmScreen extends StatefulWidget {
   final Map<String, dynamic> destinationData;
   final String pickupAddress;
   final String destinationAddress;
+  final double? baseFare;
+  final double? serviceFare;
+
   const OrderConfirmScreen({
     super.key,
     required this.pickupData,
     required this.destinationData,
     required this.pickupAddress,
     required this.destinationAddress,
+    this.baseFare,
+    this.serviceFare,
   });
 
   @override
@@ -45,12 +50,14 @@ class OrderConfirmScreen extends StatefulWidget {
 }
 
 class _OrderConfirmScreenState extends State<OrderConfirmScreen>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
   @override
   bool get wantKeepAlive => true;
+  bool isExpanded = false; // Track dropdown state
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _destController = TextEditingController();
   bool _isDrawingPolyline = false;
+  double _currentZoomLevel = 16.0; // Default zoom
 
   bool isDriverConfirmed = false;
   bool driverStartedRide = false;
@@ -67,6 +74,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   Marker? _driverMarker;
   Set<Marker> _markers = {};
   BitmapDescriptor? _carIcon;
+  BitmapDescriptor? _bikeIcon;
   LatLng? _currentPosition;
   LatLng? _customerLatLng;
   LatLng? _customerToLatLang;
@@ -80,15 +88,38 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   String CUSTOMERPHONE = '';
   String CARTYPE = '';
   String otp = '';
-  int Amount = 0;
+  double Amount = 0.0;
   Set<Polyline> _polylines = {};
+  bool isTripCancelled = false;
+  String cancelReason = "";
 
-  Future<void> _loadCustomMarker() async {
-    _carIcon = await BitmapDescriptor.asset(
-      height: 60,
-      ImageConfiguration(size: Size(52, 52)),
-      AppImages.carHop,
+  Future<void> _loadCustomMarkers() async {
+    _carIcon = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(size: Size(52, 52)),
+      AppImages.movingCar,
     );
+    _bikeIcon = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(size: Size(48, 48)),
+      AppImages.packageBike,
+    );
+  }
+
+  BitmapDescriptor _iconForVehicleType(String? type) {
+    final t = (type ?? '').toLowerCase();
+    switch (t) {
+      case 'bike':
+      case 'two_wheeler':
+      case '2w':
+      case 'motorbike':
+      case 'scooter':
+        return _bikeIcon ?? BitmapDescriptor.defaultMarker;
+      case 'car':
+      case 'sedan':
+      case 'hatchback':
+      case 'suv':
+      default:
+        return _carIcon ?? BitmapDescriptor.defaultMarker;
+    }
   }
 
   Future<void> _initLocation() async {
@@ -112,7 +143,14 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   @override
   void initState() {
     super.initState();
-    _loadCustomMarker();
+    _loadCustomMarkers().then((_) {
+      _setupSocketListeners();
+      _initLocation();
+      _goToCurrentLocation();
+    });
+  }
+
+  void _setupSocketListeners() {
     socketService.onConnect(() {
       AppLogger.log.i("✅ Socket connected on booking screen");
     });
@@ -129,7 +167,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
       final String color = vehicle['color'] ?? '';
       final String model = vehicle['model'] ?? '';
       final String brand = vehicle['brand'] ?? '';
-      final String carType = vehicle['carType'] ?? '';
+      final String serviceType = vehicle['serviceType'] ?? '';
       final bool driverAccepted = data['driver_accept_status'] == true;
       final String type = vehicle['type'] ?? '';
       final String plate = vehicle['plateNumber'] ?? '';
@@ -151,7 +189,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         carDetails = '$color - $brand';
         isDriverConfirmed = driverAccepted;
         CUSTOMERPHONE = customerPhone;
-        CARTYPE = carType;
+        CARTYPE = serviceType;
         Amount = amount;
       });
 
@@ -253,6 +291,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
         });
         Future.delayed(const Duration(seconds: 2), () {
           if (!mounted) return;
+          Get.to(() => PaymentScreen(bookingId: bookingId, amount: Amount));
         });
 
         AppLogger.log.i("driver_reached,$data");
@@ -261,131 +300,120 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     socketService.on('customer-cancelled', (data) async {
       AppLogger.log.i('customer-cancelled : $data');
 
-      if (data != null) {
-        if (data['status'] == true) {
-          Get.offAll(() => HomeScreens());
-        }
+      if (data != null && data['status'] == true) {
+        if (!mounted) return;
+
+        setState(() {
+          isTripCancelled = true;
+          cancelReason =
+              data['reason'] ?? "Driver had to cancel due to an emergency";
+        });
+
+        // Optional: Automatically go back after showing UI for some time
+        await Future.delayed(const Duration(seconds: 3));
+        if (!mounted) return;
+        Get.offAll(() => HomeScreens());
       }
     });
     socketService.on('driver-cancelled', (data) async {
       AppLogger.log.i('driver-cancelled : $data');
 
-      if (data != null) {
-        if (data['status'] == true) {
-          Get.offAll(() => HomeScreens());
-        }
+      if (data != null && data['status'] == true) {
+        if (!mounted) return;
+
+        setState(() {
+          isTripCancelled = true;
+          cancelReason =
+              data['reason'] ?? "Driver had to cancel due to an emergency";
+        });
+
+        // Optional: Automatically go back after showing UI for some time
+        await Future.delayed(const Duration(seconds: 3));
+        if (!mounted) return;
+        Get.offAll(() => HomeScreens());
       }
     });
+
     // 🔶 Optional fallback (if using 'tracked-driver-location' too)
     // socketService.on('tracked-driver-location', (data) {
     //   AppLogger.log.i("📡 tracked-driver-location received: $data");
     // });
-
-    _initLocation();
-    _goToCurrentLocation();
   }
 
   void _updateDriverMarker(LatLng position, double bearing) {
-    _driverMarker = Marker(
+    final newMarker = Marker(
       markerId: const MarkerId("driver_marker"),
       position: position,
       rotation: bearing,
-      icon:
-          _carIcon ??
-          BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+      icon: _iconForVehicleType(CARTYPE),
       anchor: const Offset(0.5, 0.5),
       flat: true,
     );
 
-    if (!mounted) return;
     setState(() {
-      // 🟢 Remove old marker and add updated one
-      _markers = {
-        ..._markers.where((m) => m.markerId != const MarkerId("driver_marker")),
-        _driverMarker!,
-      };
+      _markers.removeWhere((m) => m.markerId.value == "driver_marker");
+      _markers.add(newMarker);
+      _driverMarker = newMarker;
     });
   }
 
   Future<void> _animateCarTo(LatLng from, LatLng to) async {
-    const steps = 10;
-    const duration = Duration(milliseconds: 800);
-    final interval = duration.inMilliseconds ~/ steps;
+    if (!mounted || _mapController == null) return;
+
+    const int steps = 60; // number of animation steps
+    const int durationMs = 1200; // total animation duration
+    final int stepMs = (durationMs / steps).round();
 
     double currentBearing = _driverMarker?.rotation ?? 0;
 
     for (int i = 1; i <= steps; i++) {
-      await Future.delayed(Duration(milliseconds: interval));
+      if (!mounted) return;
 
-      final lat = _lerp(from.latitude, to.latitude, i / steps);
-      final lng = _lerp(from.longitude, to.longitude, i / steps);
+      await Future.delayed(Duration(milliseconds: stepMs));
+
+      final t = i / steps;
+      final lat = _lerp(from.latitude, to.latitude, t);
+      final lng = _lerp(from.longitude, to.longitude, t);
       final intermediate = LatLng(lat, lng);
-      double newBearing = _getBearing(from, intermediate);
 
-      if ((newBearing - currentBearing).abs() > 10) {
-        currentBearing = newBearing;
-      }
+      // Smooth bearing calculation
+      double newBearing = _getBearing(from, to);
+      final bearing = _lerpAngle(currentBearing, newBearing, t);
 
-      _updateDriverMarker(intermediate, currentBearing);
+      // Update marker only once per step
+      _updateDriverMarker(intermediate, bearing);
 
-      // ✅ Only auto-move camera if user is not interacting
-      if (Geolocator.distanceBetween(
-            _currentDriverLatLng!.latitude,
-            _currentDriverLatLng!.longitude,
-            intermediate.latitude,
-            intermediate.longitude,
-          ) >
-          1) {
-        _updateDriverMarker(intermediate, currentBearing);
-
-        if (_autoFollowEnabled) {
-          final zoom = await _mapController?.getZoomLevel() ?? 17;
-
+      // Move camera occasionally for smoothness
+      if (_autoFollowEnabled && i % 10 == 0) {
+        try {
           _mapController?.animateCamera(
             CameraUpdate.newCameraPosition(
               CameraPosition(
                 target: intermediate,
-                zoom: zoom,
-                tilt: 45, // optional
-                bearing: currentBearing, // 👈 map rotates with car
+                zoom: _currentZoomLevel,
+                tilt: 45,
+                bearing: bearing,
               ),
             ),
           );
+        } catch (e) {
+          AppLogger.log.e("⛔ animateCamera error: $e");
         }
       }
     }
 
-    _currentDriverLatLng = to;
-
-    if (driverStartedRide && _customerToLatLang != null) {
-      await _drawPolylineFromDriverToCustomer(
-        driverLatLng: to,
-        customerLatLng: _customerToLatLang!,
-      );
-    } else if (!driverStartedRide && _customerLatLng != null) {
-      await _drawPolylineFromDriverToCustomer(
-        driverLatLng: to,
-        customerLatLng: _customerLatLng!,
-      );
-    }
+    _currentDriverLatLng = to; // update current driver position
   }
 
-  /*  double _getBearing(LatLng start, LatLng end) {
-    final lat1 = start.latitude * math.pi / 180;
-    final lon1 = start.longitude * math.pi / 180;
-    final lat2 = end.latitude * math.pi / 180;
-    final lon2 = end.longitude * math.pi / 180;
+  double _lerp(double start, double end, double t) => start + (end - start) * t;
 
-    final dLon = lon2 - lon1;
+  double _lerpAngle(double start, double end, double t) {
+    double difference = end - start;
+    while (difference < -180) difference += 360;
+    while (difference > 180) difference -= 360;
+    return start + difference * t;
+  }
 
-    final y = math.sin(dLon) * math.cos(lat2);
-    final x =
-        math.cos(lat1) * math.sin(lat2) -
-        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
-
-    final bearing = math.atan2(y, x);
-    return (bearing * 180 / math.pi + 360) % 360;
-  }*/
   double _getBearing(LatLng start, LatLng end) {
     final lat1 = start.latitude * math.pi / 180;
     final lon1 = start.longitude * math.pi / 180;
@@ -393,25 +421,27 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
     final lon2 = end.longitude * math.pi / 180;
 
     final dLon = lon2 - lon1;
-
     final y = math.sin(dLon) * math.cos(lat2);
     final x =
         math.cos(lat1) * math.sin(lat2) -
         math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
 
-    final bearing = math.atan2(y, x);
-    return (bearing * 180 / math.pi + 360) % 360;
-  }
+    double bearing = (math.atan2(y, x) * 180 / math.pi + 360) % 360;
 
-  double _lerp(double start, double end, double t) {
-    return start + (end - start) * t;
+    // Smooth bearing over updates
+    if (_driverMarker != null) {
+      double prevBearing = _driverMarker!.rotation;
+      bearing = _lerpAngle(prevBearing, bearing, 0.2); // smoothing factor
+    }
+
+    return bearing;
   }
 
   Future<void> _drawPolylineFromDriverToCustomer({
     required LatLng driverLatLng,
     required LatLng customerLatLng,
   }) async {
-    if (_isDrawingPolyline) return; // prevent multiple calls
+    if (_isDrawingPolyline) return;
     _isDrawingPolyline = true;
 
     String apiKey = ApiConsents.googleMapApiKey;
@@ -478,6 +508,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
   final DriverSearchController driverSearchController = Get.put(
     DriverSearchController(),
   );
+  void _onCameraMove(CameraPosition position) {
+    _currentZoomLevel = position.zoom;
+  }
+
   @override
   Widget build(BuildContext context) {
     _startController.text = widget.pickupAddress;
@@ -490,22 +524,22 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
             height: 550,
             width: double.infinity,
             child: GoogleMap(
+              compassEnabled: false,
               onCameraMoveStarted: () {
                 _userInteractingWithMap = true;
                 _autoFollowEnabled = false;
 
                 _autoFollowTimer?.cancel();
 
-                // Re-enable auto-follow after 10 seconds
                 _autoFollowTimer = Timer(Duration(seconds: 10), () {
                   _autoFollowEnabled = true;
                   _userInteractingWithMap = false;
                 });
               },
-
+              onCameraMove: _onCameraMove,
               initialCameraPosition: CameraPosition(
                 target: _currentPosition ?? LatLng(9.9144908, 78.0970899),
-                zoom: 16,
+                zoom: _currentZoomLevel,
               ),
               markers: _markers,
               onMapCreated: (controller) async {
@@ -514,6 +548,8 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                   context,
                 ).loadString('assets/map_style/map_style1.json');
                 _mapController?.setMapStyle(style);
+
+                _autoFollowEnabled = true; // Enable auto-follow
               },
               polylines: _polylines,
               myLocationEnabled: true,
@@ -526,6 +562,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
               },
             ),
           ),
+
           Positioned(
             top: 350,
             right: 10,
@@ -541,7 +578,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
             key: ValueKey(isDriverConfirmed),
             initialChildSize: isDriverConfirmed ? 0.65 : 0.5,
             minChildSize: 0.4,
-            maxChildSize: isDriverConfirmed ? 0.9 : 0.75,
+            maxChildSize: isDriverConfirmed ? 0.9 : 0.80,
             builder: (context, scrollController) {
               return Container(
                 padding: EdgeInsets.symmetric(horizontal: 15),
@@ -550,6 +587,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: ListView(
+                  physics: BouncingScrollPhysics(),
                   controller: scrollController,
                   children: [
                     Center(
@@ -666,6 +704,42 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                         text: 'Cancel Ride',
                       ),
                     ] else ...[
+                      /* if (isTripCancelled)
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.cancel, color: Colors.red),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Your trip has been cancelled",
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      cancelReason,
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
                       Center(
                         child: CustomTextFields.textWithImage(
                           fontSize: 20,
@@ -680,7 +754,59 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                           colors: AppColors.commonBlack,
                           rightImagePath: AppImages.clrTick,
                         ),
-                      ),
+                      ),*/
+                      if (isTripCancelled)
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.cancel, color: Colors.red),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Your trip has been cancelled",
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      cancelReason,
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        // RIDE COMPLETED / IN PROGRESS / CONFIRMED UI
+                        Center(
+                          child: CustomTextFields.textWithImage(
+                            fontSize: 20,
+                            imageSize: 24,
+                            fontWeight: FontWeight.w600,
+                            text:
+                                destinationReached
+                                    ? 'Ride Completed'
+                                    : driverStartedRide
+                                    ? 'Ride in Progress'
+                                    : 'Your ride is confirmed',
+                            colors: AppColors.commonBlack,
+                            rightImagePath: AppImages.clrTick,
+                          ),
+                        ),
 
                       SizedBox(height: 12),
                       Row(
@@ -813,46 +939,208 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 10,
                                 ),
-                                child: Row(
+                                child: Column(
                                   children: [
-                                    CustomTextFields.textWithImage(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16,
-                                      colors: AppColors.commonBlack,
-                                      text: 'Total Fare',
-                                      rightImagePath: AppImages.nBlackCurrency,
-                                      rightImagePathText: ' $Amount',
+                                    Row(
+                                      children: [
+                                        CustomTextFields.textWithImage(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
+                                          colors: AppColors.commonBlack,
+                                          text: 'Total Fare',
+                                          rightImagePath:
+                                              AppImages.nBlackCurrency,
+                                          rightImagePathText: ' $Amount',
+                                        ),
+
+                                        Spacer(),
+                                        otp == ''
+                                            ? SizedBox.shrink()
+                                            : Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 10,
+                                                vertical: 6,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                color:
+                                                    AppColors
+                                                        .userChatContainerColor,
+                                              ),
+                                              child:
+                                                  CustomTextFields.textWithStyles600(
+                                                    'OTP - $otp',
+                                                    fontSize: 16,
+                                                    color:
+                                                        AppColors.commonWhite,
+                                                  ),
+                                            ),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0,
+                                      ),
+                                      child: InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            isExpanded = !isExpanded;
+                                          });
+                                        },
+                                        child: Row(
+                                          children: [
+                                            CustomTextFields.textWithStylesSmall(
+                                              'View Details',
+                                              colors:
+                                                  AppColors.changeButtonColor,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            AnimatedRotation(
+                                              turns: isExpanded ? 0.5 : 0,
+                                              duration: const Duration(
+                                                milliseconds: 300,
+                                              ),
+                                              child: Image.asset(
+                                                AppImages.dropDown,
+                                                height: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
 
-                                    Spacer(),
-                                    otp == ''
-                                        ? SizedBox.shrink()
-                                        : Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 6,
+                                    AnimatedSwitcher(
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
+                                      switchInCurve: Curves.easeInOut,
+                                      switchOutCurve: Curves.easeInOut,
+                                      transitionBuilder: (child, animation) {
+                                        return SizeTransition(
+                                          sizeFactor: animation,
+                                          axisAlignment: -1, // expand downwards
+                                          child: FadeTransition(
+                                            opacity: animation,
+                                            child: child,
                                           ),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                            color:
-                                                AppColors
-                                                    .userChatContainerColor,
-                                          ),
-                                          child:
-                                              CustomTextFields.textWithStyles600(
-                                                'OTP - $otp',
-                                                fontSize: 16,
-                                                color: AppColors.commonWhite,
+                                        );
+                                      },
+                                      child:
+                                          isExpanded
+                                              ? Column(
+                                                key: const ValueKey("expanded"),
+                                                children: [
+                                                  const SizedBox(height: 10),
+
+                                                  Container(
+                                                    margin:
+                                                        const EdgeInsets.only(
+                                                          top: 10,
+                                                        ),
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                          10,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      border: Border.all(
+                                                        color: AppColors
+                                                            .commonBlack
+                                                            .withOpacity(0.1),
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Text(
+                                                          "Fare Breakdown",
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 5,
+                                                        ),
+
+                                                        /// Base fare
+                                                        Row(
+                                                          children: [
+                                                            CustomTextFields.textWithStylesSmall(
+                                                              'Base Fare',
+                                                            ),
+                                                            const Spacer(),
+                                                            CustomTextFields.textWithImage(
+                                                              colors:
+                                                                  AppColors
+                                                                      .commonBlack,
+                                                              text:
+                                                                  widget
+                                                                      .baseFare
+                                                                      .toString() ??
+                                                                  '0',
+                                                              imagePath:
+                                                                  AppImages
+                                                                      .nBlackCurrency,
+                                                            ),
+                                                          ],
+                                                        ),
+
+                                                        const SizedBox(
+                                                          height: 10,
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            CustomTextFields.textWithStylesSmall(
+                                                              'Service Fare',
+                                                            ),
+                                                            const Spacer(),
+                                                            CustomTextFields.textWithImage(
+                                                              colors:
+                                                                  AppColors
+                                                                      .commonBlack,
+                                                              text:
+                                                                  widget
+                                                                      .serviceFare
+                                                                      .toString() ??
+                                                                  '0',
+                                                              imagePath:
+                                                                  AppImages
+                                                                      .nBlackCurrency,
+                                                            ),
+                                                          ],
+                                                        ),
+
+                                                        const SizedBox(
+                                                          height: 10,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                ],
+                                              )
+                                              : const SizedBox.shrink(
+                                                key: ValueKey("collapsed"),
                                               ),
-                                        ),
+                                    ),
                                   ],
                                 ),
                               ),
-                              Divider(color: AppColors.containerColor),
+                              SizedBox(height: 5),
 
-                              ListTile(
+                              // Divider(color: AppColors.containerColor),
+
+                              /*ListTile(
                                 leading: Image.asset(
                                   AppImages.cash,
                                   height: 24,
@@ -921,7 +1209,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                     ),
                                   );
                                 },
-                              ),
+                              ),*/
                             ],
                           ),
                         ),
@@ -1048,7 +1336,10 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                                             : ' Cancel Ride',
                                     fontWeight: FontWeight.w500,
                                     colors: AppColors.cancelRideColor,
-                                    imagePath: AppImages.cancel,
+                                    imagePath:
+                                        otp.isNotEmpty
+                                            ? null
+                                            : AppImages.cancel,
                                   ),
                                   SizedBox(width: 10),
                                   Container(
@@ -1068,7 +1359,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
 
                                   SizedBox(width: 10),
                                   Container(
-                                    height: 24, // Set the height you need
+                                    height: 24,
                                     child: VerticalDivider(
                                       color: Colors.grey,
                                       thickness: 1,
@@ -1097,6 +1388,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen>
                           ],
                         ),
                       ),
+                      SizedBox(height: 20),
                     ],
                   ],
                 ),

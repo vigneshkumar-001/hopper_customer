@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
 import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:get/get.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/Presentation/Drawer/controller/profle_cotroller.dart';
+import 'package:hopper/Presentation/Drawer/screens/notification_screens.dart';
 import 'package:hopper/Presentation/Drawer/screens/ride_and_package_history_screen.dart';
 import 'package:hopper/Presentation/Drawer/screens/settings_screen.dart';
+import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
+import 'package:hopper/Presentation/wallet/screens/wallet_screens.dart';
 
 class DrawerScreen extends StatefulWidget {
   const DrawerScreen({super.key});
@@ -14,6 +20,13 @@ class DrawerScreen extends StatefulWidget {
 }
 
 class _DrawerScreenState extends State<DrawerScreen> {
+  final ProfleCotroller controller = Get.put(ProfleCotroller());
+  @override
+  void initState() {
+    super.initState();
+    controller.getProfileData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,19 +95,39 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         ),
 
                         const SizedBox(height: 30),
-                        CustomTextFields.textWithStyles700('Notifications'),
-                        const SizedBox(height: 20),
+                        InkWell(
+                          onTap: () {
+                            Get.to(() => WalletScreen());
+                          },
+                          child: CustomTextFields.textWithStyles700('Wallet'),
+                        ),
+                        const SizedBox(height: 15),
                         Divider(
                           color: AppColors.dividerColor.withOpacity(0.1),
                           thickness: 1.5,
                         ),
+
                         const SizedBox(height: 30),
-                        CustomTextFields.textWithStyles700('Help'),
+                        InkWell(
+                          onTap: () {
+                            Get.to(() => NotificationScreen());
+                          },
+                          child: CustomTextFields.textWithStyles700(
+                            'Notifications',
+                          ),
+                        ),
                         const SizedBox(height: 20),
                         Divider(
                           color: AppColors.dividerColor.withOpacity(0.1),
                           thickness: 1.5,
                         ),
+                        // const SizedBox(height: 30),
+                        // CustomTextFields.textWithStyles700('Help'),
+                        // const SizedBox(height: 20),
+                        // Divider(
+                        //   color: AppColors.dividerColor.withOpacity(0.1),
+                        //   thickness: 1.5,
+                        // ),
                         const SizedBox(height: 30),
                         InkWell(
                           onTap: () {
@@ -108,6 +141,103 @@ class _DrawerScreenState extends State<DrawerScreen> {
                 ),
                 Divider(color: AppColors.dividerColor1, thickness: 2),
                 Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 5,
+                  ),
+                  child: Obx(() {
+                    final user = controller.user.value;
+                    if (user == null) {
+                      return const SizedBox();
+                    }
+
+                    return Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child: CachedNetworkImage(
+                            imageUrl: user.profileImage ?? '',
+                            height: 45,
+                            width: 45,
+                            fit: BoxFit.cover,
+                            placeholder:
+                                (context, url) => SizedBox(
+                                  height: 45,
+                                  width: 45,
+                                  child: const Center(
+                                    child: SizedBox(
+                                      height: 15,
+                                      width: 15,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            errorWidget:
+                                (context, url, error) => Container(
+                                  height: 45,
+                                  width: 45,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[300],
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: Colors.white,
+                                    size: 25,
+                                  ),
+                                ),
+                          ),
+                        ),
+                        const SizedBox(width: 15),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                CustomTextFields.textWithStyles600(
+                                  fontSize: 20,
+                                  '${user.firstName ?? ''} ',
+                                ),
+                                const SizedBox(width: 15),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.commonWhite,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Image.asset(
+                                        AppImages.star,
+                                        height: 15,
+                                        color: AppColors.walletCurrencyColor,
+                                      ),
+                                      const SizedBox(width: 5),
+                                      CustomTextFields.textWithStyles600(
+                                        fontSize: 15,
+                                        '${user.customerRating?.averageRating?.toStringAsFixed(2) ?? '0.0'}',
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            CustomTextFields.textWithStylesSmall(
+                              '${user.countryCode ?? ''} ${user.phone ?? ''}',
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }),
+                ),
+
+                /*Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 15,
                     vertical: 5,
@@ -166,7 +296,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       ),
                     ],
                   ),
-                ),
+                ),*/
                 Divider(color: AppColors.dividerColor1, thickness: 2),
               ],
             ),

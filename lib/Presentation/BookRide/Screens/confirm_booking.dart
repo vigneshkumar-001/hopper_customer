@@ -398,26 +398,28 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                       //         ),
                       //   ),
                       // );
-                 Navigator.push(
-                   context,
-                   MaterialPageRoute(
-                     builder:
-                         (context) => OrderConfirmScreen(
-                           pickupData: {
-                             'description': widget.pickupAddress,
-                             'lat': _pickupPosition?.latitude ?? 0.0,
-                             'lng': _pickupPosition?.longitude ?? 0.0,
-                           },
-                           destinationData: {
-                             'description': widget.destinationAddress,
-                             'lat': _destinationPosition?.latitude ?? 0.0,
-                             'lng': _destinationPosition?.longitude ?? 0.0,
-                           },
-                           pickupAddress: widget.pickupAddress,
-                           destinationAddress: widget.destinationAddress,
-                         ),
-                   ),
-                 );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => OrderConfirmScreen(
+                                baseFare:allData?.baseFare?? 0.0 ,
+                                serviceFare:allData?.serviceFare?? 0.0 ,
+                                pickupData: {
+                                  'description': widget.pickupAddress,
+                                  'lat': _pickupPosition?.latitude ?? 0.0,
+                                  'lng': _pickupPosition?.longitude ?? 0.0,
+                                },
+                                destinationData: {
+                                  'description': widget.destinationAddress,
+                                  'lat': _destinationPosition?.latitude ?? 0.0,
+                                  'lng': _destinationPosition?.longitude ?? 0.0,
+                                },
+                                pickupAddress: widget.pickupAddress,
+                                destinationAddress: widget.destinationAddress,
+                              ),
+                        ),
+                      );
                     }
                   },
                   text: 'Confirm',

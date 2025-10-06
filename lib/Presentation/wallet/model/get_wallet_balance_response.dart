@@ -24,8 +24,8 @@ class GetWalletBalanceResponse {
 }
 
 class WalletBalance {
-  final int? customerWalletBalance;
-  final int minimumWalletAddBalance;
+  final String customerWalletBalance;
+  final String minimumWalletAddBalance;
 
   WalletBalance({
     required this.customerWalletBalance,
@@ -34,8 +34,8 @@ class WalletBalance {
 
   factory WalletBalance.fromJson(Map<String, dynamic> json) {
     return WalletBalance(
-      customerWalletBalance: json['customerWalletBalance'] ?? 0,
-      minimumWalletAddBalance: json['minimumWalletAddBalance'] ?? 0,
+      customerWalletBalance: json['customerWalletBalance'] ?? '0',
+      minimumWalletAddBalance: json['minimumWalletAddBalance'] ?? '0',
     );
   }
 

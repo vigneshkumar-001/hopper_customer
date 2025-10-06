@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Presentation/Drawer/models/ride_history_response.dart';
 import 'package:hopper/Presentation/wallet/model/get_wallet_balance_response.dart';
+import 'package:hopper/Presentation/wallet/model/transaction_response.dart';
 import 'package:hopper/Presentation/wallet/model/wallet_response.dart';
 import 'package:hopper/Presentation/wallet/screens/wallet_payment_screens.dart';
 
@@ -12,13 +13,15 @@ class WalletController extends GetxController {
   final ApiDataSource apiDataSource = ApiDataSource();
   Rx<WalletResponse?> walletData = Rx<WalletResponse?>(null);
   Rx<WalletBalance?> walletBalance = Rx<WalletBalance?>(null);
+  RxList<Transaction> traction = RxList<Transaction>([]);
 
   final RxBool isLoading = false.obs;
-
+  var balance = 0.0.obs; // <- Balance variable
   @override
   void onInit() {
     super.onInit();
     getWalletBalance();
+    customerWalletHistory();
   }
 
   Future<void> addWallet({
@@ -33,6 +36,7 @@ class WalletController extends GetxController {
       );
       results.fold(
         (failure) {
+
           AppLogger.log.e("❌ Ride history fetch failed: $failure");
         },
         (response) {
@@ -68,6 +72,29 @@ class WalletController extends GetxController {
           walletBalance.value = response.data;
           AppLogger.log.i("✅ Raw response: ${response.toJson()}");
           return response.data.toString();
+        },
+      );
+    } catch (e) {
+      AppLogger.log.e("❌ Exception while fetching rides: $e");
+    } finally {
+      isLoading.value = false;
+    }
+    return null;
+  }
+
+  Future<void> customerWalletHistory() async {
+    isLoading.value = true;
+    try {
+      final results = await apiDataSource.customerWalletHistory();
+      results.fold(
+        (failure) {
+          AppLogger.log.e("❌ Ride history fetch failed: $failure");
+        },
+        (response) {
+          traction.value = response.transactions;
+          balance.value = response.balance; // ← store balance
+          AppLogger.log.i("✅ Raw response: ${response.transactions}");
+          return response.transactions.toString();
         },
       );
     } catch (e) {

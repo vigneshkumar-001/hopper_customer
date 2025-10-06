@@ -120,40 +120,48 @@ class _OtpScreensState extends State<OtpScreens> {
                                       otpController.otpVerify(
                                         otp: otp.text,
                                         onSuccess: () async {
-                                          if (mounted) {
-                                            LocationPermission permission =
-                                                await Geolocator.checkPermission();
-                                            bool serviceEnabled =
-                                                await Geolocator.isLocationServiceEnabled();
-
-                                            if (serviceEnabled &&
-                                                (permission ==
-                                                        LocationPermission
-                                                            .always ||
-                                                    permission ==
-                                                        LocationPermission
-                                                            .whileInUse)) {
-                                              // ✅ Already granted → go home
-                                              Navigator.pushReplacement(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder:
-                                                      (context) =>
-                                                          CommonBottomNavigation(),
-                                                ),
-                                              );
-                                            } else {
-                                              // 🚪 Not granted → show permission screen
-                                              Navigator.pushReplacement(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder:
-                                                      (context) =>
-                                                          PermissionScreens(),
-                                                ),
-                                              );
-                                            }
-                                          }
+                                          Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                  PermissionScreens(),
+                                            ),
+                                          );
+                                          // if (mounted) {
+                                          //   LocationPermission permission =
+                                          //       await Geolocator.checkPermission();
+                                          //   bool serviceEnabled =
+                                          //       await Geolocator.isLocationServiceEnabled();
+                                          //
+                                          //   if (serviceEnabled &&
+                                          //       (permission ==
+                                          //               LocationPermission
+                                          //                   .always ||
+                                          //           permission ==
+                                          //               LocationPermission
+                                          //                   .whileInUse)) {
+                                          //     // ✅ Already granted → go home
+                                          //     Navigator.pushReplacement(
+                                          //       context,
+                                          //       MaterialPageRoute(
+                                          //         builder:
+                                          //             (context) =>
+                                          //                 CommonBottomNavigation(),
+                                          //       ),
+                                          //     );
+                                          //   } else {
+                                          //     // 🚪 Not granted → show permission screen
+                                          //     Navigator.pushReplacement(
+                                          //       context,
+                                          //       MaterialPageRoute(
+                                          //         builder:
+                                          //             (context) =>
+                                          //                 PermissionScreens(),
+                                          //       ),
+                                          //     );
+                                          //   }
+                                          // }
 
                                           /*      if (mounted) {
                                             Navigator.pushReplacement(

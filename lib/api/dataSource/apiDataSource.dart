@@ -7,11 +7,15 @@ import 'package:hopper/Presentation/Authentication/models/otp_response.dart';
 import 'package:hopper/Presentation/BookRide/Models/create_booking_model.dart';
 import 'package:hopper/Presentation/BookRide/Models/driver_search_models.dart';
 import 'package:hopper/Presentation/BookRide/Models/send_driver_request_models.dart';
+import 'package:hopper/Presentation/Drawer/models/notification_response.dart';
+import 'package:hopper/Presentation/Drawer/models/profile_response.dart';
 import 'package:hopper/Presentation/Drawer/models/ride_history_response.dart';
+import 'package:hopper/Presentation/Drawer/models/user_submit_response.dart';
 import 'package:hopper/Presentation/OnBoarding/models/address_models.dart';
 import 'package:hopper/Presentation/OnBoarding/models/confrom_package_response.dart';
 import 'package:hopper/Presentation/OnBoarding/models/package_details_response.dart';
 import 'package:hopper/Presentation/wallet/model/get_wallet_balance_response.dart';
+import 'package:hopper/Presentation/wallet/model/transaction_response.dart';
 import 'package:hopper/Presentation/wallet/model/wallet_response.dart';
 
 import 'package:hopper/api/repository/api_consents.dart';
@@ -42,7 +46,7 @@ class ApiDataSource extends BaseApiDataSource {
       final String phone = countryCode + mobileNumber;
       dynamic response = await Request.sendRequest(
         url,
-        {"phone": phone},
+        {"phone": mobileNumber,'countryCode': countryCode},
         'Post',
         false,
       );
@@ -83,6 +87,7 @@ class ApiDataSource extends BaseApiDataSource {
         return Left(ServerFailure((response as DioException).message ?? ""));
       }
     } catch (e) {
+      AppLogger.log.e(e);
       return Left(ServerFailure(''));
     }
   }
@@ -556,4 +561,136 @@ class ApiDataSource extends BaseApiDataSource {
       return Left(ServerFailure('Something went wrong'));
     }
   }
+
+  Future<Either<Failure, TransactionResponse>> customerWalletHistory() async {
+    try {
+      final url = ApiConsents.customerWalletHistory;
+      AppLogger.log.i(url);
+
+      dynamic response = await Request.sendRequest(url, {}, 'GET', false);
+
+      if (response.statusCode == 200) {
+        if (response.data['success'] == true) {
+          return Right(TransactionResponse.fromJson(response.data));
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Login failed"),
+          );
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
+  Future<Either<Failure, ProfileResponse>> getProfileData() async {
+    try {
+      final url = ApiConsents.getCustomerDetails;
+      AppLogger.log.i(url);
+
+      dynamic response = await Request.sendRequest(url, {}, 'GET', false);
+
+      if (response.statusCode == 200) {
+        if (response.data['success'] == true) {
+          return Right(ProfileResponse.fromJson(response.data));
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Login failed"),
+          );
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
+  Future<Either<Failure, UserSubmitResponse>> submitProfileData({
+    required String firstName,
+    required String lastName,
+    required String dateOfBirth,
+    required String gender,
+    required String email,
+    required String profileImage,
+  }) async {
+    try {
+      final url = ApiConsents.postCustomerDetails;
+      AppLogger.log.i(url);
+
+      dynamic response = await Request.sendRequest(
+        url,
+        {
+          "firstName": firstName,
+
+          "dateOfBirth": dateOfBirth,
+          "gender": gender,
+          "email": email,
+          "profileImage": profileImage,
+        },
+        'POST',
+        false,
+      );
+
+      if (response.statusCode == 200) {
+        if (response.data['success'] == true) {
+          return Right(UserSubmitResponse.fromJson(response.data));
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Login failed"),
+          );
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
+  Future<Either<Failure, NotificationResponse>> getNotification() async {
+    try {
+      final url = ApiConsents.notification;
+      AppLogger.log.i(url);
+
+      dynamic response = await Request.sendGetRequest(url, {}, 'GET', false);
+
+      if (response.statusCode == 200) {
+        if (response.data['success'] == true) {
+          return Right(NotificationResponse.fromJson(response.data));
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Login failed"),
+          );
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
 }

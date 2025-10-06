@@ -18,8 +18,10 @@ class CustomTextFields {
     ValueChanged<String>? onChanged,
     required String hintText,
     VoidCallback? onTap,
-    bool isReadOnly = true,
+    bool readOnly = false,
     Widget? suffixIcon,
+    bool filled  = false,
+    Color? filledColor ,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,10 +40,12 @@ class CustomTextFields {
             color: Color(0xff111111),
             fontWeight: FontWeight.w500,
           ),
-          readOnly: isReadOnly,
+          readOnly: readOnly,
           onTap: onTap,
           onChanged: onChanged,
           decoration: InputDecoration(
+            filled: filled, // ✅ enable filled background
+            fillColor: filledColor, // ✅ white background (#FFFFFF)
             hintText: hintText,
             hintStyle: TextStyle(color: Color(0xff666666)),
             suffixIcon: suffixIcon,
@@ -70,6 +74,9 @@ class CustomTextFields {
     ValueChanged<String>? onChanged,
     required String hintText,
     required TextEditingController controller,
+    bool filled  = false,
+    Color? filledColor ,
+    bool readOnly = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,9 +94,11 @@ class CustomTextFields {
             fontWeight: FontWeight.w500,
           ),
           controller: controller,
-          readOnly: true,
+          readOnly: readOnly,
           validator: validator,
           decoration: InputDecoration(
+            filled: filled, // ✅ enable filled background
+            fillColor: filledColor, // ✅ white background (#FFFFFF)
             errorBorder: const OutlineInputBorder(
               borderSide: BorderSide(color: Colors.red),
             ),
@@ -180,6 +189,8 @@ class CustomTextFields {
     ValueChanged<String>? onChanged,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
+    bool filled  = false,
+    Color? filledColor ,
 
     bool readOnly = false,
   }) {
@@ -210,6 +221,8 @@ class CustomTextFields {
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
+            filled: filled, // ✅ enable filled background
+            fillColor: filledColor, // ✅ white background (#FFFFFF)
             hintText: hintText,
             hintStyle: TextStyle(color: Color(0xff666666)),
             border: OutlineInputBorder(

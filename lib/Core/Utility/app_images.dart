@@ -17,6 +17,7 @@ class AppImages {
   static String search = "assets/images/search.png";
   static String recentHistory = "assets/images/recentHistory.png";
   static String advertisement = "assets/images/advertisement.png";
+  static String dropDown = "assets/images/dropDown.png";
   static String bCar = "assets/images/bCar.png";
   static String bPackage = "assets/images/bPackage.png";
   static String bProfile = "assets/images/bProfile.png";
@@ -75,10 +76,23 @@ class AppImages {
   static String stripe = "assets/images/stripe.png";
   static String packageBike = "assets/images/packageBike.png";
 
-
   static String star1 = "assets/images/star1.png";
   static String starFill = "assets/images/starFill.png";
   static String packageLoading = "assets/images/packageLoading.png";
   static String hopprWallet = "assets/images/hopprWallet.png";
   static String trans = "assets/images/trans.png";
+
+
+  static String refund = "assets/images/refund.png";
+  static String wallet_top = "assets/images/wallet_top.png";
+  static String tripPayment = "assets/images/tripPayment.png";
+  static String packageDelivery = "assets/images/packageDelivery.png";
+
+
+  static String nCar = "assets/images/nCar.png";
+  static String twoPeople = "assets/images/twoPeople.png";
+  static String nPackage = "assets/images/nPackage.png";
+  static String clock = "assets/images/clock.png";
+
+
 }

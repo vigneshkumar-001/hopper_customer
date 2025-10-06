@@ -3,6 +3,7 @@ import 'package:hopper/Core/Consents/app_colors.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/BookRide/Screens/book_map_screen.dart';
 import 'package:hopper/Presentation/BookRide/Screens/search_screen.dart';
+import 'package:hopper/Presentation/Drawer/screens/settings_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
@@ -44,12 +45,12 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
       case 1:
         return BookRideSearchScreen();
       case 2:
-        return WalletScreens();
+        return WalletScreen();
 
       case 3:
         return PackageScreens();
       case 4:
-        return ChatScreen(bookingId: '');
+        return SettingsScreen();
       default:
         return HomeScreens();
     }
@@ -63,15 +64,19 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     return WillPopScope(
       onWillPop: () async {
         return false;
       },
       child: NoInternetOverlay(
         child: Scaffold(
+          resizeToAvoidBottomInset: true,
           backgroundColor: Colors.white,
           body: _getScreen(_selectedIndex),
-          bottomNavigationBar: BottomNavigationBar(
+          bottomNavigationBar: isKeyboardVisible
+              ? null
+              :BottomNavigationBar(
             backgroundColor: AppColors.commonWhite,
             type: BottomNavigationBarType.fixed,
             currentIndex: _selectedIndex,

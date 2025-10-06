@@ -97,7 +97,7 @@ class DriverSearchController extends GetxController {
           carBooking.value = response.data;
 
           final bookingData = {
-            'bookingId': response.data. bookingId,
+            'bookingId': response.data.bookingId,
             'userId': response.data.customerId,
           };
 
@@ -229,6 +229,7 @@ class DriverSearchController extends GetxController {
 
     try {
       final results = await apiDataSource.starRating(
+
         selectedReason: rating,
         bookingId: bookingId,
       );

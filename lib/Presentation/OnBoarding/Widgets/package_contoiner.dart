@@ -433,7 +433,7 @@ class PackageContainer {
     required VoidCallback onTap,
     required String carTitle,
     required String carMinRate,
-    required String carMaxRate,
+      String? carMaxRate,
     required String carSubTitle,
     required String arrivingTime,
     required String carImg,
@@ -455,10 +455,10 @@ class PackageContainer {
               Spacer(),
               Image.asset(AppImages.nBlackCurrency, height: 14),
 
-              CustomTextFields.textWithStyles600('$carMinRate - '),
-              Image.asset(AppImages.nBlackCurrency, height: 14),
+              CustomTextFields.textWithStyles600('$carMinRate'),
 
-              CustomTextFields.textWithStyles600(' $carMaxRate'),
+
+
             ],
           ),
           subtitle: Row(

@@ -33,7 +33,7 @@ class DriverData {
   final DateTime? requestDateAndTime;
   final String? requestStatus;
   final double distance;
-  final double estimatedPrice;
+  final String estimatedPrice;
   final int estimatedTime;
 
   DriverData({
@@ -70,7 +70,7 @@ class DriverData {
               : null,
       requestStatus: json['requestStatus'],
       distance: (json['distance'] as num).toDouble(),
-      estimatedPrice: (json['estimatedPrice'] as num).toDouble(),
+      estimatedPrice: (json['estimatedPrice'] ?? ''),
       estimatedTime: json['estimatedTime'] ?? 0,
     );
   }

@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/services.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
+import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -38,6 +40,7 @@ class PackageMapConfirmScreen extends StatefulWidget {
 }
 
 class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
+  bool isExpanded = false;
   GoogleMapController? _mapController;
   final socketService = SocketService();
   LatLng? _currentPosition;
@@ -74,6 +77,8 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
   String _estimateStt2 = '';
   String otp = '';
   LatLng? _currentDriverLatLng;
+  bool isTripCancelled = false;
+  String cancelReason = "";
   Future<void> _loadCustomMarker() async {
     _carIcon = await BitmapDescriptor.asset(
       height: 60,
@@ -304,19 +309,35 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
     socketService.on('customer-cancelled', (data) async {
       AppLogger.log.i('customer-cancelled : $data');
 
-      if (data != null) {
-        if (data['status'] == true) {
-          Get.offAll(() => HomeScreens());
-        }
+      if (data != null && data['status'] == true) {
+        if (!mounted) return;
+
+        setState(() {
+          isTripCancelled = true;
+          cancelReason =
+              data['reason'] ?? "Driver had to cancel due to an emergency";
+        });
+
+        await Future.delayed(const Duration(seconds: 3));
+        if (!mounted) return;
+        Get.offAll(() => CommonBottomNavigation(initialIndex: 0));
       }
     });
     socketService.on('driver-cancelled', (data) async {
       AppLogger.log.i('driver-cancelled : $data');
 
-      if (data != null) {
-        if (data['status'] == true) {
-          Get.offAll(() => HomeScreens());
-        }
+      if (data != null && data['status'] == true) {
+        if (!mounted) return;
+
+        setState(() {
+          isTripCancelled = true;
+          cancelReason =
+              data['reason'] ?? "Driver had to cancel due to an emergency";
+        });
+
+        await Future.delayed(const Duration(seconds: 3));
+        if (!mounted) return;
+        Get.offAll(() => CommonBottomNavigation(initialIndex: 0));
       }
     });
   }
@@ -563,12 +584,22 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
               polylines: _polylines,
               myLocationEnabled: false,
               myLocationButtonEnabled: false,
-              zoomControlsEnabled: true,
+              zoomControlsEnabled: false,
               gestureRecognizers: {
                 Factory<OneSequenceGestureRecognizer>(
                   () => EagerGestureRecognizer(),
                 ),
               },
+            ),
+          ),
+          Positioned(
+            top: 350,
+            right: 10,
+            child: FloatingActionButton(
+              mini: true,
+              backgroundColor: Colors.white,
+              onPressed: _goToCurrentLocation,
+              child: Icon(Icons.my_location, color: Colors.black),
             ),
           ),
 
@@ -607,6 +638,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                 child: SafeArea(
                   top: false,
                   child: ListView(
+                    physics: BouncingScrollPhysics(),
                     controller: scrollController,
                     padding: EdgeInsets.only(top: 15),
                     children: [
@@ -719,21 +751,60 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                           ),
                         ),
                       ] else ...[
-                        Center(
-                          child: CustomTextFields.textWithImage(
-                            fontSize: 20,
-                            imageSize: 24,
-                            fontWeight: FontWeight.w600,
-                            text:
-                                destinationReached
-                                    ? 'Ride Completed'
-                                    : driverStartedRide
-                                    ? 'Ride in Progress'
-                                    : 'Your ride is confirmed',
-                            colors: AppColors.commonBlack,
-                            rightImagePath: AppImages.clrTick,
+                        if (isTripCancelled)
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            margin: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.cancel, color: Colors.red),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "Your trip has been cancelled",
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        cancelReason,
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Center(
+                            child: CustomTextFields.textWithImage(
+                              fontSize: 20,
+                              imageSize: 24,
+                              fontWeight: FontWeight.w600,
+                              text:
+                                  destinationReached
+                                      ? 'Ride Completed'
+                                      : driverStartedRide
+                                      ? 'Ride in Progress'
+                                      : 'Your ride is confirmed',
+                              colors: AppColors.commonBlack,
+                              rightImagePath: AppImages.clrTick,
+                            ),
                           ),
-                        ),
 
                         // Center(
                         //   child: CustomTextFields.textWithImage(
@@ -1008,7 +1079,23 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                     color: Colors.transparent,
                                     child: InkWell(
                                       onTap: () {
-                                        // Handle tap
+                                        final textToCopy = 'PKG- ${BookingId}';
+                                        Clipboard.setData(
+                                          ClipboardData(text: textToCopy),
+                                        );
+
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Copied: $textToCopy',
+                                            ),
+                                            duration: const Duration(
+                                              seconds: 1,
+                                            ),
+                                          ),
+                                        );
                                       },
                                       borderRadius: BorderRadius.circular(
                                         8,
@@ -1050,8 +1137,277 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                 ],
                               ),
                               Divider(color: AppColors.dividerColor1),
-                              SizedBox(height: 10),
 
+                              const SizedBox(height: 12),
+                              Card(
+                                elevation: 5,
+                                color: AppColors.commonWhite,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 20),
+                                  child: Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            CustomTextFields.textWithImage(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 16,
+                                              colors: AppColors.commonBlack,
+                                              text: 'Total Fare',
+                                              rightImagePath:
+                                                  AppImages.nBlackCurrency,
+                                              rightImagePathText: ' $Amount',
+                                            ),
+
+                                            Spacer(),
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 10,
+                                                vertical: 6,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                color: AppColors.commonBlack,
+                                              ),
+                                              child:
+                                                  CustomTextFields.textWithStyles600(
+                                                    'PKG - ${BookingId}',
+                                                    color:
+                                                        AppColors.commonWhite,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(height: 20),
+                                      /*     Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8.0,
+                                        ),
+                                        child: InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              isExpanded = !isExpanded;
+                                            });
+                                          },
+                                          child: Row(
+                                            children: [
+                                              CustomTextFields.textWithStylesSmall(
+                                                'View Details',
+                                                colors:
+                                                    AppColors.changeButtonColor,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                              const SizedBox(width: 10),
+                                              AnimatedRotation(
+                                                turns: isExpanded ? 0.5 : 0,
+                                                duration: const Duration(
+                                                  milliseconds: 300,
+                                                ),
+                                                child: Image.asset(
+                                                  AppImages.dropDown,
+                                                  height: 16,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      AnimatedSwitcher(
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
+                                        switchInCurve: Curves.easeInOut,
+                                        switchOutCurve: Curves.easeInOut,
+                                        transitionBuilder: (child, animation) {
+                                          return SizeTransition(
+                                            sizeFactor: animation,
+                                            axisAlignment: -1, // expand downwards
+                                            child: FadeTransition(
+                                              opacity: animation,
+                                              child: child,
+                                            ),
+                                          );
+                                        },
+                                        child:
+                                        isExpanded
+                                            ? Column(
+                                          key: const ValueKey("expanded"),
+                                          children: [
+                                            const SizedBox(height: 10),
+
+                                            Container(
+                                              margin:
+                                              const EdgeInsets.only(
+                                                top: 10,
+                                              ),
+                                              padding:
+                                              const EdgeInsets.all(
+                                                10,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                border: Border.all(
+                                                  color: AppColors
+                                                      .commonBlack
+                                                      .withOpacity(0.1),
+                                                ),
+                                                borderRadius:
+                                                BorderRadius.circular(
+                                                  8,
+                                                ),
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                CrossAxisAlignment
+                                                    .start,
+                                                children: [
+                                                  const Text(
+                                                    "Fare Breakdown",
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                      FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 5,
+                                                  ),
+
+                                                  /// Base fare
+                                                  Row(
+                                                    children: [
+                                                      CustomTextFields.textWithStylesSmall(
+                                                        'Base Fare',
+                                                      ),
+                                                      const Spacer(),
+                                                      CustomTextFields.textWithImage(
+                                                        colors:
+                                                        AppColors
+                                                            .commonBlack,
+                                                        text:
+                                                        widget
+                                                            .baseFare
+                                                            .toString() ??
+                                                            '0',
+                                                        imagePath:
+                                                        AppImages
+                                                            .nBlackCurrency,
+                                                      ),
+                                                    ],
+                                                  ),
+
+                                                  const SizedBox(
+                                                    height: 10,
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextFields.textWithStylesSmall(
+                                                        'Service Fare',
+                                                      ),
+                                                      const Spacer(),
+                                                      CustomTextFields.textWithImage(
+                                                        colors:
+                                                        AppColors
+                                                            .commonBlack,
+                                                        text:
+                                                        widget
+                                                            .serviceFare
+                                                            .toString() ??
+                                                            '0',
+                                                        imagePath:
+                                                        AppImages
+                                                            .nBlackCurrency,
+                                                      ),
+                                                    ],
+                                                  ),
+
+                                                  const SizedBox(
+                                                    height: 10,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 10),
+                                          ],
+                                        )
+                                            : const SizedBox.shrink(
+                                          key: ValueKey("collapsed"),
+                                        ),
+                                      ),*/
+
+                                      /* ListTile(
+                                        leading: Image.asset(
+                                          AppImages.cash,
+                                          height: 24,
+                                          width: 24,
+                                        ),
+                                        title:
+                                            CustomTextFields.textWithStylesSmall(
+                                              "Cash Payment",
+                                              fontSize: 15,
+                                              colors: AppColors.commonBlack,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+
+                                        trailing: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              5,
+                                            ),
+                                            color: AppColors.resendBlue
+                                                .withOpacity(0.1),
+                                          ),
+                                          child:
+                                              CustomTextFields.textWithStyles600(
+                                                fontSize: 10,
+                                                color:
+                                                    AppColors.changeButtonColor,
+                                                'Change',
+                                              ),
+                                        ),
+                                        onTap: () {},
+                                      ),
+                                      ListTile(
+                                        leading: Image.asset(
+                                          AppImages.digiPay,
+                                          height: 32,
+                                          width: 32,
+                                        ),
+                                        title:
+                                            CustomTextFields.textWithStylesSmall(
+                                              "Pay using card, UPI & more",
+                                              fontSize: 15,
+                                              colors: AppColors.commonBlack,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+
+                                        subtitle:
+                                            CustomTextFields.textWithStylesSmall(
+                                              'Pay during the ride to avoid cash payments',
+                                              fontSize: 10,
+                                            ),
+                                        trailing: Image.asset(
+                                          AppImages.rightArrow,
+                                          height: 20,
+                                          color: AppColors.commonBlack,
+                                          width: 20,
+                                        ),
+                                        onTap: () {
+                                          // Get.to(() => PaymentScreen());
+                                        },
+                                      ),*/
+                                    ],
+                                  ),
+                                ),
+                              ),
                               const SizedBox(height: 12),
                               Stack(
                                 children: [
@@ -1260,122 +1616,7 @@ class _PackageMapConfirmScreenState extends State<PackageMapConfirmScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 12),
-                              Card(
-                                elevation: 5,
-                                color: AppColors.commonWhite,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 20),
-                                  child: Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            CustomTextFields.textWithImage(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 16,
-                                              colors: AppColors.commonBlack,
-                                              text: 'Total Fare',
-                                              rightImagePath:
-                                                  AppImages.nBlackCurrency,
-                                              rightImagePathText: ' $Amount',
-                                            ),
 
-                                            Spacer(),
-                                            Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 10,
-                                                vertical: 6,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                                color: AppColors.commonBlack,
-                                              ),
-                                              child:
-                                                  CustomTextFields.textWithStyles600(
-                                                    'PKG - ${BookingId}',
-                                                    color:
-                                                        AppColors.commonWhite,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Divider(color: AppColors.dividerColor1),
-
-                                      ListTile(
-                                        leading: Image.asset(
-                                          AppImages.cash,
-                                          height: 24,
-                                          width: 24,
-                                        ),
-                                        title:
-                                            CustomTextFields.textWithStylesSmall(
-                                              "Cash Payment",
-                                              fontSize: 15,
-                                              colors: AppColors.commonBlack,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-
-                                        trailing: Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 5,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              5,
-                                            ),
-                                            color: AppColors.resendBlue
-                                                .withOpacity(0.1),
-                                          ),
-                                          child:
-                                              CustomTextFields.textWithStyles600(
-                                                fontSize: 10,
-                                                color:
-                                                    AppColors.changeButtonColor,
-                                                'Change',
-                                              ),
-                                        ),
-                                        onTap: () {},
-                                      ),
-                                      ListTile(
-                                        leading: Image.asset(
-                                          AppImages.digiPay,
-                                          height: 32,
-                                          width: 32,
-                                        ),
-                                        title:
-                                            CustomTextFields.textWithStylesSmall(
-                                              "Pay using card, UPI & more",
-                                              fontSize: 15,
-                                              colors: AppColors.commonBlack,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-
-                                        subtitle:
-                                            CustomTextFields.textWithStylesSmall(
-                                              'Pay during the ride to avoid cash payments',
-                                              fontSize: 10,
-                                            ),
-                                        trailing: Image.asset(
-                                          AppImages.rightArrow,
-                                          height: 20,
-                                          color: AppColors.commonBlack,
-                                          width: 20,
-                                        ),
-                                        onTap: () {
-                                          // Get.to(() => PaymentScreen());
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
                               SizedBox(height: 20),
                             ],
                           ),

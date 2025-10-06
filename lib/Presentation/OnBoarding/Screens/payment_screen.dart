@@ -22,7 +22,7 @@ import 'package:get/get.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String? bookingId;
-  final int? amount;
+  final double? amount;
   final AddressModel? sender;
   final AddressModel? receiver;
   const PaymentScreen({
@@ -146,22 +146,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               ),
                               SizedBox(width: 10),
                               Expanded(
-                                child: AppButtons.button1(
-                                  borderRadius: 8,
-                                  buttonColor: AppColors.commonBlack,
-                                  onTap: () {
-                                    final String bookingId =
-                                        widget.bookingId ?? '';
-                                    selectedRating;
-                                    AppLogger.log.i(selectedRating);
-                                    driverSearchController.rateDriver(
-                                      bookingId: bookingId,
-                                      rating: selectedRating.toString(),
-                                      context: context,
-                                    );
-                                  },
-                                  text: Text('Rate Ride'),
-                                ),
+                                child: Obx(() {
+                                  return AppButtons.button1(
+                                    isLoading:
+                                        driverSearchController.isLoading.value,
+                                    borderRadius: 8,
+                                    buttonColor: AppColors.commonBlack,
+                                    onTap: () {
+                                      final String bookingId =
+                                          widget.bookingId ?? '';
+                                      selectedRating;
+                                      AppLogger.log.i(selectedRating);
+                                      driverSearchController.rateDriver(
+                                        bookingId: bookingId,
+                                        rating: selectedRating.toString(),
+                                        context: context,
+                                      );
+                                    },
+                                    text: Text('Rate Ride'),
+                                  );
+                                }),
                               ),
                             ],
                           ),
@@ -626,9 +630,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () {
-                            // Handle view details tap here
-                          },
+                          onTap: () {},
                           child: CustomTextFields.textWithStylesSmall(
                             'View Details',
                           ),
@@ -643,11 +645,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   child: Obx(() {
                     return AppButtons.button(
                       onTap: () {
-                        packageController.sendPackageDriverRequest(
-                          bookingId: widget.bookingId ?? '',
-                          senderData: widget.sender!,
-                          receiverData: widget.receiver!,
-                        );
+                        _showRatingBottomSheet(context);
+                        // packageController.sendPackageDriverRequest(
+                        //   bookingId: widget.bookingId ?? '',
+                        //   senderData: widget.sender!,
+                        //   receiverData: widget.receiver!,
+                        // );
                       },
                       isLoading: packageController.isConfirmLoading.value,
                       text: 'Continue',

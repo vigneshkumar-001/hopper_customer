@@ -113,7 +113,7 @@ class PackageController extends GetxController {
 
           Get.to(
             PaymentScreen(
-              amount: amount.toInt(),
+              amount: amount,
               bookingId: bookingId,
               sender: senderData,
               receiver: receiverData,
