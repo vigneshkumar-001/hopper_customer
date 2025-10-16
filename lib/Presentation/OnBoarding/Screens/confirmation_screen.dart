@@ -661,8 +661,8 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
               onTap: () {
                 final String? bookingId =
                     packageController.packageDetails.value?.data.bookingId;
-                packageController.confirmPackageAddressDetails(
-                  weight: widget.weight??'',
+                packageController. sendPackageDriverRequest(
+                  // weight: widget.weight??'',
                   bookingId: bookingId ?? '',
                   receiverData: receiverData!,
                   senderData: senderData!,

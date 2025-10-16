@@ -26,6 +26,10 @@ class AppTexts {
   static String  itemType = 'Item type';
   static String  baseFare = 'Base Fare';
   static String  serviceFare = 'Service Fare';
+  static String  distanceFare = 'Distance Fare';
+  static String  timeFare = 'Time Fare';
+  static String  pickupFare = 'Pickup Fare';
+  static String  bookingFee = 'Booking Fee';
   static String  totalKm = 'Total KM';
   static String  estTime = 'Estimated Time';
   static String  recipientDetails = 'Recipient details';

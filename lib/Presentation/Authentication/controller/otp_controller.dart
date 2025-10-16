@@ -42,7 +42,7 @@ class OtpController extends GetxController {
   }) async {
     isLoading.value = true;
     try {
-      final mbl = countryCode + mobileNumber;
+      final mbl = mobileNumber;
       final results = await apiDataSource.otpVerify(mbl, otp);
       results.fold(
         (failure) {
@@ -85,7 +85,8 @@ class OtpController extends GetxController {
   Future<String?> resend({
     required String mobileNumber,
     required String code,
-  }) async {
+  }) async
+  {
     try {
       final results = await apiDataSource.resendOtp(mobileNumber, code);
       results.fold((failure) {}, (response) {

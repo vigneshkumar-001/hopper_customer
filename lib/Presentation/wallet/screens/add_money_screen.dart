@@ -138,12 +138,12 @@ import 'package:get/get.dart';
 import 'package:hopper/Presentation/wallet/screens/wallet_payment_screens.dart';
 
 class AddMoneyScreen extends StatefulWidget {
-  final int? minimumWalletAddBalance;
-  final int? customerWalletBalance;
+  final String? minimumWalletAddBalance;
+  final String? customerWalletBalance;
   const AddMoneyScreen({
     super.key,
     this.minimumWalletAddBalance,
-    this.customerWalletBalance = 0,
+    this.customerWalletBalance ,
   });
 
   @override
@@ -163,7 +163,6 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
             children: [
-              // Top section
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Row(

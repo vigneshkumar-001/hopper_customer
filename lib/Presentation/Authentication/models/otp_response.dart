@@ -10,6 +10,8 @@ class OtpResponse {
       data: Data.fromJson(json['data']),
     );
   }
+
+  Map<String, dynamic> toJson() => {"status": status, "data": data.toJson()};
 }
 
 class Data {
@@ -24,57 +26,30 @@ class Data {
       customer: Customer.fromJson(json['customer']),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    "token": token,
+    "customer": customer.toJson(),
+  };
 }
 
 class Customer {
   final String id;
   final String firstName;
   final String lastName;
-  final String? email;
+
   final String phone;
-  final bool isActive;
-  final bool isVerified;
-  final bool isBlocked;
-  final bool emailVerified;
-  final bool phoneVerified;
-  final bool isOnline;
-  final int averageRating;
-  final int totalRatings;
-  final int totalBookings;
-  final int totalCancelledBookings;
-  final int completedBookings;
-  final String defaultPaymentMethod;
-  final int walletBalance;
-  final List<dynamic> addresses;
-  final String lastSeen;
-  final Preferences preferences;
-  final String createdAt;
-  final String updatedAt;
+
+  final String countryCode;
 
   Customer({
     required this.id,
     required this.firstName,
     required this.lastName,
-    required this.email,
+
     required this.phone,
-    required this.isActive,
-    required this.isVerified,
-    required this.isBlocked,
-    required this.emailVerified,
-    required this.phoneVerified,
-    required this.isOnline,
-    required this.averageRating,
-    required this.totalRatings,
-    required this.totalBookings,
-    required this.totalCancelledBookings,
-    required this.completedBookings,
-    required this.defaultPaymentMethod,
-    required this.walletBalance,
-    required this.addresses,
-    required this.lastSeen,
-    required this.preferences,
-    required this.createdAt,
-    required this.updatedAt,
+
+    required this.countryCode,
   });
 
   factory Customer.fromJson(Map<String, dynamic> json) {
@@ -82,28 +57,22 @@ class Customer {
       id: json['_id'],
       firstName: json['firstName'],
       lastName: json['lastName'],
-      email: json['email'],
+
       phone: json['phone'],
-      isActive: json['isActive'],
-      isVerified: json['isVerified'],
-      isBlocked: json['isBlocked'],
-      emailVerified: json['emailVerified'],
-      phoneVerified: json['phoneVerified'],
-      isOnline: json['isOnline'],
-      averageRating: json['averageRating'],
-      totalRatings: json['totalRatings'],
-      totalBookings: json['totalBookings'],
-      totalCancelledBookings: json['totalCancelledBookings'],
-      completedBookings: json['completedBookings'],
-      defaultPaymentMethod: json['defaultPaymentMethod'],
-      walletBalance: json['walletBalance'],
-      addresses: List<dynamic>.from(json['addresses']),
-      lastSeen: json['lastSeen'],
-      preferences: Preferences.fromJson(json['preferences']),
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
+
+      countryCode: json['countryCode'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    "_id": id,
+    "firstName": firstName,
+    "lastName": lastName,
+
+    "phone": phone,
+
+    "countryCode": countryCode,
+  };
 }
 
 class Preferences {
@@ -112,6 +81,7 @@ class Preferences {
   final Ride ride;
   final String language;
   final String currency;
+  final String id;
 
   Preferences({
     required this.notifications,
@@ -119,6 +89,7 @@ class Preferences {
     required this.ride,
     required this.language,
     required this.currency,
+    required this.id,
   });
 
   factory Preferences.fromJson(Map<String, dynamic> json) {
@@ -128,17 +99,27 @@ class Preferences {
       ride: Ride.fromJson(json['ride']),
       language: json['language'],
       currency: json['currency'],
+      id: json['_id'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    "notifications": notifications.toJson(),
+    "privacy": privacy.toJson(),
+    "ride": ride.toJson(),
+    "language": language,
+    "currency": currency,
+    "_id": id,
+  };
 }
 
 class Notifications {
-  final bool email;
-  final bool sms;
-  final bool push;
-  final bool bookingUpdates;
-  final bool promotions;
-  final bool rideReminders;
+  final String email;
+  final String sms;
+  final String push;
+  final String bookingUpdates;
+  final String promotions;
+  final String rideReminders;
 
   Notifications({
     required this.email,
@@ -159,12 +140,21 @@ class Notifications {
       rideReminders: json['rideReminders'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    "email": email,
+    "sms": sms,
+    "push": push,
+    "bookingUpdates": bookingUpdates,
+    "promotions": promotions,
+    "rideReminders": rideReminders,
+  };
 }
 
 class Privacy {
-  final bool shareLocation;
-  final bool showOnlineStatus;
-  final bool allowDataCollection;
+  final String shareLocation;
+  final String showOnlineStatus;
+  final String allowDataCollection;
 
   Privacy({
     required this.shareLocation,
@@ -179,13 +169,19 @@ class Privacy {
       allowDataCollection: json['allowDataCollection'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    "shareLocation": shareLocation,
+    "showOnlineStatus": showOnlineStatus,
+    "allowDataCollection": allowDataCollection,
+  };
 }
 
 class Ride {
   final List<dynamic> preferredVehicleType;
-  final int maxWaitTime;
-  final bool autoConfirmBooking;
-  final bool allowSharedRides;
+  final String maxWaitTime;
+  final String autoConfirmBooking;
+  final String allowSharedRides;
 
   Ride({
     required this.preferredVehicleType,
@@ -202,4 +198,11 @@ class Ride {
       allowSharedRides: json['allowSharedRides'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    "preferredVehicleType": preferredVehicleType,
+    "maxWaitTime": maxWaitTime,
+    "autoConfirmBooking": autoConfirmBooking,
+    "allowSharedRides": allowSharedRides,
+  };
 }

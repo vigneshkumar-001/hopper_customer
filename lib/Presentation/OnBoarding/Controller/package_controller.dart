@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/confirmation_screen.dart';
@@ -17,6 +18,7 @@ class PackageController extends GetxController {
   final RxBool isLoading = false.obs;
   final socketService = SocketService();
   final RxBool isConfirmLoading = false.obs;
+  final RxBool isButtonLoading = false.obs;
   var packageDetails = Rxn<PackageDetailsResponse>();
   var confirmPackageDetails = Rxn<ConfirmPackageResponse>();
   final RideHistoryController controller = Get.put(RideHistoryController());
@@ -24,6 +26,36 @@ class PackageController extends GetxController {
   void onInit() {
     super.onInit();
     controller.getRideHistory();
+  }
+
+  Future<String?> paymentDetails({
+    required String bookingId,
+    required String paymentType,
+    required BuildContext context,
+  }) async {
+    isButtonLoading.value = true;
+
+    try {
+      final results = await apiDataSource.paymentDetails(
+        paymentType: paymentType,
+        bookingId: bookingId,
+      );
+
+      return results.fold(
+        (failure) {
+          isButtonLoading.value = false;
+          return failure.message;
+        },
+        (response) {
+          isButtonLoading.value = false;
+
+          return '';
+        },
+      );
+    } catch (e) {
+      isButtonLoading.value = false;
+      return 'An error occurred';
+    }
   }
 
   Future<String?> packageAddressDetails({
@@ -113,7 +145,7 @@ class PackageController extends GetxController {
 
           Get.to(
             PaymentScreen(
-              amount: amount.toInt(),
+              amount: amount,
               bookingId: bookingId,
               sender: senderData,
               receiver: receiverData,
@@ -149,12 +181,19 @@ class PackageController extends GetxController {
       );
       return results.fold(
         (failure) {
-          isConfirmLoading.value = false;
+          isConfirmLoading.value = false; // ✅ handled
           AppLogger.log.e("Failure: $failure");
           return '';
         },
         (response) {
-          Get.to(PackageMapConfirmScreen());
+          isConfirmLoading.value = false;
+          Get.to(
+            PackageMapConfirmScreen(
+              bookingId: bookingId,
+              senderData: senderData,
+              receiverData: receiverData,
+            ),
+          );
           // Navigator.push(
           //   context,
           //   MaterialPageRoute(builder: (context) => PaymentScreen()),

@@ -4,7 +4,12 @@ import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/screens/mobile_screens.dart';
+import 'package:hopper/Presentation/Drawer/controller/profle_cotroller.dart';
+import 'package:hopper/Presentation/Drawer/controller/ride_history_controller.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreens extends StatefulWidget {
   const SplashScreens({super.key});
@@ -14,6 +19,14 @@ class SplashScreens extends StatefulWidget {
 }
 
 class _SplashScreensState extends State<SplashScreens> {
+
+
+  @override
+  void initState() {
+    super.initState();
+
+  }
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(

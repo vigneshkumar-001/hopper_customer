@@ -127,20 +127,20 @@ class _BookMapScreenState extends State<BookMapScreen> {
       destinationLocation.longitude,
     );
 
-    if (distance < 1000) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.back(); // First, go back
-
-        // Delay the toast slightly to ensure the context is still safe
-        Future.delayed(const Duration(milliseconds: 300), () {
-          AppToasts.customToast(
-            Get.context!, // safer than old `context` after pop
-            'Pickup and destination must be more than 1 km apart.',
-          );
-        });
-      });
-      return;
-    }
+    // if (distance < 1000) {
+    //   WidgetsBinding.instance.addPostFrameCallback((_) {
+    //     Get.back(); // First, go back
+    //
+    //     // Delay the toast slightly to ensure the context is still safe
+    //     Future.delayed(const Duration(milliseconds: 300), () {
+    //       AppToasts.customToast(
+    //         Get.context!, // safer than old `context` after pop
+    //         'Pickup and destination must be more than 1 km apart.',
+    //       );
+    //     });
+    //   });
+    //   return;
+    // }
 
     _pickupPosition = pickupLocation;
     _destinationPosition = destinationLocation;
@@ -205,7 +205,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
   }
 
   Future<void> _drawPolyline() async {
-    String apiKey =  ApiConsents.googleMapApiKey;
+    String apiKey = ApiConsents.googleMapApiKey;
     final String url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${_pickupPosition!.latitude},${_pickupPosition!.longitude}&destination=${_destinationPosition!.latitude},${_destinationPosition!.longitude}&key=$apiKey';
 
@@ -802,9 +802,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
                                   carTitle: 'Luxury',
                                   carMinRate:
                                       luxuryDriver.estimatedPrice.toString(),
-                                  carMaxRate:
-                                      (luxuryDriver.estimatedPrice + 30)
-                                          .toString(),
+
                                   carSubTitle: 'Comfy, Economical Cars',
                                   arrivingTime:
                                       '${luxuryDriver.estimatedTime ?? 0} min',
@@ -833,8 +831,7 @@ class _BookMapScreenState extends State<BookMapScreen> {
                                   carMinRate:
                                       sedanDriver.estimatedPrice.toString(),
                                   carMaxRate:
-                                      (sedanDriver.estimatedPrice + 32)
-                                          .toString(),
+                                      (sedanDriver.estimatedPrice).toString(),
                                   carSubTitle: 'Comfy, Economical Cars',
                                   arrivingTime:
                                       '${sedanDriver.estimatedTime ?? 0} min',
@@ -882,9 +879,11 @@ class _BookMapScreenState extends State<BookMapScreen> {
 
                             return;
                           }
-
+                          final _selectedCarType =
+                              driverController.selectedCarType.value;
                           final result = await driverController
                               .createBookingCar(
+                                carType: _selectedCarType,
                                 fromLatitude: _pickupPosition?.latitude ?? 0.0,
                                 fromLongitude:
                                     _pickupPosition?.longitude ?? 0.0,
@@ -907,7 +906,6 @@ class _BookMapScreenState extends State<BookMapScreen> {
                                 MaterialPageRoute(
                                   builder:
                                       (context) => ConfirmBooking(
-
                                         carType: carType,
                                         selectedCarType: _selectedCarType,
                                         pickupData: {

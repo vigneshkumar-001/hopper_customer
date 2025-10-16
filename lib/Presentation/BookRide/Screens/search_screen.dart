@@ -17,11 +17,13 @@ class BookRideSearchScreen extends StatefulWidget {
   final bool? isPickup;
   final Map<String, dynamic>? pickupData;
   final Map<String, dynamic>? destinationData;
+  final String? flag;
   const BookRideSearchScreen({
     super.key,
     this.isPickup,
     this.pickupData,
     this.destinationData,
+    this.flag,
   });
 
   @override
@@ -450,14 +452,15 @@ class _BookRideSearchScreenState extends State<BookRideSearchScreen> {
                   children: [
                     Row(
                       children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Image.asset(
-                            AppImages.backImage,
-                            height: 19,
-                            width: 19,
+                        if (widget.flag != "bottomBar")
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Image.asset(
+                              AppImages.backImage,
+                              height: 19,
+                              width: 19,
+                            ),
                           ),
-                        ),
                         SizedBox(width: 12),
                         CustomTextFields.textWithStyles600(
                           'Set pick up location',

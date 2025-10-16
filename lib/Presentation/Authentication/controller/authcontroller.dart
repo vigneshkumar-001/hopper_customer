@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Presentation/Authentication/controller/authController.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:hopper/Presentation/Authentication/screens/otp_screens.dart';
@@ -26,6 +27,7 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    getAppSettings();
   }
 
   void setSelectedCountry(Country country) {
@@ -44,7 +46,10 @@ class AuthController extends GetxController {
   }) async {
     isLoading.value = true;
     try {
-      final results = await apiDataSource.mobileNumberLogin(mobileNumber,countryCode);
+      final results = await apiDataSource.mobileNumberLogin(
+        mobileNumber,
+        countryCode,
+      );
       results.fold(
         (failure) {
           // Get.snackbar(
@@ -55,8 +60,6 @@ class AuthController extends GetxController {
           //   colorText: Get.theme.colorScheme.onSecondary,
           // );
           isLoading.value = false;
-
-
         },
         (response) {
           isLoading.value = false;
@@ -70,6 +73,34 @@ class AuthController extends GetxController {
                   ),
             ),
           );
+        },
+      );
+    } catch (e) {
+      isLoading.value = false;
+      return '';
+    }
+    isLoading.value = false;
+    return '';
+  }
+
+  Future<String?> getAppSettings() async {
+    try {
+      final results = await apiDataSource.getAppSettings();
+      results.fold(
+        (failure) {
+          // Get.snackbar(
+          //   "Error",
+          //   failure.message,
+          //   snackPosition: SnackPosition.TOP,
+          //   backgroundColor: Get.theme.colorScheme.secondary,
+          //   colorText: Get.theme.colorScheme.onSecondary,
+          // );
+          isLoading.value = false;
+        },
+        (response) {
+          isLoading.value = false;
+          AppLogger.log.i('App Setting');
+          AppLogger.log.i(response.toJson());
         },
       );
     } catch (e) {

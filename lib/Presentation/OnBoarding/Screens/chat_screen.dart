@@ -134,6 +134,7 @@ class _ChatScreenState extends State<ChatScreen> {
             isSending: false, // remove loading
           );
         });
+        AppLogger.log.i("Message sended: $ack");
         _textController.clear();
         _scrollToBottom();
       } else {
@@ -232,6 +233,7 @@ class _ChatScreenState extends State<ChatScreen> {
       AppLogger.log.i("✅ Registered → $data");
     });
     socketService.on("typing", (data) {
+      AppLogger.log.i('Typing $data');
       if (!mounted) return;
 
       final senderId = data["senderId"];
@@ -465,34 +467,34 @@ class _ChatScreenState extends State<ChatScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.lowLightBlue,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: ListTile(
-                      leading: Image.asset(
-                        AppImages.box,
-                        height: 35,
-                        width: 35,
-                      ),
-
-                      title: CustomTextFields.textWithStyles600(
-                        'Order PKG-2025-7841',
-                      ),
-                      subtitle: CustomTextFields.textWithStylesSmall(
-                        fontSize: 12,
-                        'Pickup: 123 Main Street • Weight: 2.5 kg',
-                        colors: AppColors.changeButtonColor,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            // Row(
+            //   children: [
+            //     Expanded(
+            //       child: Container(
+            //         decoration: BoxDecoration(
+            //           color: AppColors.lowLightBlue,
+            //           borderRadius: BorderRadius.circular(10),
+            //         ),
+            //         child: ListTile(
+            //           leading: Image.asset(
+            //             AppImages.box,
+            //             height: 35,
+            //             width: 35,
+            //           ),
+            //
+            //           title: CustomTextFields.textWithStyles600(
+            //             'Order PKG-2025-7841',
+            //           ),
+            //           subtitle: CustomTextFields.textWithStylesSmall(
+            //             fontSize: 12,
+            //             'Pickup: 123 Main Street • Weight: 2.5 kg',
+            //             colors: AppColors.changeButtonColor,
+            //           ),
+            //         ),
+            //       ),
+            //     ),
+            //   ],
+            // ),
             Expanded(
               child: Column(
                 children: [

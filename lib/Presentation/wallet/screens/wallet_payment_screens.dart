@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hopper/Presentation/OnBoarding/Controller/package_controller.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/pay_pall_screen.dart';
+import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
 import 'package:hopper/Presentation/OnBoarding/models/address_models.dart';
 import 'package:hopper/Presentation/wallet/controller/wallet_controller.dart';
 import 'package:hopper/api/repository/api_consents.dart';
@@ -45,6 +46,7 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
   final DriverSearchController driverSearchController =
       DriverSearchController();
   final WalletController Controller = Get.put(WalletController());
+
   bool _isLoading = false;
   bool payPalLoading = false;
   void _showRatingBottomSheet(BuildContext context) {
@@ -204,7 +206,6 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
   }*/
 
   Future<void> initStripe() async {
-    // Set publishable key from backend
     Stripe.publishableKey = widget.publishableKey ?? "";
 
     // Initialize payment sheet
@@ -224,10 +225,22 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
       // confirm payment to your backend
       await confirmPayment(widget.transactionId ?? "");
 
-      AppLogger.log.i("✅ Payment successful");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Payment Successful")));
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Controller.getWalletBalance();
+
+        AppLogger.log.i("✅ Payment successful");
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Payment Successful")));
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CommonBottomNavigation(initialIndex: 2),
+          ),
+          (route) => false,
+        );
+      });
     } catch (e) {
       AppLogger.log.e("❌ Stripe error: $e");
       ScaffoldMessenger.of(
@@ -417,6 +430,8 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
     initStripe();
   }
 
+  String? selectedPaymentMethod;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -460,13 +475,13 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
                             fontSize: 20,
                           ),
                           CustomTextFields.textWithStylesSmall(
-                            'Razorpay Trusted Businnes',
+                            'Hoppr Trusted Business',
                           ),
                         ],
                       ),
 
                       Spacer(),
-                      Image.asset(AppImages.history, height: 20, width: 20),
+                      // Image.asset(AppImages.history, height: 20, width: 20),
                     ],
                   ),
 
@@ -563,6 +578,7 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
                             ? null
                             : () async {
                               setState(() {
+                                selectedPaymentMethod = "Stripe";
                                 _isLoading = true;
                               });
 
@@ -617,7 +633,7 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
                   ),
                   SizedBox(height: 15),
 
-                  CustomTextFields.textWithStyles700('Wallets', fontSize: 16),
+                  /*   CustomTextFields.textWithStyles700('Wallets', fontSize: 16),
                   SizedBox(height: 15),
                   PackageContainer.customWalletContainer(
                     onTap: () {},
@@ -631,7 +647,7 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
                       imagePath: AppImages.nBlackCurrency,
                       imageColors: AppColors.walletCurrencyColor,
                     ),
-                  ),
+                  ),*/
                   SizedBox(height: 15),
                   PackageContainer.customWalletContainer(
                     onTap: () {},
@@ -658,56 +674,52 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
       ),
       bottomNavigationBar: SafeArea(
         child: SizedBox(
-          height: 120,
+          height: 100,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 5),
                     CustomTextFields.textWithImage(
-                      text: widget.amount.toString() ?? '280',
+                      text: widget.amount.toString() ?? '0',
                       fontSize: 25,
                       colors: AppColors.commonBlack,
                       fontWeight: FontWeight.w700,
                       imageSize: 23,
                       imagePath: AppImages.nBlackCurrency,
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            // Handle view details tap here
-                          },
-                          child: CustomTextFields.textWithStylesSmall(
-                            'View Details',
-                          ),
-                        ),
-                        Icon(Icons.keyboard_arrow_down_outlined, size: 20),
-                      ],
-                    ),
+
+                    // Row(
+                    //   children: [
+                    //     GestureDetector(
+                    //       onTap: () {
+                    //         // Handle view details tap here
+                    //       },
+                    //       child: CustomTextFields.textWithStylesSmall(
+                    //         'View Details',
+                    //       ),
+                    //     ),
+                    //     Icon(Icons.keyboard_arrow_down_outlined, size: 20),
+                    //   ],
+                    // ),
                   ],
                 ),
                 const SizedBox(width: 40),
                 Expanded(
                   child: AppButtons.button(
                     onTap: () {
-                      // packageController.sendPackageDriverRequest(
-                      //   bookingId: widget.bookingId ?? '',
-                      //   senderData: widget.sender,
-                      //   receiverData: widget.receiver,
-                      // );
-                      //  _showRatingBottomSheet(context);
-
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => PackageMapConfirmScreen(),
-                      //   ),
-                      // );
+                      if (selectedPaymentMethod == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Please select a payment method"),
+                          ),
+                        );
+                        return;
+                      }
                     },
                     text: 'Continue',
                   ),

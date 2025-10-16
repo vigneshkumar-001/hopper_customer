@@ -13,6 +13,7 @@ import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
+import 'package:hopper/Presentation/Drawer/screens/ride_and_package_history_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Controller/package_controller.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/confirmation_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Widgets/package_contoiner.dart';
@@ -127,10 +128,15 @@ class _PackageScreensState extends State<PackageScreens> {
                       ),
                       Positioned(
                         right: 0,
-                        child: Image.asset(
-                          AppImages.history,
-                          height: 20,
-                          width: 20,
+                        child: InkWell(
+                          onTap: () {
+                            Get.to(RideAndPackageHistoryScreen());
+                          },
+                          child: Image.asset(
+                            AppImages.history,
+                            height: 20,
+                            width: 20,
+                          ),
                         ),
                       ),
                     ],
@@ -576,7 +582,8 @@ class _PackageScreensState extends State<PackageScreens> {
 
                     const SizedBox(height: 16),
 
-                    CustomTextFields.textAndField(type: TextInputType.number,
+                    CustomTextFields.textAndField(
+                      type: TextInputType.number,
                       controller: packageWeightController,
                       tittle: 'Package weight',
                       hintText: 'Eg., 10kg , 20kg',
@@ -773,9 +780,6 @@ class _PackageScreensState extends State<PackageScreens> {
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: AppButtons.button(
                       onTap: () async {
-                        AppLogger.log.i(
-                          "Selected Parcel: $packageWeightController",
-                        );
                         final String weight = packageWeightController.text;
                         final results = await packageController
                             .packageAddressDetails(

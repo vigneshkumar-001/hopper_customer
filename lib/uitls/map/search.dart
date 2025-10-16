@@ -5,7 +5,7 @@ import 'dart:convert';
 
 class LocationHelper {
   static const String _apiKey =
-      'AIzaSyDZ0T-ObERFV38YA0F2AVdZtrt1qUO-1D8'; // Replace this
+      'AIzaSyA5wtbZ30XrpN1WE9-ZM1CYbY0g31NlT_A'; // Replace this
   // String apiKey =  ApiConsents.googleMapApiKey;
 
   static Future<List<Map<String, dynamic>>> searchPlaces(String query) async {

@@ -8,7 +8,7 @@ class AppColors {
   static const containerColor1 = Color(0xffF5F5F7);
   static const containerBorder = Color(0xff1C1C1C);
   static const advertisementColor = Color(0xffE9F3FF);
-
+  static const circularClr = Color(0xffF3F4F6);
   static const commonBlack = Color(0xff000000);
   static const commonWhite = Color(0xffFFFFFF);
 
@@ -22,9 +22,12 @@ class AppColors {
   static final changeButtonColor = Color(0xff357AE9);
   static final couponCard = Color(0xff006FD01A);
   static final justInColor = Color(0xff5700D0);
+  static final twoPeopleClr = Color(0xffF9F6FE);
   static final addToAddress = Color(0xff357AE9);
+  static final emergencyColor = Color(0xff1B2072);
 
   static final choiceChipColor = Color(0xff006FD0);
+  static final nCarColor = Color(0xffF0F6FE);
   static final walletCurrencyColor = Color(0xff009721);
   static final searchDownTextColor = Color(0xff424147);
   static final dotLineColor = Color(0xff979797);
@@ -46,5 +49,6 @@ class AppColors {
   static final drawerT = Color(0xFF262626);
   static final addMoney = Color(0xFFE1EBFF);
 
-
+  static final walletText = Color(0xffDEDEDE);
+  static final walletButton = Color(0xff7f70e8);
 }

@@ -231,7 +231,7 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                                   ),
                                 ],
                               ),
-                              Row(
+                              /*   Row(
                                 children: [
                                   Expanded(child: Text(AppTexts.serviceFare)),
                                   CustomTextFields.textWithImage(
@@ -240,6 +240,82 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                                             .carBooking
                                             .value
                                             ?.serviceFare
+                                            .toString() ??
+                                        "",
+
+                                    imagePath: AppImages.nCurrency,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ],
+                              ),*/
+                              Row(
+                                children: [
+                                  Expanded(child: Text(AppTexts.distanceFare)),
+                                  CustomTextFields.textWithImage(
+                                    text:
+                                        driverController
+                                            .carBooking
+                                            .value
+                                            ?.fareBreakdown
+                                            .first
+                                            .distanceFare
+                                            .toString() ??
+                                        "",
+
+                                    imagePath: AppImages.nCurrency,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(child: Text(AppTexts.pickupFare)),
+                                  CustomTextFields.textWithImage(
+                                    text:
+                                        driverController
+                                            .carBooking
+                                            .value
+                                            ?.fareBreakdown
+                                            .first
+                                            .pickupFare
+                                            .toString() ??
+                                        "",
+
+                                    imagePath: AppImages.nCurrency,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(child: Text(AppTexts.bookingFee)),
+                                  CustomTextFields.textWithImage(
+                                    text:
+                                        driverController
+                                            .carBooking
+                                            .value
+                                            ?.fareBreakdown
+                                            .first
+                                            .bookingFee
+                                            .toString() ??
+                                        "",
+
+                                    imagePath: AppImages.nCurrency,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(child: Text(AppTexts.timeFare)),
+                                  CustomTextFields.textWithImage(
+                                    text:
+                                        driverController
+                                            .carBooking
+                                            .value
+                                            ?.fareBreakdown
+                                            .first
+                                            .timeFare
                                             .toString() ??
                                         "",
 
@@ -318,17 +394,12 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
 
                                   CustomTextFields.textWithImage(
                                     text:
-                                        ((driverController
-                                                        .carBooking
-                                                        .value
-                                                        ?.baseFare ??
-                                                    0) +
-                                                (driverController
-                                                        .carBooking
-                                                        .value
-                                                        ?.serviceFare ??
-                                                    0))
-                                            .toString(),
+                                        driverController
+                                            .carBooking
+                                            .value
+                                            ?.amount
+                                            .toString() ??
+                                        '',
 
                                     imagePath: AppImages.nBlackCurrency,
                                     fontWeight: FontWeight.w900,
@@ -345,6 +416,7 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
 
                   SizedBox(height: 10),
                   CustomTextFields.textWithStylesSmall(
+                    maxLines: 2,
                     'By confirming, you agree to our Terms of Service and Cancellation Policy',
                   ),
                 ],
@@ -398,26 +470,37 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                       //         ),
                       //   ),
                       // );
-                 Navigator.push(
-                   context,
-                   MaterialPageRoute(
-                     builder:
-                         (context) => OrderConfirmScreen(
-                           pickupData: {
-                             'description': widget.pickupAddress,
-                             'lat': _pickupPosition?.latitude ?? 0.0,
-                             'lng': _pickupPosition?.longitude ?? 0.0,
-                           },
-                           destinationData: {
-                             'description': widget.destinationAddress,
-                             'lat': _destinationPosition?.latitude ?? 0.0,
-                             'lng': _destinationPosition?.longitude ?? 0.0,
-                           },
-                           pickupAddress: widget.pickupAddress,
-                           destinationAddress: widget.destinationAddress,
-                         ),
-                   ),
-                 );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => OrderConfirmScreen(
+                                carType: widget.carType ?? '',
+                                bookingId: allData?.bookingId.toString() ?? '',
+                                baseFare: allData?.baseFare ?? 0.0,
+                                bookingFee:
+                                    allData?.fareBreakdown[0].bookingFee,
+                                pickupFare:
+                                    allData?.fareBreakdown[0].pickupFare,
+                                timeFare: allData?.fareBreakdown[0].timeFare,
+                                distanceFare:
+                                    allData?.fareBreakdown[0].distanceFare,
+                                serviceFare: allData?.serviceFare ?? 0.0,
+                                pickupData: {
+                                  'description': widget.pickupAddress,
+                                  'lat': _pickupPosition?.latitude ?? 0.0,
+                                  'lng': _pickupPosition?.longitude ?? 0.0,
+                                },
+                                destinationData: {
+                                  'description': widget.destinationAddress,
+                                  'lat': _destinationPosition?.latitude ?? 0.0,
+                                  'lng': _destinationPosition?.longitude ?? 0.0,
+                                },
+                                pickupAddress: widget.pickupAddress,
+                                destinationAddress: widget.destinationAddress,
+                              ),
+                        ),
+                      );
                     }
                   },
                   text: 'Confirm',

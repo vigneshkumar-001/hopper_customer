@@ -11,7 +11,81 @@ class AppButtons {
   AppButtons._internal();
 
   static AppButtons get instance => _singleton;
+  static Widget button1({
+    required GestureTapCallback? onTap,
+    required Widget text,
+    double? size = double.infinity,
+    double? imgHeight = 24,
+    double? imgWeight = 24,
+    double? borderRadius = 4,
 
+    Color? buttonColor,
+    Color? foreGroundColor,
+    Color? borderColor,
+    Color? textColor = Colors.white,
+    bool? isLoading,
+    bool hasBorder = false,
+    String? imagePath,
+  }) {
+    return SizedBox(
+      width: size,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          foregroundColor: foreGroundColor,
+
+          shape:
+          hasBorder
+              ? RoundedRectangleBorder(
+            side: BorderSide(color: Color(0xff3F5FF2)),
+            borderRadius: BorderRadius.circular(borderRadius!),
+          )
+              : RoundedRectangleBorder(
+            side: BorderSide(color: borderColor ?? Colors.transparent),
+
+            borderRadius: BorderRadius.circular(borderRadius!),
+          ),
+          elevation: 0,
+          fixedSize: Size(150.w, 40.h),
+          backgroundColor: buttonColor,
+        ),
+        child: isLoading == true
+            ? SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              textColor ?? Colors.white,
+            ),
+          ),
+        )
+            :Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (imagePath != null) ...[
+              Image.asset(
+                imagePath,
+                height: imgHeight!.sp,
+                width: imgWeight!.sp,
+              ),
+              SizedBox(width: 10.w),
+            ],
+            DefaultTextStyle(
+              style: TextStyle(
+                fontFamily: "Roboto-normal",
+                fontSize: 16.sp,
+                color: textColor,
+                fontWeight: FontWeight.bold,
+              ),
+              child: text,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   static button({
     required GestureTapCallback? onTap,
     required String text,
@@ -536,68 +610,5 @@ class AppButtons {
     );
   }
 
-  static Widget button1({
-    required GestureTapCallback? onTap,
-    required Widget text,
-    double? size = double.infinity,
-    double? imgHeight = 24,
-    double? imgWeight = 24,
-    double? borderRadius = 4,
 
-    Color? buttonColor,
-    Color? foreGroundColor,
-    Color? borderColor,
-    Color? textColor = Colors.white,
-    bool? isLoading,
-    bool hasBorder = false,
-    String? imagePath,
-  }) {
-    return SizedBox(
-      width: size,
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          foregroundColor: foreGroundColor,
-
-          shape:
-              hasBorder
-                  ? RoundedRectangleBorder(
-                    side: BorderSide(color: Color(0xff3F5FF2)),
-                    borderRadius: BorderRadius.circular(borderRadius!),
-                  )
-                  : RoundedRectangleBorder(
-                    side: BorderSide(color: borderColor ?? Colors.transparent),
-
-                    borderRadius: BorderRadius.circular(borderRadius!),
-                  ),
-          elevation: 0,
-          fixedSize: Size(150.w, 40.h),
-          backgroundColor: buttonColor,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (imagePath != null) ...[
-              Image.asset(
-                imagePath,
-                height: imgHeight!.sp,
-                width: imgWeight!.sp,
-              ),
-              SizedBox(width: 10.w),
-            ],
-            DefaultTextStyle(
-              style: TextStyle(
-                fontFamily: "Roboto-normal",
-                fontSize: 16.sp,
-                color: textColor,
-                fontWeight: FontWeight.bold,
-              ),
-              child: text,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

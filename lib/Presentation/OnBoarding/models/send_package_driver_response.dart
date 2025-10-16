@@ -19,7 +19,7 @@ class SendPackageDriverResponse {
 }
 
 class BookingPackageDriverData {
-  final int totalDrivers;
+  final String totalDrivers;
 
   BookingPackageDriverData({required this.totalDrivers});
 
