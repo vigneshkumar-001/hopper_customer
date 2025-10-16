@@ -74,12 +74,14 @@ class DriverSearchController extends GetxController {
     required double toLatitude,
     required double toLongitude,
     required String customerId,
+    required String carType,
     required BuildContext context,
   }) async {
     isLoading.value = true;
 
     try {
       final results = await apiDataSource.carBookingCar(
+        carType: carType,
         fromLatitude: fromLatitude,
         fromLongitude: fromLongitude,
         toLatitude: toLatitude,
@@ -229,7 +231,6 @@ class DriverSearchController extends GetxController {
 
     try {
       final results = await apiDataSource.starRating(
-
         selectedReason: rating,
         bookingId: bookingId,
       );
@@ -262,6 +263,47 @@ class DriverSearchController extends GetxController {
     } catch (e) {
       isLoading.value = false;
       return 'An error occurred';
+    }
+  }
+
+  Future<bool> noDriverFound({
+    required String bookingId,
+    required bool status,
+    required BuildContext context,
+  }) async {
+    isLoading.value = true;
+
+    try {
+      final results = await apiDataSource.noDriverFound(
+        status: status,
+        bookingId: bookingId,
+      );
+
+      return results.fold(
+        (failure) {
+          isLoading.value = false;
+          return false;
+        },
+        (response) {
+          isLoading.value = false;
+
+          sendDriverRequestData.value = response.data;
+          final totalDrivers =
+              int.tryParse(
+                sendDriverRequestData.value?.driversNotified.toString() ?? '0',
+              ) ??
+              0;
+
+          AppLogger.log.i("Total Drivers Found: $totalDrivers");
+
+          // ✅ Return TRUE only if there are drivers found
+          return totalDrivers > 0;
+        },
+      );
+    } catch (e) {
+      isLoading.value = false;
+      AppLogger.log.e("NoDriverFound Error: $e");
+      return false;
     }
   }
 

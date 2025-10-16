@@ -85,7 +85,8 @@ class OtpController extends GetxController {
   Future<String?> resend({
     required String mobileNumber,
     required String code,
-  }) async {
+  }) async
+  {
     try {
       final results = await apiDataSource.resendOtp(mobileNumber, code);
       results.fold((failure) {}, (response) {

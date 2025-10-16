@@ -19,7 +19,7 @@ class SendDriverRequestModels {
 }
 
 class BookingDriverData {
-  final int driversNotified;
+  final String driversNotified;
 
   BookingDriverData({required this.driversNotified});
 

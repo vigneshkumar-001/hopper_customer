@@ -248,7 +248,7 @@ class FareBreakdown {
   final double baseFare;
   final double rideDistanceInKm;
   final double perKilometerRate;
-  final double distanceFare;
+  final dynamic distanceFare;
   final int rideDuration;
   final double timeFareAmount;
   final double timeFare;

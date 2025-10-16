@@ -206,7 +206,6 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
   }*/
 
   Future<void> initStripe() async {
-
     Stripe.publishableKey = widget.publishableKey ?? "";
 
     // Initialize payment sheet
@@ -230,26 +229,25 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
         await Controller.getWalletBalance();
 
         AppLogger.log.i("✅ Payment successful");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Payment Successful")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Payment Successful")));
 
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (context) => CommonBottomNavigation(initialIndex: 2),
           ),
-              (route) => false,
+          (route) => false,
         );
       });
     } catch (e) {
       AppLogger.log.e("❌ Stripe error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Payment Failed")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Payment Failed")));
     }
   }
-
 
   Future<void> confirmPayment(String transactionId) async {
     try {
@@ -477,13 +475,13 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
                             fontSize: 20,
                           ),
                           CustomTextFields.textWithStylesSmall(
-                            'Razorpay Trusted Businnes',
+                            'Hoppr Trusted Business',
                           ),
                         ],
                       ),
 
                       Spacer(),
-                      Image.asset(AppImages.history, height: 20, width: 20),
+                      // Image.asset(AppImages.history, height: 20, width: 20),
                     ],
                   ),
 
@@ -635,7 +633,7 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
                   ),
                   SizedBox(height: 15),
 
-                  CustomTextFields.textWithStyles700('Wallets', fontSize: 16),
+                  /*   CustomTextFields.textWithStyles700('Wallets', fontSize: 16),
                   SizedBox(height: 15),
                   PackageContainer.customWalletContainer(
                     onTap: () {},
@@ -649,7 +647,7 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
                       imagePath: AppImages.nBlackCurrency,
                       imageColors: AppColors.walletCurrencyColor,
                     ),
-                  ),
+                  ),*/
                   SizedBox(height: 15),
                   PackageContainer.customWalletContainer(
                     onTap: () {},
@@ -687,7 +685,7 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
                   children: [
                     const SizedBox(height: 5),
                     CustomTextFields.textWithImage(
-                      text: widget.amount.toString() ?? '280',
+                      text: widget.amount.toString() ?? '0',
                       fontSize: 25,
                       colors: AppColors.commonBlack,
                       fontWeight: FontWeight.w700,

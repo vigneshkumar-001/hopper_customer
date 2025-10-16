@@ -72,6 +72,8 @@ class RideHistoryData {
 
   final int? rideDurationSeconds;
   final String? rideDurationFormatted;
+  final String? ridehistoryColor;
+  final String? starRating;
 
   RideHistoryData({
     this.id,
@@ -123,6 +125,8 @@ class RideHistoryData {
     this.driverRating,
     this.rideDurationSeconds,
     this.rideDurationFormatted,
+    this.starRating,
+    this.ridehistoryColor,
   });
 
   factory RideHistoryData.fromJson(Map<String, dynamic> json) {
@@ -201,6 +205,8 @@ class RideHistoryData {
               : null,
       rideDurationSeconds: json['rideDurationSeconds'],
       rideDurationFormatted: json['rideDurationFormatted'],
+      ridehistoryColor: json['ridehistoryColor'],
+      starRating: json['starRating'],
     );
   }
 }

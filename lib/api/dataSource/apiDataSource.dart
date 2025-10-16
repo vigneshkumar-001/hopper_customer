@@ -4,8 +4,10 @@ import 'dart:io';
 import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/Presentation/Authentication/models/login_response.dart';
 import 'package:hopper/Presentation/Authentication/models/otp_response.dart';
+import 'package:hopper/Presentation/Authentication/models/sos_response.dart';
 import 'package:hopper/Presentation/BookRide/Models/create_booking_model.dart';
 import 'package:hopper/Presentation/BookRide/Models/driver_search_models.dart';
+import 'package:hopper/Presentation/BookRide/Models/payment_response.dart';
 import 'package:hopper/Presentation/BookRide/Models/send_driver_request_models.dart';
 import 'package:hopper/Presentation/Drawer/models/notification_response.dart';
 import 'package:hopper/Presentation/Drawer/models/profile_response.dart';
@@ -46,7 +48,7 @@ class ApiDataSource extends BaseApiDataSource {
       final String phone = countryCode + mobileNumber;
       dynamic response = await Request.sendRequest(
         url,
-        {"phone": mobileNumber,'countryCode': countryCode},
+        {"phone": mobileNumber, 'countryCode': countryCode},
         'Post',
         false,
       );
@@ -165,6 +167,7 @@ class ApiDataSource extends BaseApiDataSource {
     required double toLatitude,
     required double toLongitude,
     required String customerId,
+    required String carType,
   }) async {
     try {
       final url = ApiConsents.createBooking;
@@ -177,13 +180,14 @@ class ApiDataSource extends BaseApiDataSource {
           "fromLongitude": fromLongitude,
           "toLatitude": toLatitude,
           "toLongitude": toLongitude,
-
           "sharedBooking": false,
           "sharedCount": 1,
+          "carType": carType,
         },
         'Post',
         false,
       );
+      AppLogger.log.i(response);
       if (response.statusCode == 200) {
         if (response.data['status'] == 200) {
           return Right(CreateBookingModel.fromJson(response.data));
@@ -625,6 +629,8 @@ class ApiDataSource extends BaseApiDataSource {
     required String gender,
     required String email,
     required String profileImage,
+    required String emergencyNumber,
+    required String countryCode,
   }) async {
     try {
       final url = ApiConsents.postCustomerDetails;
@@ -639,6 +645,8 @@ class ApiDataSource extends BaseApiDataSource {
           "gender": gender,
           "email": email,
           "profileImage": profileImage,
+          "emergencyContactNumber": emergencyNumber,
+          "emergencyCountryCode": countryCode,
         },
         'POST',
         false,
@@ -693,4 +701,103 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
+  Future<Either<Failure, SendDriverRequestModels>> noDriverFound({
+    required String bookingId,
+    required bool status,
+  }) async {
+    try {
+      final url = ApiConsents.sendDriverRequestStatus;
+      AppLogger.log.i(url);
+
+      dynamic response = await Request.sendRequest(
+        url,
+        {"bookingId": bookingId, "driverNotAvailableFromCustomer": status},
+        'Post',
+        true,
+      );
+      if (response.statusCode == 200) {
+        if (response.data['status'] == 200) {
+          return Right(SendDriverRequestModels.fromJson(response.data));
+        } else {
+          return Left(ServerFailure(response.data['message'] ?? " "));
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
+  Future<Either<Failure, PaymentResponse>> paymentDetails({
+    required String bookingId,
+    required String paymentType,
+  }) async {
+    try {
+      final url = ApiConsents.paymentBooking;
+      AppLogger.log.i(url);
+
+      dynamic response = await Request.sendRequest(
+        url,
+        {
+          "userBookingId": bookingId,
+          "paymentType": paymentType,
+          // "paymentType":"WALLET" // "COD"
+        },
+        'Post',
+        false,
+      );
+      if (response.statusCode == 200) {
+        if (response.data['status'] == 200) {
+          return Right(PaymentResponse.fromJson(response.data));
+        } else {
+          return Left(ServerFailure(response.data['message'] ?? " "));
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
+
+
+
+  Future<Either<Failure, SosResponse>> getAppSettings() async {
+    try {
+      final url = ApiConsents.appSettings;
+      AppLogger.log.i(url);
+
+      dynamic response = await Request.sendGetRequest(url, {}, 'GET', false);
+
+      if (response.statusCode == 200) {
+        if (response.data['success'] == true) {
+          return Right(SosResponse.fromJson(response.data));
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Login failed"),
+          );
+        }
+      } else if (response is Response) {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Unexpected error"),
+        );
+      } else {
+        return Left(ServerFailure("Unknown error occurred"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure('Something went wrong'));
+    }
+  }
 }

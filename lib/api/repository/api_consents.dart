@@ -1,11 +1,13 @@
 class ApiConsents {
   static String baseUrl = 'https://hoppr-face-two-dbe557472d7f.herokuapp.com';
   static String baseUrl1 = 'https://4wsg7ghz-3000.inc1.devtunnels.ms';
-  static String googleMapApiKey = 'AIzaSyDZ0T-ObERFV38YA0F2AVdZtrt1qUO-1D8';
+  static String googleMapApiKey = 'AIzaSyA5wtbZ30XrpN1WE9-ZM1CYbY0g31NlT_A';
+  // static String googleMapApiKey = 'AIzaSyDZ0T-ObERFV38YA0F2AVdZtrt1qUO-1D8';
 
   static String createBooking = '$baseUrl/api/customer/create-booking';
   static String confirmBooking = '$baseUrl/api/customer/parcel/confirm-booking';
   static String sendDriverRequest = '$baseUrl/api/customer/send-driver-request';
+  static String paymentBooking = '$baseUrl/api/customer/paymentBooking';
   static String rideHistory = '$baseUrl/api/customer/ride-history';
   static String getCustomerDetails = '$baseUrl/api/customer/getCustomerDetails';
   static String postCustomerDetails =
@@ -18,11 +20,9 @@ class ApiConsents {
   static String verifyOtp = '$baseUrl/api/customer/verify-otp';
   static String resendOtp = '$baseUrl/api/customer/resend-otp';
   static String notification = '$baseUrl/api/customer/notifications';
-
-
-
-
-
+  static String appSettings = '$baseUrl/api/settings/app-settings';
+  static String sendDriverRequestStatus =
+      '$baseUrl/api/customer/sendDriverRequestStatus';
 
   static String addToWalletResponse =
       '$baseUrl/api/customer/add-to-wallet-reponse';

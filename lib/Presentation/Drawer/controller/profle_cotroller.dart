@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
 import 'package:hopper/api/dataSource/apiDataSource.dart';
 import 'package:hopper/Presentation/Drawer/models/profile_response.dart';
-
+import 'package:country_picker/country_picker.dart';
 class ProfleCotroller extends GetxController {
   RxBool isEditing = false.obs;
   RxBool isLoading = false.obs;
@@ -16,18 +16,26 @@ class ProfleCotroller extends GetxController {
   TextEditingController genderController = TextEditingController();
   TextEditingController emailController = TextEditingController();
 
+  final TextEditingController emergencyController = TextEditingController();
+
   ApiDataSource apiDataSource = ApiDataSource();
   Rxn<UserModel> user = Rxn<UserModel>();
   RxString frontImageUrl = ''.obs;
   String mobileNumber = " ";
   RxString code = " ".obs;
-
+  final RxString selectedCountryCode = ''.obs;
+  final RxString selectedCountryFlag = ''.obs;
+  final RxString errorText = ''.obs;
 
 
   RxString userName = " ".obs;
   RxString userId = "".obs;
   RxString profileImagePath = "".obs;
+  final Rx<Country?> selectedCountry = Rx<Country?>(null);
 
+  void setSelectedCountry(Country country) {
+    selectedCountry.value = country;
+  }
   @override
   void onInit() {
     super.onInit();
@@ -121,6 +129,8 @@ class ProfleCotroller extends GetxController {
 
     String gender = genderController.text;
     String email = emailController.text;
+    String emergencyNumber = emergencyController.text;
+    String countryCode = selectedCountryCode.value;
 
     File? frontImageFile;
     if (profileImagePath.value.isNotEmpty &&
@@ -135,11 +145,13 @@ class ProfleCotroller extends GetxController {
     }
 
     String? result = await submitProfileData(
+      countryCode: countryCode,
       firstName: firstName,
       lastName: lastName,
       dateOfBirth: dateOfBirth,
       gender: gender,
       email: email,
+      emergencyNumber: emergencyNumber,
       frontImageFile: frontImageFile,
       profileImage: profileImagePath.value,
     );
@@ -170,10 +182,13 @@ class ProfleCotroller extends GetxController {
     required String dateOfBirth,
     required String gender,
     required String email,
+    required String emergencyNumber,
+    required String countryCode, // ✅ Add this
     File? frontImageFile,
     required String profileImage,
       BuildContext?  context,
-  }) async {
+  }) async
+  {
     try {
       isLoading.value = true;
       String? frontImageUrl;
@@ -208,7 +223,9 @@ class ProfleCotroller extends GetxController {
         dateOfBirth: dateOfBirth,
         gender: gender,
         email: email,
-        profileImage: frontImageUrl, // ✅ use uploaded URL
+        profileImage: frontImageUrl,
+        emergencyNumber: emergencyNumber, // ✅ added
+        countryCode: countryCode,         // ✅ added
       );
 
       return results.fold(

@@ -68,6 +68,8 @@ dev_dependencies:
   flutter_polyline_points: any
   cached_network_image: any
 
+  tutorial_coach_mark: ^1.3.1
+
 
 
 

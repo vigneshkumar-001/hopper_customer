@@ -1,7 +1,7 @@
 class TransactionResponse {
   final bool success;
-  final double balance;
-  final int totalTransactions;
+  final String balance;
+  final String totalTransactions;
   final List<Transaction> transactions;
 
   TransactionResponse({
@@ -14,8 +14,8 @@ class TransactionResponse {
   factory TransactionResponse.fromJson(Map<String, dynamic> json) {
     return TransactionResponse(
       success: json['success'] ?? false,
-      balance: (json['balance'] ?? 0).toDouble(),
-      totalTransactions: json['totalTransactions'] ?? 0,
+      balance: json['balance'] ?? '0',
+      totalTransactions: json['totalTransactions'] ?? '0',
       transactions:
           (json['transactions'] as List<dynamic>?)
               ?.map((e) => Transaction.fromJson(e))

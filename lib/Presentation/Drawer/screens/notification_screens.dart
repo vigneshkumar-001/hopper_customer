@@ -8,7 +8,6 @@ import 'package:hopper/Presentation/Drawer/models/notification_response.dart';
 import '../../Authentication/widgets/textFields.dart';
 import 'package:get/get.dart';
 
-
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
 
@@ -28,16 +27,22 @@ class _NotificationScreenState extends State<NotificationScreen>
     notificationController.getNotification();
     _tabController = TabController(length: 4, vsync: this);
   }
+
   String getImagePath(String imageType, bool sharedBooking) {
-    if (sharedBooking) return AppImages.twoPeople; // shared
+    if (sharedBooking) return AppImages.twoPeople;
 
     switch (imageType.toLowerCase()) {
-      case "bike":
+      case "Bike":
         return AppImages.nCar;
-      case "car":
+      case "Car":
         return AppImages.nCar;
       case "package":
         return AppImages.nPackage;
+      case "Wallet":
+        return AppImages.bWallet;
+      case "Cancelled":
+        return AppImages.nClose;
+
       default:
         return AppImages.nCar; // default image
     }
@@ -48,7 +53,6 @@ class _NotificationScreenState extends State<NotificationScreen>
     _tabController.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +75,10 @@ class _NotificationScreenState extends State<NotificationScreen>
                     ),
                   ),
                   const Spacer(),
-                  CustomTextFields.textWithStyles700('History', fontSize: 20),
+                  CustomTextFields.textWithStyles700(
+                    'Notifications',
+                    fontSize: 20,
+                  ),
                   const Spacer(),
                 ],
               ),
@@ -114,39 +121,41 @@ class _NotificationScreenState extends State<NotificationScreen>
               ),
             ),
 
-            // Tab Views
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildNotificationList(notificationController.notificationData),
+            Obx(() {
+              return Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildNotificationList(
+                      notificationController.notificationData,
+                    ),
 
-                  _buildNotificationList(
-                    notificationController.notificationData
-                        .where((n) => n.bookingType.toLowerCase() == "Ride")
-                        .toList(),
-                  ),
+                    _buildNotificationList(
+                      notificationController.notificationData
+                          .where((n) => n.bookingType == "Ride")
+                          .toList(),
+                    ),
 
-                  _buildNotificationList(
-                    notificationController.notificationData
-                        .where((n) => n.bookingType.toLowerCase() == "package")
-                        .toList(),
-                  ),
+                    _buildNotificationList(
+                      notificationController.notificationData
+                          .where((n) => n.bookingType == "Parcel")
+                          .toList(),
+                    ),
 
-                  _buildNotificationList(
-                    notificationController.notificationData
-                        .where((n) => n.sharedBooking == true)
-                        .toList(),
-                  ),
-                ],
-              ),
-            ),
+                    _buildNotificationList(
+                      notificationController.notificationData
+                          .where((n) => n.sharedBooking == true)
+                          .toList(),
+                    ),
+                  ],
+                ),
+              );
+            }),
           ],
         ),
       ),
     );
   }
-
 
   Widget _buildNotificationList(List<NotificationData> notifications) {
     return Obx(() {
@@ -161,11 +170,30 @@ class _NotificationScreenState extends State<NotificationScreen>
       return RefreshIndicator(
         onRefresh: () => notificationController.getNotification(),
         child: ListView.builder(
-          physics:   BouncingScrollPhysics(),
+          physics: BouncingScrollPhysics(),
           padding: const EdgeInsets.all(10),
           itemCount: notifications.length,
           itemBuilder: (context, index) {
+            // final Map<String, String> typeIcons = {
+            //   "Wallet": AppImages.wallet,
+            //   "Bike": AppImages.nPackage,
+            //   "Car": AppImages.nCar,
+            //   "Parcel_arrived": AppImages.nPackage,
+            //   "Cancelled": AppImages.nClose,
+            // };
+            //
+            // final Map<String, Color> typeColors = {
+            //   "Wallet": AppColors.greyDark,
+            //   "Bike": Colors.blue.shade100,
+            //   "Car": AppColors.circularClr,
+            //   "Parcel_arrived": AppColors.circularClr,
+            //   "Cancelled": AppColors.circularClr,
+            // };
+
             final data = notifications[index];
+            // final iconPath = typeIcons[data.imageType] ?? AppImages.nCar;
+            // final bgColor =
+            //     typeColors[data.imageType] ?? AppColors.rideShareContainerColor;
             return buildNotificationCard(
               tittle: data.title,
               description: data.message,
@@ -179,7 +207,6 @@ class _NotificationScreenState extends State<NotificationScreen>
       );
     });
   }
-
 
   Widget buildNotificationCard({
     required String tittle,
@@ -248,6 +275,4 @@ class _NotificationScreenState extends State<NotificationScreen>
       ),
     );
   }
-
-
 }

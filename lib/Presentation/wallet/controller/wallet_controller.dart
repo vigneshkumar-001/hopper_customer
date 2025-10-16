@@ -16,7 +16,7 @@ class WalletController extends GetxController {
   RxList<Transaction> traction = RxList<Transaction>([]);
 
   final RxBool isLoading = false.obs;
-  var balance = 0.0.obs; // <- Balance variable
+  var balance = 0.0.obs; // Observable double
   @override
   void onInit() {
     super.onInit();
@@ -36,7 +36,6 @@ class WalletController extends GetxController {
       );
       results.fold(
         (failure) {
-
           AppLogger.log.e("❌ Ride history fetch failed: $failure");
         },
         (response) {
@@ -92,7 +91,8 @@ class WalletController extends GetxController {
         },
         (response) {
           traction.value = response.transactions;
-          balance.value = response.balance; // ← store balance
+          balance.value =
+              double.tryParse(response.balance) ?? 0.0; // ✅ parse string
           AppLogger.log.i("✅ Raw response: ${response.transactions}");
           return response.transactions.toString();
         },

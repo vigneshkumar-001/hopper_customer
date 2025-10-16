@@ -24,6 +24,7 @@ class AppColors {
   static final justInColor = Color(0xff5700D0);
   static final twoPeopleClr = Color(0xffF9F6FE);
   static final addToAddress = Color(0xff357AE9);
+  static final emergencyColor = Color(0xff1B2072);
 
   static final choiceChipColor = Color(0xff006FD0);
   static final nCarColor = Color(0xffF0F6FE);

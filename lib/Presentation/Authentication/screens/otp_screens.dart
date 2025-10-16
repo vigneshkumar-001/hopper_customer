@@ -120,14 +120,6 @@ class _OtpScreensState extends State<OtpScreens> {
                                       otpController.otpVerify(
                                         otp: otp.text,
                                         onSuccess: () async {
-                                          Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                  PermissionScreens(),
-                                            ),
-                                          );
                                           // if (mounted) {
                                           //   LocationPermission permission =
                                           //       await Geolocator.checkPermission();
@@ -163,7 +155,7 @@ class _OtpScreensState extends State<OtpScreens> {
                                           //   }
                                           // }
 
-                                          /*      if (mounted) {
+                                          if (mounted) {
                                             Navigator.pushReplacement(
                                               context,
                                               MaterialPageRoute(
@@ -172,7 +164,7 @@ class _OtpScreensState extends State<OtpScreens> {
                                                         PermissionScreens(),
                                               ),
                                             );
-                                          }*/
+                                          }
                                         },
                                         onError: (error) {
                                           setState(() {

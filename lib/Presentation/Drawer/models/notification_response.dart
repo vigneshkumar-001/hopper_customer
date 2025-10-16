@@ -38,7 +38,7 @@ class NotificationData {
   String message;
   NotificationDetails data;
   String status;
-  DateTime createdAt;
+  String createdAt;
   DateTime updatedAt;
   int v;
   String imageType;
@@ -74,7 +74,7 @@ class NotificationData {
       message: json['message'] ?? '',
       data: NotificationDetails.fromJson(json['data'] ?? {}),
       status: json['status'] ?? '',
-      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+      createdAt: json['createdAt'] ?? '' ,
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
       v: json['__v'] ?? 0,
       imageType: json['imageType'] ?? '',
@@ -94,7 +94,7 @@ class NotificationData {
       'message': message,
       'data': data.toJson(),
       'status': status,
-      'createdAt': createdAt.toIso8601String(),
+      'createdAt': createdAt,
       'updatedAt': updatedAt.toIso8601String(),
       '__v': v,
       'imageType': imageType,

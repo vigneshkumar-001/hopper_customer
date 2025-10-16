@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hopper/Presentation/Drawer/controller/profle_cotroller.dart';
 import 'package:hopper/Presentation/OnBoarding/Controller/package_controller.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/pay_pall_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/models/address_models.dart';
+import 'package:hopper/Presentation/wallet/controller/wallet_controller.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
@@ -19,6 +22,8 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:get/get.dart';
+
+import 'package:cached_network_image/cached_network_image.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String? bookingId;
@@ -43,9 +48,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final DriverSearchController driverSearchController =
       DriverSearchController();
   final PackageController packageController = Get.put(PackageController());
+  final WalletController walletController = Get.put(WalletController());
+
+  final ProfleCotroller controller = Get.put(ProfleCotroller());
+  bool _isRatingSheetOpen = false;
+
   bool _isLoading = false;
   bool payPalLoading = false;
-  void _showRatingBottomSheet(BuildContext context) {
+  /*  void _showRatingBottomSheet(BuildContext context) {
     int selectedRating = 0;
 
     showModalBottomSheet(
@@ -73,107 +83,155 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 50),
-                    child: Column(
-                      children: [
-                        Image.asset(AppImages.dummy, height: 65, width: 65),
-                        const SizedBox(height: 20),
-                        CustomTextFields.textWithStyles600(
-                          textAlign: TextAlign.center,
-                          fontSize: 20,
-                          'Rate your Experience with Rebecca?',
-                        ),
-                        const SizedBox(height: 25),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: List.generate(5, (index) {
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    selectedRating = index + 1;
-                                  });
-                                  AppLogger.log.i(selectedRating);
-                                },
-                                child: Image.asset(
-                                  index < selectedRating
-                                      ? AppImages.starFill
-                                      : AppImages.star1,
-                                  height: 48,
-                                  width: 48,
-                                  color:
-                                      index < selectedRating
-                                          ? AppColors.commonBlack
-                                          : AppColors.buttonBorder,
-                                ),
-                              );
-                              return IconButton(
-                                icon: Icon(
-                                  Icons.star,
-                                  size: 45,
-                                  color:
-                                      index < selectedRating
-                                          ? AppColors.commonBlack
-                                          : AppColors.containerColor,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    selectedRating = index + 1;
-                                  });
-                                },
-                              );
-                            }),
+
+                  Obx(() {
+                    final user = controller.user.value;
+                    if (user == null) {
+                      return const SizedBox();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      child: Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: CachedNetworkImage(
+                              imageUrl: user.profileImage ?? '',
+                              height: 60,
+                              width: 60,
+                              fit: BoxFit.cover,
+                              placeholder:
+                                  (context, url) => SizedBox(
+                                    height: 45,
+                                    width: 45,
+                                    child: const Center(
+                                      child: SizedBox(
+                                        height: 15,
+                                        width: 15,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              errorWidget:
+                                  (context, url, error) => Container(
+                                    height: 45,
+                                    width: 45,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[300],
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                      size: 25,
+                                    ),
+                                  ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: AppButtons.button1(
-                                  borderRadius: 8,
-                                  textColor: AppColors.commonBlack,
-                                  borderColor: AppColors.buttonBorder,
-                                  buttonColor: AppColors.commonWhite,
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: CustomTextFields.textWithStyles600(
+                              textAlign: TextAlign.center,
+                              fontSize: 20,
+                              'Rate your Experience with ${user.firstName}?',
+                            ),
+                          ),
+                          const SizedBox(height: 25),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: List.generate(5, (index) {
+                                return GestureDetector(
                                   onTap: () {
-                                    Navigator.pop(context);
+                                    setState(() {
+                                      selectedRating = index + 1;
+                                    });
+                                    AppLogger.log.i(selectedRating);
                                   },
-                                  text: Text('Close'),
-                                ),
-                              ),
-                              SizedBox(width: 10),
-                              Expanded(
-                                child: Obx(() {
-                                  return AppButtons.button1(
-                                    isLoading:
-                                        driverSearchController.isLoading.value,
-                                    borderRadius: 8,
-                                    buttonColor: AppColors.commonBlack,
-                                    onTap: () {
-                                      final String bookingId =
-                                          widget.bookingId ?? '';
-                                      selectedRating;
-                                      AppLogger.log.i(selectedRating);
-                                      driverSearchController.rateDriver(
-                                        bookingId: bookingId,
-                                        rating: selectedRating.toString(),
-                                        context: context,
-                                      );
-                                    },
-                                    text: Text('Rate Ride'),
-                                  );
-                                }),
-                              ),
-                            ],
+                                  child: Image.asset(
+                                    index < selectedRating
+                                        ? AppImages.starFill
+                                        : AppImages.star1,
+                                    height: 48,
+                                    width: 48,
+                                    color:
+                                        index < selectedRating
+                                            ? AppColors.commonBlack
+                                            : AppColors.buttonBorder,
+                                  ),
+                                );
+                                return IconButton(
+                                  icon: Icon(
+                                    Icons.star,
+                                    size: 45,
+                                    color:
+                                        index < selectedRating
+                                            ? AppColors.commonBlack
+                                            : AppColors.containerColor,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      selectedRating = index + 1;
+                                    });
+                                  },
+                                );
+                              }),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  ),
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: AppButtons.button1(
+                                    borderRadius: 8,
+                                    textColor: AppColors.commonBlack,
+                                    borderColor: AppColors.buttonBorder,
+                                    buttonColor: AppColors.commonWhite,
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    text: Text('Close'),
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Obx(() {
+                                    return AppButtons.button1(
+                                      isLoading:
+                                          driverSearchController
+                                              .isLoading
+                                              .value,
+                                      borderRadius: 8,
+                                      buttonColor: AppColors.commonBlack,
+                                      onTap: () {
+                                        final String bookingId =
+                                            widget.bookingId ?? '';
+                                        selectedRating;
+                                        AppLogger.log.i(selectedRating);
+                                        driverSearchController.rateDriver(
+                                          bookingId: bookingId,
+                                          rating: selectedRating.toString(),
+                                          context: context,
+                                        );
+                                      },
+                                      text: Text('Rate Ride'),
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    );
+                  }),
                 ],
               ),
             );
@@ -181,6 +239,168 @@ class _PaymentScreenState extends State<PaymentScreen> {
         );
       },
     );
+  }*/
+  Future<void> _showRatingBottomSheet(BuildContext context) async {
+    if (_isRatingSheetOpen) return; // guard
+    _isRatingSheetOpen = true;
+
+    int selectedRating = 0;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Center(
+                    child: Container(
+                      width: 60,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  Obx(() {
+                    final user = controller.user.value;
+                    if (user == null) return const SizedBox();
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      child: Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: CachedNetworkImage(
+                              imageUrl: user.profileImage ?? '',
+                              height: 60,
+                              width: 60,
+                              fit: BoxFit.cover,
+                              placeholder:
+                                  (context, url) => SizedBox(
+                                    height: 45,
+                                    width: 45,
+                                    child: const Center(
+                                      child: SizedBox(
+                                        height: 15,
+                                        width: 15,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              errorWidget:
+                                  (context, url, error) => Container(
+                                    height: 45,
+                                    width: 45,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[300],
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                      size: 25,
+                                    ),
+                                  ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: CustomTextFields.textWithStyles600(
+                              textAlign: TextAlign.center,
+                              fontSize: 20,
+                              'Rate your Experience with ${user.firstName}?',
+                            ),
+                          ),
+                          const SizedBox(height: 25),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: List.generate(5, (index) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    setState(() => selectedRating = index + 1);
+                                    AppLogger.log.i(selectedRating);
+                                  },
+                                  child: Image.asset(
+                                    index < selectedRating
+                                        ? AppImages.starFill
+                                        : AppImages.star1,
+                                    height: 48,
+                                    width: 48,
+                                    color:
+                                        index < selectedRating
+                                            ? AppColors.commonBlack
+                                            : AppColors.buttonBorder,
+                                  ),
+                                );
+                              }),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: AppButtons.button1(
+                                    borderRadius: 8,
+                                    textColor: AppColors.commonBlack,
+                                    borderColor: AppColors.buttonBorder,
+                                    buttonColor: AppColors.commonWhite,
+                                    onTap: () => Navigator.pop(context),
+                                    text: const Text('Close'),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Obx(() {
+                                    return AppButtons.button1(
+                                      isLoading:
+                                          driverSearchController
+                                              .isLoading
+                                              .value,
+                                      borderRadius: 8,
+                                      buttonColor: AppColors.commonBlack,
+                                      onTap: () {
+                                        final String bookingId =
+                                            widget.bookingId ?? '';
+                                        driverSearchController.rateDriver(
+                                          bookingId: bookingId,
+                                          rating: selectedRating.toString(),
+                                          context: context,
+                                        );
+                                      },
+                                      text: const Text('Rate Ride'),
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    _isRatingSheetOpen = false; // release when closed
   }
 
   Map<String, dynamic>? paymentIntentData;
@@ -344,6 +564,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    walletController.getWalletBalance();
+    controller.getProfileData();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
@@ -382,7 +610,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         'Payment Method',
                         fontSize: 20,
                       ),
-                      Image.asset(AppImages.history, height: 20, width: 20),
+                      Text(''),
+                      // Image.asset(AppImages.history, height: 20, width: 20),
                     ],
                   ),
 
@@ -403,7 +632,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 : () async {
                                   setState(() {
                                     payPalLoading = true;
-                                    selectedIndex = 0; // 0 for PayPal
+                                    selectedIndex = 0;
                                   });
 
                                   await payPall();
@@ -548,13 +777,27 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   CustomTextFields.textWithStyles700('Wallets', fontSize: 16),
                   SizedBox(height: 15),
                   PackageContainer.customWalletContainer(
-                    onTap: () {},
+                    borderColor:
+                        selectedIndex == 1
+                            ? Colors.black
+                            : AppColors.containerColor,
+                    onTap: () {
+                      setState(() {
+                        selectedIndex = 1;
+                      });
+                    },
                     title: 'Hoppr Wallet',
 
                     leadingImagePath: AppImages.wallet,
                     trailing: CustomTextFields.textWithImage(
                       fontWeight: FontWeight.w600,
-                      text: '0.0',
+                      text:
+                          walletController
+                              .walletBalance
+                              .value
+                              ?.customerWalletBalance
+                              ?.toString() ??
+                          "0",
                       colors: AppColors.walletCurrencyColor,
                       imagePath: AppImages.nBlackCurrency,
                       imageColors: AppColors.walletCurrencyColor,
@@ -641,44 +884,161 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ],
                 ),
                 const SizedBox(width: 40),
+
+                /*Expanded(
+                  child: Obx(() {
+                    return AppButtons.button(
+                      onTap: () async {
+                        if (selectedIndex == 1 || selectedIndex == 3) {
+                          _showRatingBottomSheet(context);
+                          print('Cash On Delivery or Hoppr Wallet selected');
+                          final paymentType =
+                              selectedIndex == 1 ? 'WALLET' : 'COD';
+
+                          final result = await packageController.paymentDetails(
+                            bookingId: widget.bookingId ?? '',
+                            paymentType: paymentType,
+                            context: context,
+                          );
+
+                          if (result == '') {
+                            _showRatingBottomSheet(context);
+
+                            // After rating, navigate home
+                          } else {
+                            // API failure
+                            // ScaffoldMessenger.of(
+                            //   context,
+                            // ).showSnackBar(SnackBar(content: Text('')));
+                          }
+                        } else {
+                          // Stripe / PayPal flow already handled separately
+                          _showRatingBottomSheet(context);
+                        }
+                      },
+                      isLoading: packageController.isButtonLoading.value,
+                      text: 'Continue',
+                    );
+                  }),
+                ),*/
                 Expanded(
                   child: Obx(() {
                     return AppButtons.button(
-                      onTap: () {
-                        _showRatingBottomSheet(context);
-                        // packageController.sendPackageDriverRequest(
-                        //   bookingId: widget.bookingId ?? '',
-                        //   senderData: widget.sender!,
-                        //   receiverData: widget.receiver!,
-                        // );
+                      onTap: () async {
+                        final walletBalance =
+                            double.tryParse(
+                              walletController
+                                      .walletBalance
+                                      .value
+                                      ?.customerWalletBalance
+                                      ?.toString() ??
+                                  '0',
+                            ) ??
+                            0.0;
+                        final rideAmount = widget.amount ?? 0.0;
+
+                        if (selectedIndex == 1) {
+                          // WALLET
+                          if (walletBalance < rideAmount) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Insufficient wallet balance. Please add funds or choose another payment method.",
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          final result = await packageController.paymentDetails(
+                            bookingId: widget.bookingId ?? '',
+                            paymentType: 'WALLET',
+                            context: context,
+                          );
+
+                          // call ONCE after success (adjust according to your API’s success contract)
+                          if (result ==
+                              '' /* success per your current code */ ) {
+                            await _showRatingBottomSheet(context);
+                          }
+                          return;
+                        }
+
+                        if (selectedIndex == 3) {
+                          // COD
+                          final result = await packageController.paymentDetails(
+                            bookingId: widget.bookingId ?? '',
+                            paymentType: 'COD',
+                            context: context,
+                          );
+                          // show ONCE after success
+                          if (result == '' /* success */ ) {
+                            await _showRatingBottomSheet(context);
+                          }
+                          return;
+                        }
+
+                        // Stripe / PayPal flows:
+                        // Don’t open the sheet here. Open it only after a confirmed success in their respective callbacks.
+                        // For example, after Stripe success in displayPaymentSheet(), call:
+                        // await _showRatingBottomSheet(context);
+
+                        // final walletBalance =
+                        //     double.tryParse(
+                        //       walletController
+                        //               .walletBalance
+                        //               .value
+                        //               ?.customerWalletBalance
+                        //               ?.toString() ??
+                        //           '0',
+                        //     ) ??
+                        //     0.0;
+                        //
+                        // final rideAmount = widget.amount ?? 0.0;
+                        //
+                        // if (selectedIndex == 1) {
+                        //   // 🟡 WALLET SELECTED
+                        //   if (walletBalance < rideAmount) {
+                        //     // ❌ Not enough balance
+                        //     ScaffoldMessenger.of(context).showSnackBar(
+                        //       SnackBar(
+                        //         content: Text(
+                        //           "Insufficient wallet balance. Please add funds or choose another payment method.",
+                        //         ),
+                        //         backgroundColor: Colors.red,
+                        //       ),
+                        //     );
+                        //     return;
+                        //   }
+                        //
+                        //   _showRatingBottomSheet(context);
+                        //   final result = await packageController.paymentDetails(
+                        //     bookingId: widget.bookingId ?? '',
+                        //     paymentType: 'WALLET',
+                        //     context: context,
+                        //   );
+                        //
+                        //   if (result == '') {
+                        //     _showRatingBottomSheet(context);
+                        //   } else {}
+                        // } else if (selectedIndex == 3) {
+                        //   // 💵 CASH ON DELIVERY
+                        //   _showRatingBottomSheet(context);
+                        //   final result = await packageController.paymentDetails(
+                        //     bookingId: widget.bookingId ?? '',
+                        //     paymentType: 'COD',
+                        //     context: context,
+                        //   );
+                        // } else {
+                        //   _showRatingBottomSheet(context);
+                        // }
                       },
-                      isLoading: packageController.isConfirmLoading.value,
+                      isLoading: packageController.isButtonLoading.value,
                       text: 'Continue',
                     );
                   }),
                 ),
-
-                // Expanded(
-                //   child: AppButtons.button(
-                //     onTap: () {
-                //       packageController.sendPackageDriverRequest(
-                //         bookingId: widget.bookingId ?? '',
-                //         senderData: widget.sender!,
-                //         receiverData: widget.receiver!,
-                //       );
-                //       // _showRatingBottomSheet(context);
-                //
-                //       // Navigator.push(
-                //       //   context,
-                //       //   MaterialPageRoute(
-                //       //     builder: (context) => PackageMapConfirmScreen(),
-                //       //   ),
-                //       // );
-                //     },
-                //     isLoading: packageController.isConfirmLoading.value,
-                //     text: 'Continue',
-                //   ),
-                // ),
               ],
             ),
           ),

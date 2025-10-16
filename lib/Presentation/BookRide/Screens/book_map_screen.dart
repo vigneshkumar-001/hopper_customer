@@ -127,20 +127,20 @@ class _BookMapScreenState extends State<BookMapScreen> {
       destinationLocation.longitude,
     );
 
-    if (distance < 1000) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.back(); // First, go back
-
-        // Delay the toast slightly to ensure the context is still safe
-        Future.delayed(const Duration(milliseconds: 300), () {
-          AppToasts.customToast(
-            Get.context!, // safer than old `context` after pop
-            'Pickup and destination must be more than 1 km apart.',
-          );
-        });
-      });
-      return;
-    }
+    // if (distance < 1000) {
+    //   WidgetsBinding.instance.addPostFrameCallback((_) {
+    //     Get.back(); // First, go back
+    //
+    //     // Delay the toast slightly to ensure the context is still safe
+    //     Future.delayed(const Duration(milliseconds: 300), () {
+    //       AppToasts.customToast(
+    //         Get.context!, // safer than old `context` after pop
+    //         'Pickup and destination must be more than 1 km apart.',
+    //       );
+    //     });
+    //   });
+    //   return;
+    // }
 
     _pickupPosition = pickupLocation;
     _destinationPosition = destinationLocation;
@@ -879,9 +879,11 @@ class _BookMapScreenState extends State<BookMapScreen> {
 
                             return;
                           }
-
+                          final _selectedCarType =
+                              driverController.selectedCarType.value;
                           final result = await driverController
                               .createBookingCar(
+                                carType: _selectedCarType,
                                 fromLatitude: _pickupPosition?.latitude ?? 0.0,
                                 fromLongitude:
                                     _pickupPosition?.longitude ?? 0.0,

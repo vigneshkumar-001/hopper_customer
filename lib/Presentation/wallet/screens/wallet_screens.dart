@@ -10,7 +10,8 @@ import 'package:hopper/Presentation/wallet/model/transaction_response.dart';
 import 'package:hopper/Presentation/wallet/screens/add_money_screen.dart';
 
 class WalletScreen extends StatefulWidget {
-  const WalletScreen({super.key});
+  final String? flag;
+  const WalletScreen({super.key, this.flag});
 
   @override
   State<WalletScreen> createState() => _WalletScreenState();
@@ -255,10 +256,11 @@ class _WalletScreenState extends State<WalletScreen> {
   Widget _buildHeader() {
     return Row(
       children: [
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Image.asset(AppImages.backImage, height: 19, width: 19),
-        ),
+        if (widget.flag != "bottomBar")
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Image.asset(AppImages.backImage, height: 19, width: 19),
+          ),
         const Spacer(),
         CustomTextFields.textWithStyles700('Wallet', fontSize: 20),
         const Spacer(),

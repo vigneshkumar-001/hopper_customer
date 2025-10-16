@@ -32,6 +32,7 @@ class AppImages {
   static String payPall = "assets/images/payPall.png";
   static String applePay = "assets/images/applePay.png";
   static String close = "assets/images/close.png";
+  static String nClose = "assets/images/nClose.png";
   static String cash = "assets/images/cash.png";
   static String wallet = "assets/images/wallet.png";
   static String borderAdd = "assets/images/borderAdd.png";
