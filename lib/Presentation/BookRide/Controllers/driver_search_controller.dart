@@ -238,12 +238,13 @@ class DriverSearchController extends GetxController {
       return results.fold(
         (failure) {
           isLoading.value = false;
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CommonBottomNavigation(initialIndex: 0),
-            ),
-          );
+          AppLogger.log.e(failure.message);
+          // Navigator.pushReplacement(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (context) => CommonBottomNavigation(initialIndex: 0),
+          //   ),
+          // );
           return failure.message;
         },
         (response) {

@@ -8,6 +8,7 @@ import 'package:hopper/Presentation/Drawer/screens/settings_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/chat_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/package_screens.dart';
+import 'package:hopper/Presentation/OnBoarding/Screens/payment_screen.dart';
 import 'package:hopper/Presentation/wallet/screens/wallet_screens.dart';
 import 'package:hopper/TutorialService_widgets.dart';
 import 'package:hopper/dummy2.dart';
@@ -34,7 +35,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
   //   ChatScreen(),
   // ];
 
-  @override
+ @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
@@ -57,6 +58,8 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation> {
         return PackageScreens();
       case 4:
         return SettingsScreen(flag: 'bottomBar');
+      // case 4:
+      //   return PaymentScreen(amount: 12220, bookingId: '12346');
       default:
         return HomeScreens();
     }

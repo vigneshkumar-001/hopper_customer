@@ -5,7 +5,7 @@ import 'package:hopper/Core/Consents/app_texts.dart';
 import 'package:hopper/Core/Utility/app_buttons.dart';
 import 'package:hopper/Core/Utility/app_images.dart';
 import 'package:hopper/Core/Utility/app_loader.dart';
-import 'package:hopper/Presentation/Authentication/controller/authcontroller.dart';
+import 'package:hopper/Presentation/Authentication/controller/authController.dart';
 import 'package:hopper/Presentation/Authentication/screens/otp_screens.dart';
 import 'package:hopper/Presentation/Authentication/widgets/textfields.dart';
 import 'package:country_picker/country_picker.dart';

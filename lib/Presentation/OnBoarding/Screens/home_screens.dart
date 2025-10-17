@@ -1159,10 +1159,6 @@ class _HomeScreensState extends State<HomeScreens>
       _initializeSocketAndData();
       _startCompassListener();
     });
-
-
-
-
   }
 
   @override
@@ -1700,7 +1696,6 @@ class _HomeScreensState extends State<HomeScreens>
                         },
                       ),
 
-                      // Center pin image overlay (static)
                       Center(
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 40),
@@ -1712,7 +1707,6 @@ class _HomeScreensState extends State<HomeScreens>
                         ),
                       ),
 
-                      // "My location" FAB (now uses passed callback)
                       Positioned(
                         top: 290,
                         right: 10,
@@ -1801,7 +1795,6 @@ class _HomeScreensState extends State<HomeScreens>
                           Expanded(
                             key: const ValueKey('home_book_expanded'),
                             child: GestureDetector(
-
                               onTap: () => Get.to(BookRideSearchScreen()),
                               child: PackageContainer.customRideContainer(
                                 tittle: 'Book Ride',
@@ -1816,7 +1809,6 @@ class _HomeScreensState extends State<HomeScreens>
                           Expanded(
                             key: const ValueKey('home_courier_expanded'),
                             child: GestureDetector(
-
                               child: PackageContainer.customRideContainer(
                                 onTap: () {
                                   if (!mounted) return;

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:hopper/Core/Utility/app_toasts.dart';
 import 'package:hopper/Presentation/Drawer/controller/profle_cotroller.dart';
 import 'package:hopper/Presentation/OnBoarding/Controller/package_controller.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
 import 'package:hopper/Presentation/OnBoarding/Screens/pay_pall_screen.dart';
 import 'package:hopper/Presentation/OnBoarding/models/address_models.dart';
 import 'package:hopper/Presentation/wallet/controller/wallet_controller.dart';
+import 'package:hopper/webview_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:hopper/Presentation/BookRide/Controllers/driver_search_controller.dart';
@@ -55,200 +57,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   bool _isLoading = false;
   bool payPalLoading = false;
-  /*  void _showRatingBottomSheet(BuildContext context) {
-    int selectedRating = 0;
+  bool flutterWaveLoading = false;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      // shape: const RoundedRectangleBorder(
-      //   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      // ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  Center(
-                    child: Container(
-                      width: 60,
-                      height: 5,
-
-                      decoration: BoxDecoration(
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-
-                  Obx(() {
-                    final user = controller.user.value;
-                    if (user == null) {
-                      return const SizedBox();
-                    }
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: Column(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(50),
-                            child: CachedNetworkImage(
-                              imageUrl: user.profileImage ?? '',
-                              height: 60,
-                              width: 60,
-                              fit: BoxFit.cover,
-                              placeholder:
-                                  (context, url) => SizedBox(
-                                    height: 45,
-                                    width: 45,
-                                    child: const Center(
-                                      child: SizedBox(
-                                        height: 15,
-                                        width: 15,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              errorWidget:
-                                  (context, url, error) => Container(
-                                    height: 45,
-                                    width: 45,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[300],
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.person,
-                                      color: Colors.white,
-                                      size: 25,
-                                    ),
-                                  ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: CustomTextFields.textWithStyles600(
-                              textAlign: TextAlign.center,
-                              fontSize: 20,
-                              'Rate your Experience with ${user.firstName}?',
-                            ),
-                          ),
-                          const SizedBox(height: 25),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 40),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: List.generate(5, (index) {
-                                return GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      selectedRating = index + 1;
-                                    });
-                                    AppLogger.log.i(selectedRating);
-                                  },
-                                  child: Image.asset(
-                                    index < selectedRating
-                                        ? AppImages.starFill
-                                        : AppImages.star1,
-                                    height: 48,
-                                    width: 48,
-                                    color:
-                                        index < selectedRating
-                                            ? AppColors.commonBlack
-                                            : AppColors.buttonBorder,
-                                  ),
-                                );
-                                return IconButton(
-                                  icon: Icon(
-                                    Icons.star,
-                                    size: 45,
-                                    color:
-                                        index < selectedRating
-                                            ? AppColors.commonBlack
-                                            : AppColors.containerColor,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      selectedRating = index + 1;
-                                    });
-                                  },
-                                );
-                              }),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: AppButtons.button1(
-                                    borderRadius: 8,
-                                    textColor: AppColors.commonBlack,
-                                    borderColor: AppColors.buttonBorder,
-                                    buttonColor: AppColors.commonWhite,
-                                    onTap: () {
-                                      Navigator.pop(context);
-                                    },
-                                    text: Text('Close'),
-                                  ),
-                                ),
-                                SizedBox(width: 10),
-                                Expanded(
-                                  child: Obx(() {
-                                    return AppButtons.button1(
-                                      isLoading:
-                                          driverSearchController
-                                              .isLoading
-                                              .value,
-                                      borderRadius: 8,
-                                      buttonColor: AppColors.commonBlack,
-                                      onTap: () {
-                                        final String bookingId =
-                                            widget.bookingId ?? '';
-                                        selectedRating;
-                                        AppLogger.log.i(selectedRating);
-                                        driverSearchController.rateDriver(
-                                          bookingId: bookingId,
-                                          rating: selectedRating.toString(),
-                                          context: context,
-                                        );
-                                      },
-                                      text: Text('Rate Ride'),
-                                    );
-                                  }),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }*/
   Future<void> _showRatingBottomSheet(BuildContext context) async {
-    if (_isRatingSheetOpen) return; // guard
+    if (_isRatingSheetOpen) return;
     _isRatingSheetOpen = true;
-
     int selectedRating = 0;
-
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
       backgroundColor: Colors.white,
       builder: (context) {
         return StatefulBuilder(
@@ -563,9 +382,288 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
+  /*  Future<void> payWithFlutterWave() async {
+    setState(() => flutterWaveLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+          'https://hoppr-face-two-dbe557472d7f.herokuapp.com/api/flutterwave/initialize',
+        ),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "userBookingId": '981867',
+          "amount": widget.amount.toString(),
+          "email": "testuser@example.com",
+          "name": "Test User",
+          "phone": "08012345678",
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final paymentLink = data['paymentLink'];
+
+        if (paymentLink != null) {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => PaymentWebView(url: paymentLink)),
+          );
+
+          if (result != null && result["status"] == "success") {
+            AppToasts.showSuccess('Payment Successful');
+            AppLogger.log.i("Payment Successful: ${result["transactionId"]}");
+            await _showRatingBottomSheet(context);
+          } else {
+            AppToasts.showError("Payment failed or cancelled");
+          }
+        } else {
+          final errorMsg = data['message'] ?? "Failed to initialize payment";
+          AppToasts.showError(errorMsg);
+        }
+      } else {
+        // Now data is already parsed
+        final errorMsg = data['message'] ?? "Failed to initialize payment";
+        AppToasts.showError(errorMsg);
+        AppLogger.log.e(
+          'Failed to initialize Flutterwave payment: ${response.body}',
+        );
+      }
+    } catch (e) {
+      AppToasts.showError(e.toString());
+      AppLogger.log.e("Error during Flutterwave payment: $e");
+    } finally {
+      setState(() => flutterWaveLoading = false);
+    }
+  }*/
+
+  Future<void> payWithFlutterWave() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    String? email = prefs.getString('flutterwave_email');
+    String? name = prefs.getString('flutterwave_name');
+    String? phone = prefs.getString('flutterwave_phone');
+
+    // If any field is empty, show bottom sheet to enter info
+    if (email == null ||
+        email.isNotEmpty ||
+        name == null ||
+        name.isEmpty ||
+        phone == null ||
+        phone.isEmpty) {
+      final result = await _showUserInfoBottomSheet(
+        context,
+        email,
+        name,
+        phone,
+      );
+
+      // If user canceled bottom sheet, stop
+      if (result != true) return;
+
+      // After saving, read values again
+      email = prefs.getString('flutterwave_email');
+      name = prefs.getString('flutterwave_name');
+      phone = prefs.getString('flutterwave_phone');
+    }
+
+    setState(() => flutterWaveLoading = true);
+
+    try {
+      String? token = prefs.getString('token');
+      final response = await http.post(
+        Uri.parse(
+          'https://hoppr-face-two-dbe557472d7f.herokuapp.com/api/flutterwave/initialize',
+        ),
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token", // ✅ Add Bearer token
+        },
+        body: jsonEncode({
+          "userBookingId": widget.bookingId ?? '',
+          "amount": widget.amount.toString(),
+          "email": email,
+          "name": name,
+          "phone": phone,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final paymentLink = data['paymentLink'];
+
+        if (paymentLink != null) {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => PaymentWebView(url: paymentLink)),
+          );
+
+          if (result != null && result["status"] == "success") {
+            AppToasts.showSuccess('Payment Successful');
+            AppLogger.log.i("Payment Successful: ${result["transactionId"]}");
+            await _showRatingBottomSheet(context);
+          } else {
+            AppToasts.showError("Payment failed or cancelled");
+          }
+        } else {
+          final errorMsg = data['message'] ?? "Failed to initialize payment";
+          AppToasts.showError(errorMsg);
+        }
+      } else {
+        final errorMsg = data['message'] ?? "Failed to initialize payment";
+        AppToasts.showError(errorMsg);
+        AppLogger.log.e(
+          'Failed to initialize Flutterwave payment: ${response.body}',
+        );
+      }
+    } catch (e) {
+      AppToasts.showError(e.toString());
+      AppLogger.log.e("Error during Flutterwave payment: $e");
+    } finally {
+      setState(() => flutterWaveLoading = false);
+    }
+  }
+
+  // Bottom sheet to enter user info
+  Future<bool?> _showUserInfoBottomSheet(
+    BuildContext context,
+    String? email,
+    String? name,
+    String? phone,
+  ) {
+    final _emailController = TextEditingController(text: email);
+    final _nameController = TextEditingController(text: name);
+    final _phoneController = TextEditingController(text: phone);
+
+    return showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent, // Transparent to get rounded corners
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, -4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                SizedBox(height: 15),
+                Text(
+                  "Enter Payment Info",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 25),
+                _buildTextField(
+                  _emailController,
+                  "Email",
+                  Icons.email,
+                  TextInputType.emailAddress,
+                ),
+                SizedBox(height: 15),
+                _buildTextField(
+                  _nameController,
+                  "Name",
+                  Icons.person,
+                  TextInputType.name,
+                ),
+                SizedBox(height: 15),
+                _buildTextField(
+                  _phoneController,
+                  "Phone",
+                  Icons.phone,
+                  TextInputType.phone,
+                ),
+                SizedBox(height: 25),
+                AppButtons.button(
+                  onTap: () async {
+                    if (_emailController.text.isEmpty ||
+                        _nameController.text.isEmpty ||
+                        _phoneController.text.isEmpty) {
+                      AppToasts.showError("All fields are required");
+                      return;
+                    }
+
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setString(
+                      'flutterwave_email',
+                      _emailController.text,
+                    );
+                    await prefs.setString(
+                      'flutterwave_name',
+                      _nameController.text,
+                    );
+                    await prefs.setString(
+                      'flutterwave_phone',
+                      _phoneController.text,
+                    );
+
+                    Navigator.pop(context, true);
+                  },
+                  text: 'Save & Continue',
+                ),
+
+                SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+    TextInputType type,
+  ) {
+    return TextField(
+      controller: controller,
+      keyboardType: type,
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: AppColors.commonBlack),
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.grey[700]),
+        filled: true,
+        fillColor: Colors.grey[100],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      ),
+    );
+  }
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     walletController.getWalletBalance();
     controller.getProfileData();
@@ -678,30 +776,63 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ),
                       ),
 
-                      Container(
-                        height: 50,
-                        width: 170,
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.containerColor1,
-                          border: Border.all(color: AppColors.containerColor),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              AppImages.applePay,
-                              height: 24,
-                              width: 40,
-                            ),
-                            SizedBox(width: 10),
-                            CustomTextFields.textWithStylesSmall(
-                              'Apple Pay',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              colors: AppColors.commonBlack,
-                            ),
-                          ],
+                      InkWell(
+                        onTap:
+                            flutterWaveLoading
+                                ? null
+                                : () async {
+                                  setState(() {
+                                    flutterWaveLoading = true;
+                                  });
+
+                                  await payWithFlutterWave();
+
+                                  setState(() {
+                                    flutterWaveLoading = false;
+                                  });
+                                },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          height: 50,
+                          width: 170,
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.commonWhite,
+                            border: Border.all(color: AppColors.containerColor),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child:
+                                flutterWaveLoading
+                                    ? const SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color:
+                                            Colors
+                                                .black, // you can change to AppColors.commonBlack
+                                      ),
+                                    )
+                                    : Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          AppImages.flutter_wave,
+                                          height: 24,
+                                          width: 40,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        CustomTextFields.textWithStylesSmall(
+                                          'Flutter wave',
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                          colors: AppColors.commonBlack,
+                                        ),
+                                      ],
+                                    ),
+                          ),
                         ),
                       ),
                     ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hopper/Core/Consents/app_logger.dart';
-import 'package:hopper/Presentation/Authentication/controller/authController.dart';
+
 import 'package:country_picker/country_picker.dart';
 import 'package:hopper/Presentation/Authentication/screens/otp_screens.dart';
 import 'package:hopper/api/dataSource/apiDataSource.dart';
@@ -27,7 +27,7 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    getAppSettings();
+
   }
 
   void setSelectedCountry(Country country) {
