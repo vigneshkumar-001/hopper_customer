@@ -1793,7 +1793,7 @@ class _HomeScreensState extends State<HomeScreens>
                       Row(
                         children: [
                           Expanded(
-                            key: const ValueKey('home_book_expanded'),
+                            // key: const ValueKey('home_book_expanded'),
                             child: GestureDetector(
                               onTap: () => Get.to(BookRideSearchScreen()),
                               child: PackageContainer.customRideContainer(
@@ -1807,7 +1807,7 @@ class _HomeScreensState extends State<HomeScreens>
                           ),
                           const SizedBox(width: 5),
                           Expanded(
-                            key: const ValueKey('home_courier_expanded'),
+                            // key: const ValueKey('home_courier_expanded'),
                             child: GestureDetector(
                               child: PackageContainer.customRideContainer(
                                 onTap: () {

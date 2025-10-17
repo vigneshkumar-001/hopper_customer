@@ -159,10 +159,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                   ),
                   Divider(color: AppColors.dividerColor1, thickness: 2),
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
-                      vertical: 5,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                     child: Obx(() {
                       final user = controller.user.value;
                       if (user == null) {
@@ -170,6 +167,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       }
 
                       return Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(50),
@@ -178,82 +176,86 @@ class _DrawerScreenState extends State<DrawerScreen> {
                               height: 45,
                               width: 45,
                               fit: BoxFit.cover,
-                              placeholder:
-                                  (context, url) => SizedBox(
-                                    height: 45,
-                                    width: 45,
-                                    child: const Center(
-                                      child: SizedBox(
-                                        height: 15,
-                                        width: 15,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    ),
+                              placeholder: (context, url) => const SizedBox(
+                                height: 45,
+                                width: 45,
+                                child: Center(
+                                  child: SizedBox(
+                                    height: 15,
+                                    width: 15,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
                                   ),
-                              errorWidget:
-                                  (context, url, error) => Container(
-                                    height: 45,
-                                    width: 45,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[300],
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.person,
-                                      color: Colors.white,
-                                      size: 25,
-                                    ),
-                                  ),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                height: 45,
+                                width: 45,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.person, color: Colors.white, size: 25),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 15),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  CustomTextFields.textWithStyles600(
-                                    fontSize: 20,
-                                    '${user.firstName ?? ''} ',
-                                  ),
-                                  const SizedBox(width: 15),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 2,
+
+                          /// ✅ Expanded prevents overflow while keeping layout neat
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    /// ✅ Expanded keeps long names from pushing out
+                                    Expanded(
+                                      child: CustomTextFields.textWithStyles600(
+                                        fontSize: 20,
+                                        '${user.firstName ?? ''}',
+
+                                      ),
                                     ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.commonWhite,
-                                      borderRadius: BorderRadius.circular(10),
+                                    const SizedBox(width: 10),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.commonWhite,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Image.asset(
+                                            AppImages.star,
+                                            height: 15,
+                                            color: AppColors.walletCurrencyColor,
+                                          ),
+                                          const SizedBox(width: 5),
+                                          CustomTextFields.textWithStyles600(
+                                            fontSize: 15,
+                                            '${user.customerRating?.averageRating?.toStringAsFixed(2) ?? '0.0'}',
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Image.asset(
-                                          AppImages.star,
-                                          height: 15,
-                                          color: AppColors.walletCurrencyColor,
-                                        ),
-                                        const SizedBox(width: 5),
-                                        CustomTextFields.textWithStyles600(
-                                          fontSize: 15,
-                                          '${user.customerRating?.averageRating?.toStringAsFixed(2) ?? '0.0'}',
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              CustomTextFields.textWithStylesSmall(
-                                '${user.countryCode ?? ''} ${user.phone ?? ''}',
-                              ),
-                            ],
+                                  ],
+                                ),
+                                CustomTextFields.textWithStylesSmall(
+                                  '${user.countryCode ?? ''} ${user.phone ?? ''}',
+
+                                  maxLines: 1,
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       );
                     }),
                   ),
+
 
                   /*Padding(
                     padding: const EdgeInsets.symmetric(
