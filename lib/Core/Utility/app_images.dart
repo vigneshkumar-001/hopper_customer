@@ -94,6 +94,7 @@ class AppImages {
   static String twoPeople = "assets/images/twoPeople.png";
   static String nPackage = "assets/images/nPackage.png";
   static String clock = "assets/images/clock.png";
+  static String flutter_wave = "assets/images/flutter_wave.png";
 
 
 }

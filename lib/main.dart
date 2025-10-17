@@ -57,7 +57,7 @@ import 'package:get/get.dart';
 import 'package:hopper/Presentation/Authentication/controller/authController.dart';
 import 'package:hopper/Presentation/Drawer/controller/profle_cotroller.dart';
 import 'package:hopper/Presentation/Drawer/controller/ride_history_controller.dart';
-import 'package:hopper/Presentation/OnBoarding/Screens/home_screens.dart';
+
 import 'package:hopper/Presentation/OnBoarding/Widgets/custom_bottomnavigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hopper/Core/Consents/app_colors.dart';
@@ -100,12 +100,11 @@ Future<void> main() async {
     final authController = Get.find<AuthController>();
     final profileController = Get.find<ProfleCotroller>();
 
-    await authController. getAppSettings();
+    await authController.getAppSettings();
     await rideHistoryController.getRideHistory();
     await profileController.getProfileData();
 
-
-    startWidget = CommonBottomNavigation(initialIndex: 0); // Go to Home
+    startWidget = CommonBottomNavigation(initialIndex: 0);
   } else {
     startWidget = const MobileScreens();
   }

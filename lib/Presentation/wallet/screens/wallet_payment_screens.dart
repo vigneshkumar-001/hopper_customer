@@ -333,6 +333,7 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
   //     AppLogger.log.i('Error: $e');
   //   }
   // }
+
   /*  displayPaymentSheet() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -424,6 +425,58 @@ class _WalletPaymentScreensState extends State<WalletPaymentScreens> {
       AppLogger.log.i('err charging user: $err');
     }
   }*/
+
+  Future<void> payWithFlutterWave() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+          'https://hoppr-face-two-dbe557472d7f.herokuapp.com/api/flutterwave/initialize',
+        ),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "userBookingId": widget.transactionId,
+          "amount": widget.amount.toString(),
+          "email": "testuser@example.com",
+          "name": "Test User",
+          "phone": "08012345678",
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final paymentLink = data['paymentLink'];
+
+        if (paymentLink != null) {
+          // Open the link in the browser
+          if (await canLaunchUrl(Uri.parse(paymentLink))) {
+            await launchUrl(
+              Uri.parse(paymentLink),
+              mode: LaunchMode.externalApplication,
+            );
+          } else {
+            throw 'Could not launch $paymentLink';
+          }
+        } else {
+          AppLogger.log.e("Payment link not found in response");
+        }
+      } else {
+        AppLogger.log.e(
+          "Failed to initialize Flutterwave payment: ${response.body}",
+        );
+      }
+    } catch (e) {
+      AppLogger.log.e("Error during Flutterwave payment: $e");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
