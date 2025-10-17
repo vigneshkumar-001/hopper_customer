@@ -45,11 +45,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      TutorialService.showProfileTutorial(
-        context,
-      ); // ✅ Only for Settings Screen
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   TutorialService.showProfileTutorial(
+    //     context,
+    //   ); // ✅ Only for Settings Screen
+    // });
     controller.getProfileData();
   }
 
@@ -126,7 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Spacer(),
           Obx(
             () => GestureDetector(
-              key: ShowcaseKeys.profileEditButton,
+              // key: ShowcaseKeys.profileEditButton,
               onTap: () {
                 if (controller.isEditing.value) {
                   controller.saveData(_formKey);
@@ -167,7 +167,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child:
                       path.isEmpty
                           ? Container(
-                            key: ShowcaseKeys.profileImage,
+                            // key: ShowcaseKeys.profileImage,
                             height: 85,
                             width: 85,
                             decoration: BoxDecoration(
@@ -182,7 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           )
                           : path.startsWith('http')
                           ? CachedNetworkImage(
-                            key: ShowcaseKeys.profileImage,
+                            // key: ShowcaseKeys.profileImage,
                             imageUrl: path,
                             height: 85,
                             width: 85,
